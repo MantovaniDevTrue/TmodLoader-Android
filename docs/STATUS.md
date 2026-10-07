@@ -81,7 +81,7 @@ That proves the file is found and opened successfully.
 
 ## Current boundary
 
-The focused trace ends immediately after the successful shader stream open.
+The shader stream and native effect creation boundaries are now crossed. The current boundary is the managed exception raised after the third successful `FNA3D_CreateEffect` return.
 
 Upstream FNA's shader load path is:
 
@@ -102,7 +102,17 @@ The current test phase:
 - forwards the real managed effect byte array to the native APK FNA3D implementation;
 - adds focused tracing for `ContentReader`, `EffectReader.Read`, `Effect::.ctor` and `FNA3D_CreateEffect`.
 
-Phase 2.23.00 is not yet validated on-device.
+Phase 2.23.00 has now validated the `FNA3D_CreateEffect` bridge on-device.
+
+Observed native effect creations:
+
+- 91,904-byte effect blob -> non-null `effect` and `effectData`;
+- 34,052-byte effect blob -> non-null `effect` and `effectData`;
+- 39,320-byte effect blob -> non-null `effect` and `effectData`.
+
+This proves the real shader byte arrays are reaching the APK FNA3D implementation and three effects are being created successfully.
+
+The current run still ends in a managed exception **after** those three successful effect creations. The exact exception text/stack is the next item to capture before changing bootstrap code.
 
 ## Rules for the current bootstrap
 
