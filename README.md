@@ -2,7 +2,7 @@
 
 Experimental Android ARM64 bootstrap for running the desktop tModLoader/FNA stack through MonoVM on Android.
 
-> **Status:** work in progress. Current baseline: **Phase 2.22.99 — FAudio No-Device Fallback**.
+> **Status:** work in progress. Current validated baseline: **Phase 2.22.99 — FAudio No-Device Fallback**.
 
 ## Current progress
 
@@ -17,11 +17,17 @@ The bootstrap already reaches the first controlled game frame and has passed sev
 - `FNA3D_CreateTexture2D` through an Android-safe InternalCall bridge;
 - `FNA3D_SetTextureData2D` through an Android-safe InternalCall bridge;
 - real 1×1 dummy texture creation and 4-byte pixel upload;
-- ARM64 tagged-pointer-safe Mono method metadata conversion.
+- ARM64 tagged-pointer-safe Mono method metadata conversion;
+- `SoundEngine.Initialize()` no-device fallback through the existing Terraria/tModLoader audio path;
+- asset service creation and registration of PNG/XNB/rawimg/FXC/WAV/MP3/OGG readers.
 
-Phase 2.22.98 proved that the next managed stage is `Terraria.Audio.SoundEngine.Initialize()` and exposed `System.DllNotFoundException: libFAudio.so` as the first post-texture compatibility boundary.
+Phase 2.22.99 is now validated. The FAudio bridge reports zero devices, FNA raises the expected `NoAudioHardwareException`, Terraria catches it in `TestAudioSupport`, and `SoundEngine.Initialize()` returns normally.
 
-Phase 2.22.99 keeps the proven graphics fixes and uses a narrow FAudio probe bridge that reports zero audio devices, allowing the existing Terraria/tModLoader `DisabledAudioSystem` fallback to be tested before real Android FAudio integration.
+The current startup boundary is no longer code execution. `Main.LoadContent` reaches `TMLContentManager.Load("PixelShader")`, but the required FNA-platform content payload is missing:
+
+`Content/PixelShader.xnb`
+
+The matching `TileShader.xnb` and `ScreenShader.xnb` files are part of the same platform content set and must be supplied from a legitimate tModLoader/Terraria installation rather than committed to this repository.
 
 ## Latest source
 
@@ -48,7 +54,7 @@ Its SHA-256 and exact contents/exclusions are documented beside the archive in:
 
 This repository intentionally does **not** contain signing private keys, proprietary game/runtime payloads, personal save data or generated APK binaries. Those stay outside Git.
 
-The build expects locally supplied Android/FNA payload files described in `docs/BUILD.md`.
+The build expects locally supplied Android/FNA and game content payload files described in `docs/BUILD.md`.
 
 ## Upstream projects
 
