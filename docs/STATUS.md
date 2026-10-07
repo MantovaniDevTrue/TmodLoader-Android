@@ -1,8 +1,14 @@
 # Current status
 
-## Active baseline
+## Baselines
+
+Validated baseline:
 
 **Phase 2.22.99 — FAudio No-Device Fallback**
+
+Current test baseline:
+
+**Phase 2.23.00 — FNA3D Effect Metadata Bridge**
 
 Target:
 
@@ -14,7 +20,7 @@ Target:
 
 ## Confirmed working
 
-The current bootstrap has already crossed these startup stages:
+The bootstrap has crossed these startup stages:
 
 - native APK bootstrap and MonoVM initialization;
 - managed assembly preload pipeline;
@@ -36,9 +42,10 @@ The current bootstrap has already crossed these startup stages:
 - successful return from `SoundEngine.Initialize()`;
 - `AssetInitializer.CreateAssetServices()`;
 - registration of PNG, XNB, rawimg, FXC, WAV, MP3 and OGG asset readers;
-- `AssetRepository` creation and main-thread registration.
+- `AssetRepository` creation and main-thread registration;
+- successful opening of the supplied `Content/PixelShader.xnb`.
 
-## Phase 2.22.99 result
+## Phase 2.22.99 validation result
 
 The no-audio compatibility path is proven.
 
@@ -52,45 +59,57 @@ Observed sequence:
 6. `Terraria.Audio.SoundEngine.Initialize()` returns normally.
 7. `Main.LoadContent` continues into asset service initialization.
 
-This confirms that the earlier `libFAudio.so` problem is no longer the active blocker.
+The earlier `libFAudio.so` issue is no longer the active blocker.
 
-## Current blocker
+## Shader payload result
 
-The next failure is:
+The required platform files were supplied externally from the matching tModLoader package:
 
-`System.IO.FileNotFoundException: .../Content/PixelShader.xnb`
+- `Content/PixelShader.xnb`;
+- `Content/TileShader.xnb`;
+- `Content/ScreenShader.xnb`.
 
-followed by:
+On the next run, the previous `PixelShader.xnb` `FileNotFoundException` disappears.
 
-`Microsoft.Xna.Framework.Content.ContentLoadException: Could not load asset PixelShader`
+The new trace reaches:
 
-The failure occurs in:
+`Terraria.ModLoader.Engine.TMLContentManager::OpenStream`
 
-`Terraria.ModLoader.Engine.TMLContentManager.Load -> OpenStream`
+and records a normal `LOADCONTENT_LEAVE`.
 
-This is a content payload problem rather than another Mono/FNA ABI failure.
+That proves the file is found and opened successfully.
 
-The platform content set also contains:
+## Current boundary
 
-- `PixelShader.xnb`;
-- `TileShader.xnb`;
-- `ScreenShader.xnb`.
+The focused trace ends immediately after the successful shader stream open.
 
-These files are intentionally not source-controlled upstream. The tModLoader repository's own legacy file manifest describes them as non-GitHub files and says those omitted files are not theirs to host. Our public Android repository therefore must not commit copies of them either.
+Upstream FNA's shader load path is:
 
-## Next action
+`TMLContentManager.Load -> ContentReader -> EffectReader.Read -> Effect::.ctor -> FNA3D_CreateEffect`
 
-Supply the correct FNA/Linux-compatible shader content files from a legitimate tModLoader/Terraria installation into the Android content root, then retest the same 2.22.99 APK before changing bootstrap code.
+`EffectReader` reads the compiled shader bytes into a managed `byte[]`, and the `Effect` constructor passes that blob to `FNA3D_CreateEffect`.
 
-Only if loading the real shader files exposes another runtime incompatibility should a new bootstrap phase be created.
+This makes `FNA3D_CreateEffect` the next unmanaged boundary to test.
+
+## Phase 2.23.00
+
+The current test phase:
+
+- preserves the validated FAudio and texture bridges;
+- resolves the APK's real `FNA3D_CreateEffect`;
+- resolves Mono's public `mono_array_length` and `mono_array_addr_with_size` embedding APIs;
+- converts `FNA3D_Impl.FNA3D_CreateEffect` from P/Invoke to InternalCall before first JIT;
+- forwards the real managed effect byte array to the native APK FNA3D implementation;
+- adds focused tracing for `ContentReader`, `EffectReader.Read`, `Effect::.ctor` and `FNA3D_CreateEffect`.
+
+Phase 2.23.00 is not yet validated on-device.
 
 ## Rules for the current bootstrap
 
 - Preserve the desktop tModLoader/FNA behavior as much as possible.
-- Prefer the upstream fallback path over swallowing or hiding exceptions.
-- Do not ship arbitrary or mismatched native/audio/content payloads just to move startup forward.
+- Prefer real upstream code paths over swallowing exceptions.
 - Keep the 32 MiB game-thread stack until the startup path is proven stable.
 - Keep ARM64 tagged-pointer handling in metadata writes.
 - Preserve the validated FNA3D texture bridges.
 - Keep proprietary/non-source-controlled game content out of the public repository.
-- Change one verified blocker at a time.
+- Bridge one verified unmanaged boundary at a time.
