@@ -4,69 +4,70 @@ The bootstrap writes logs under:
 
 `/storage/emulated/0/Android/media/com.mantovani.tmlmono8/`
 
-## Phase 2.22.99 files
+## Phase 2.23.00 files
 
-- `monovm_phase2_22_99.txt` — main bootstrap/runtime log.
-- `monovm_phase2_22_99_state.txt` — last known high-level state.
-- `monovm_phase2_22_99_loadcontent.txt` — focused post-texture `LoadContent` trace.
-- `monovm_phase2_22_99_audio.txt` — focused FAudio metadata/fallback audit.
-- `monovm_phase2_22_99_fna3d_binding.txt` — FNA3D method metadata/binding audit.
-- `monovm_phase2_22_99_stack.txt` — large-stack pthread diagnostics.
-- additional focused files may exist for earlier diagnostic subsystems.
+- `monovm_phase2_23_00.txt` — main bootstrap/runtime log.
+- `monovm_phase2_23_00_state.txt` — last known high-level state.
+- `monovm_phase2_23_00_loadcontent.txt` — focused shader/XNB `LoadContent` trace.
+- `monovm_phase2_23_00_fna3d_binding.txt` — FNA3D metadata/binding audit, including `CreateEffect`.
+- `monovm_phase2_23_00_audio.txt` — retained FAudio no-device audit.
+- `monovm_phase2_23_00_stack.txt` — large-stack pthread diagnostics.
 
 ## Useful commands
 
-FAudio compatibility audit:
+FNA3D effect metadata audit:
 
 ```bash
-cat /storage/emulated/0/Android/media/com.mantovani.tmlmono8/monovm_phase2_22_99_audio.txt
+cat /storage/emulated/0/Android/media/com.mantovani.tmlmono8/monovm_phase2_23_00_fna3d_binding.txt
 ```
 
-Focused LoadContent trace:
+Focused shader/content trace:
 
 ```bash
-cat /storage/emulated/0/Android/media/com.mantovani.tmlmono8/monovm_phase2_22_99_loadcontent.txt
+tail -n 350 /storage/emulated/0/Android/media/com.mantovani.tmlmono8/monovm_phase2_23_00_loadcontent.txt
+```
+
+Effect bridge and exception context:
+
+```bash
+grep -E "CreateEffect|EffectReader|PixelShader|TileShader|ScreenShader|LOADCONTENT_|FIRST_CHANCE_EXCEPTION|RUNONEFRAME_EXCEPTION|MANAGED EXCEPTION" \
+/storage/emulated/0/Android/media/com.mantovani.tmlmono8/monovm_phase2_23_00.txt | tail -n 450
 ```
 
 Last state:
 
 ```bash
-cat /storage/emulated/0/Android/media/com.mantovani.tmlmono8/monovm_phase2_22_99_state.txt
+cat /storage/emulated/0/Android/media/com.mantovani.tmlmono8/monovm_phase2_23_00_state.txt
 ```
 
-Audio/fallback and managed exception context:
+## Expected Phase 2.23.00 transition
 
-```bash
-grep -E "FAudio|DisabledAudioSystem|SoundEngine|LOADCONTENT_|FIRST_CHANCE_EXCEPTION|RUNONEFRAME_EXCEPTION|MANAGED EXCEPTION" \
-/storage/emulated/0/Android/media/com.mantovani.tmlmono8/monovm_phase2_22_99.txt | tail -n 350
-```
-
-Full exception context if a new managed failure occurs:
-
-```bash
-grep -A100 -B120 "RUNONEFRAME_EXCEPTION_BEGIN" \
-/storage/emulated/0/Android/media/com.mantovani.tmlmono8/monovm_phase2_22_99.txt
-```
-
-## Expected Phase 2.22.99 transition
-
-The focused audit should show the three probe methods converted to InternalCall:
+The binding audit should show:
 
 ```text
-FAUDIOCREATE_METADATA_PATCH=APPLIED
-FAUDIO_GETDEVICECOUNT_METADATA_PATCH=APPLIED
-FAUDIO_RELEASE_METADATA_PATCH=APPLIED
+CREATEEFFECT_METADATA_PATCH=APPLIED
+CREATEEFFECT_METADATA_AFTER ... pinvoke=0 internalCall=1
+CREATEEFFECT_LOOKUP_AFTER_PATCH=... match=1
 ```
 
-The runtime should then execute the compatibility bridge:
+The runtime should then show:
 
 ```text
-ICALL_BRIDGE_ENTER=FAudioCreate no-device Android fallback
-ICALL_BRIDGE_ENTER=FAudio_GetDeviceCount no-device Android fallback
-... count=0 ...
+TMLContentManager::OpenStream -> LEAVE
+EffectReader::Read
+Effect::.ctor
+FNA3D_CreateEffect
+ICALL_BRIDGE_ENTER=FNA3D_CreateEffect Android InternalCall bridge
+ICALL_BRIDGE_EXIT=FNA3D_CreateEffect ... effect=... effectData=...
 ```
 
-If the upstream fallback behaves as expected, `DisabledAudioSystem::.ctor` should run and `SoundEngine.Initialize` should return before the trace advances to the next `Main.LoadContent` stage.
+If the effect is accepted by FNA3D, the trace should continue into the remaining shader assets or the next `Main.LoadContent` subsystem.
+
+## Phase 2.22.99 result
+
+The FAudio no-device fallback is already validated. `NoAudioHardwareException` is expected during the probe and is handled by Terraria's own `TestAudioSupport` path.
+
+The previous `PixelShader.xnb` file-not-found error is also resolved once the matching shader XNB payloads are supplied under `Content/`.
 
 ## Diagnostic rule
 
