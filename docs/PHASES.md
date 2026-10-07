@@ -19,7 +19,8 @@ This file tracks the diagnostic/fix chain that led to the current Android bootst
 | 2.22.95 | FNA3D Texture2D Metadata Bridge | Added metadata conversion, but Android ARM64 tagged pointers prevented the write. |
 | 2.22.96 | FNA3D Tagged Pointer Metadata Bridge | Canonicalized tagged pointers and successfully converted `CreateTexture2D` to InternalCall. |
 | 2.22.97 | FNA3D Texture Upload Metadata Bridge | Converted `SetTextureData2D`; real 1×1 texture upload completed. |
-| 2.22.98 | Post-Texture LoadContent Isolation | Current baseline; traces the next blocker after the texture upload. |
+| 2.22.98 | Post-Texture LoadContent Isolation | Identified `SoundEngine.Initialize` and missing `libFAudio.so` as the first post-texture compatibility boundary. |
+| 2.22.99 | FAudio No-Device Fallback | Current baseline; converts the minimum FAudio probe calls to InternalCalls that report zero devices, exercising Terraria/tML's existing `DisabledAudioSystem` path. |
 
 ## Major breakthroughs
 
@@ -58,3 +59,21 @@ The Android ARM64 method pointer used top-byte tagging, so the bootstrap had to 
 ### Phase 2.22.97
 
 The same verified conversion pattern was applied to `FNA3D_SetTextureData2D`. The runtime then successfully allocated a normal 1×1 texture and uploaded four bytes of pixel data.
+
+### Phase 2.22.98
+
+The first stage after the successful dummy texture upload was confirmed as:
+
+`Terraria.Audio.SoundEngine.Initialize()`
+
+The first-chance trace immediately exposed:
+
+`System.DllNotFoundException: libFAudio.so`
+
+This moved the active investigation from graphics into the audio initialization boundary.
+
+### Phase 2.22.99
+
+Instead of bundling an unverified FAudio build or modifying managed game logic, the bootstrap now converts only `FAudioCreate`, `FAudio_GetDeviceCount` and `FAudio_Release` to InternalCalls and reports zero devices.
+
+The purpose is to follow the existing upstream no-audio fallback and determine whether `Main.LoadContent` can continue cleanly into the next stage. Real Android audio remains separate work.
