@@ -2,7 +2,7 @@
 
 Experimental Android ARM64 bootstrap for running the desktop tModLoader/FNA stack through MonoVM on Android.
 
-> **Status:** work in progress. Current baseline: **Phase 2.22.98 — Post-Texture LoadContent Isolation**.
+> **Status:** work in progress. Current baseline: **Phase 2.22.99 — FAudio No-Device Fallback**.
 
 ## Current progress
 
@@ -16,19 +16,22 @@ The bootstrap already reaches the first controlled game frame and has passed sev
 - render-target creation;
 - `FNA3D_CreateTexture2D` through an Android-safe InternalCall bridge;
 - `FNA3D_SetTextureData2D` through an Android-safe InternalCall bridge;
+- real 1×1 dummy texture creation and 4-byte pixel upload;
 - ARM64 tagged-pointer-safe Mono method metadata conversion.
 
-The current investigation starts immediately after the successful tModLoader/FNA 1×1 dummy texture upload, inside `Terraria.Main.LoadContent`.
+Phase 2.22.98 proved that the next managed stage is `Terraria.Audio.SoundEngine.Initialize()` and exposed `System.DllNotFoundException: libFAudio.so` as the first post-texture compatibility boundary.
+
+Phase 2.22.99 keeps the proven graphics fixes and uses a narrow FAudio probe bridge that reports zero audio devices, allowing the existing Terraria/tModLoader `DisabledAudioSystem` fallback to be tested before real Android FAudio integration.
 
 ## Latest source
 
 The sanitized source snapshot for the active baseline is:
 
-`source-snapshots/phase2.22.98/tML_Android_Phase2_22_98_public_source.zip`
+`source-snapshots/phase2.22.99/tML_Phase2_22_99_FAudioNoDeviceFallback_Fontes.zip`
 
 Its SHA-256 and exact contents/exclusions are documented beside the archive in:
 
-`source-snapshots/phase2.22.98/README.md`
+`source-snapshots/phase2.22.99/README.md`
 
 ## Repository layout
 
@@ -49,7 +52,7 @@ The build expects locally supplied Android/FNA payload files described in `docs/
 
 ## Upstream projects
 
-This work is built around the tModLoader, FNA, FNA3D and SDL2 ecosystems. Their upstream licenses and terms continue to apply to their respective source and binaries.
+This work is built around the tModLoader, FNA, FNA3D, FAudio and SDL2 ecosystems. Their upstream licenses and terms continue to apply to their respective source and binaries.
 
 ## Development model
 
