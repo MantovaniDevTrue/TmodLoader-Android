@@ -1,0 +1,41 @@
+# Build artifacts
+*.apk
+*.aab
+*.zip
+*.so
+*.dex
+*.arsc
+
+# Signing material
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*_signing_key*
+signing/
+keys/
+
+# Runtime payloads
+runtime/
+deps/
+apk_base/lib/
+apk_base/classes.dex
+apk_base/resources.arsc
+
+# Logs and local probes
+*.log
+monovm_*.txt
+probes/
+work/
+save/
+
+# Python
+__pycache__/
+*.pyc
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
