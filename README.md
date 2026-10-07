@@ -2,7 +2,7 @@
 
 Experimental Android ARM64 bootstrap for running the desktop tModLoader/FNA stack through MonoVM on Android.
 
-> **Status:** work in progress. Current validated baseline: **Phase 2.22.99 — FAudio No-Device Fallback**.
+> **Status:** work in progress. Latest validated baseline: **Phase 2.22.99 — FAudio No-Device Fallback**. Current test baseline: **Phase 2.23.00 — FNA3D Effect Metadata Bridge**.
 
 ## Current progress
 
@@ -19,25 +19,24 @@ The bootstrap already reaches the first controlled game frame and has passed sev
 - real 1×1 dummy texture creation and 4-byte pixel upload;
 - ARM64 tagged-pointer-safe Mono method metadata conversion;
 - `SoundEngine.Initialize()` no-device fallback through the existing Terraria/tModLoader audio path;
-- asset service creation and registration of PNG/XNB/rawimg/FXC/WAV/MP3/OGG readers.
+- asset service creation and registration of PNG/XNB/rawimg/FXC/WAV/MP3/OGG readers;
+- successful opening of the real `Content/PixelShader.xnb` payload after it is supplied externally.
 
-Phase 2.22.99 is now validated. The FAudio bridge reports zero devices, FNA raises the expected `NoAudioHardwareException`, Terraria catches it in `TestAudioSupport`, and `SoundEngine.Initialize()` returns normally.
+Phase 2.22.99 is validated. The FAudio bridge reports zero devices, FNA raises the expected `NoAudioHardwareException`, Terraria catches it in `TestAudioSupport`, and `SoundEngine.Initialize()` returns normally.
 
-The current startup boundary is no longer code execution. `Main.LoadContent` reaches `TMLContentManager.Load("PixelShader")`, but the required FNA-platform content payload is missing:
+The shader content payload is also no longer missing. With the correct XNB files in `Content/`, `TMLContentManager.OpenStream` returns successfully for `PixelShader`.
 
-`Content/PixelShader.xnb`
-
-The matching `TileShader.xnb` and `ScreenShader.xnb` files are part of the same platform content set and must be supplied from a legitimate tModLoader/Terraria installation rather than committed to this repository.
+The current test boundary is the next FNA effect stage. Upstream FNA reads the compiled effect blob and constructs an `Effect`, which calls `FNA3D_CreateEffect`. Phase 2.23.00 converts that one method from P/Invoke to an Android-safe InternalCall and forwards the real managed shader byte array to the APK's FNA3D.
 
 ## Latest source
 
-The sanitized source snapshot for the active baseline is:
+The sanitized source snapshot for the current test baseline is:
 
-`source-snapshots/phase2.22.99/tML_Phase2_22_99_FAudioNoDeviceFallback_Fontes.zip`
+`source-snapshots/phase2.23.00/tML_Phase2_23_00_FNA3DEffectMetadataBridge_Fontes.zip`
 
 Its SHA-256 and exact contents/exclusions are documented beside the archive in:
 
-`source-snapshots/phase2.22.99/README.md`
+`source-snapshots/phase2.23.00/README.md`
 
 ## Repository layout
 
