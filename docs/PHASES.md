@@ -20,7 +20,7 @@ This file tracks the diagnostic/fix chain that led to the current Android bootst
 | 2.22.96 | FNA3D Tagged Pointer Metadata Bridge | Canonicalized tagged pointers and successfully converted `CreateTexture2D` to InternalCall. |
 | 2.22.97 | FNA3D Texture Upload Metadata Bridge | Converted `SetTextureData2D`; real 1×1 texture upload completed. |
 | 2.22.98 | Post-Texture LoadContent Isolation | Identified `SoundEngine.Initialize` and missing `libFAudio.so` as the first post-texture compatibility boundary. |
-| 2.22.99 | FAudio No-Device Fallback | Validated: the zero-device bridge reaches the native Terraria/tML no-audio fallback, `SoundEngine.Initialize` returns, asset services initialize, and the next boundary is missing `Content/PixelShader.xnb`. |
+| 2.22.99 | FAudio No-Device Fallback | Validated: the zero-device bridge reaches the native Terraria/tML no-audio fallback, `SoundEngine.Initialize` returns, asset services initialize, and shader loading is reached. |\n| 2.23.00 | FNA3D Effect Metadata Bridge | Current test phase: after real shader XNB files are supplied and `OpenStream` returns normally, bridges `FNA3D_CreateEffect` through an InternalCall and traces the FNA effect pipeline. |
 
 ## Major breakthroughs
 
@@ -76,4 +76,4 @@ This moved the active investigation from graphics into the audio initialization 
 
 Instead of bundling an unverified FAudio build or modifying managed game logic, the bootstrap now converts only `FAudioCreate`, `FAudio_GetDeviceCount` and `FAudio_Release` to InternalCalls and reports zero devices.
 
-The fallback is now proven. `SoundEngine.Initialize()` returns normally, `AssetInitializer.CreateAssetServices()` completes, the asset readers register, and `TMLContentManager` reaches its first real shader load. The current blocker is a missing FNA-platform content payload (`Content/PixelShader.xnb`), not audio. Real Android audio remains separate work.
+The fallback is now proven. `SoundEngine.Initialize()` returns normally, `AssetInitializer.CreateAssetServices()` completes, and the asset readers register. After the matching shader XNB files are supplied externally, `TMLContentManager.OpenStream` also returns normally for `PixelShader`. Real Android audio remains separate work.\n\n### Phase 2.23.00\n\nWith the shader file now found, the focused trace ends immediately after `TMLContentManager.OpenStream` returns. Upstream FNA then reads the XNB effect blob through `EffectReader`, constructs `Effect`, and calls `FNA3D_CreateEffect`.\n\nPhase 2.23.00 applies the same proven ARM64 metadata conversion pattern to `FNA3D_CreateEffect`, but additionally resolves the managed `byte[]` through Mono's public array embedding APIs before forwarding the shader bytes to the real APK FNA3D implementation. The phase is awaiting on-device validation.
