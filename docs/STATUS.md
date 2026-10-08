@@ -142,3 +142,20 @@ The new test phase preserves all validated bridges and converts the exact Sprite
 - `FNA3D_SupportsNoOverwrite`.
 
 Each bridge forwards to the real symbol from the APK `libFNA3D.so`; no fake graphics buffers are created. The build also traces `SpriteBatch`, `VertexBuffer`, `DynamicVertexBuffer` and `IndexBuffer` constructors to expose the next boundary cleanly.
+
+## Phase 2.23.01 validation
+
+The SpriteBatch buffer bridge is validated on-device.
+
+Observed successful native calls include:
+
+- repeated `FNA3D_GenVertexBuffer` allocations with non-null buffer handles;
+- repeated `FNA3D_GenIndexBuffer` allocations with non-null buffer handles;
+- repeated `FNA3D_SetIndexBufferData` uploads;
+- repeated `FNA3D_CreateEffect` calls, including the internal SpriteBatch effect;
+- repeated `FNA3D_SupportsNoOverwrite` calls;
+- continued texture/render-target creation after SpriteBatch construction.
+
+This proves the first SpriteBatch and subsequent SpriteBatch instances cross the previously failing native buffer path successfully.
+
+The current run advances further into `Main.LoadContent` and creates additional 4x4 textures and 2048x2048 render targets before a new managed exception is reported. The exact exception text must be captured before the next bootstrap change.
