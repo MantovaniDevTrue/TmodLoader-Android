@@ -2,11 +2,7 @@
 
 ## Baselines
 
-Validated baseline:
-
-**Phase 2.22.99 — FAudio No-Device Fallback**
-
-Current test baseline:
+Latest validated baseline:
 
 **Phase 2.23.01 — FNA3D SpriteBatch Buffer Bridge**
 
@@ -81,15 +77,32 @@ That proves the file is found and opened successfully.
 
 ## Current boundary
 
-The shader stream and native effect creation boundaries are now crossed. The current boundary is the managed exception raised after the third successful `FNA3D_CreateEffect` return.
+The native graphics path has moved past shader creation and SpriteBatch buffer allocation.
 
-Upstream FNA's shader load path is:
+The current failure is:
 
-`TMLContentManager.Load -> ContentReader -> EffectReader.Read -> Effect::.ctor -> FNA3D_CreateEffect`
+`ReLogic.Content.AssetLoadException: Asset could not be found: "Images/SplashScreens/Splash_1"`
 
-`EffectReader` reads the compiled shader bytes into a managed `byte[]`, and the `Effect` constructor passes that blob to `FNA3D_CreateEffect`.
+with the stack:
 
-This makes `FNA3D_CreateEffect` the next unmanaged boundary to test.
+`AssetRepository.Request<Texture2D> -> AssetInitializer.LoadAsset<Texture2D> -> AssetInitializer.LoadSplashAssets -> Terraria.Main.LoadContent`.
+
+This is a content-root problem, not a new FNA3D or Mono JIT failure.
+
+Upstream tModLoader intentionally uses **two content roots**:
+
+1. the vanilla Terraria PC `Content` directory as the base content tree;
+2. the local tModLoader `Content` directory as an optional override tree.
+
+The Android bootstrap already has routing support for external content roots. The next requirement is to provide a complete matching Terraria PC vanilla Content tree instead of copying individual XNB files one-by-one.
+
+The current bootstrap can inspect:
+
+- `/storage/emulated/0/Android/media/com.mantovani.tmlmono8/Content`;
+- `/storage/emulated/0/Android/media/com.mantovani.tmlmono8/Terraria/Content`;
+- the app-private `Content` tree.
+
+The preferred long-term layout is to keep the vanilla Terraria PC content separate under `Terraria/Content` and reserve the top-level `Content` directory for tModLoader/platform overrides.
 
 ## Phase 2.23.00
 
@@ -158,4 +171,4 @@ Observed successful native calls include:
 
 This proves the first SpriteBatch and subsequent SpriteBatch instances cross the previously failing native buffer path successfully.
 
-The current run advances further into `Main.LoadContent` and creates additional 4x4 textures and 2048x2048 render targets before a new managed exception is reported. The exact exception text must be captured before the next bootstrap change.
+The current run advances further into `Main.LoadContent`, creates additional 4x4 textures and 2048x2048 render targets, and then reaches the vanilla splash asset load. The next blocker is a missing `Images/SplashScreens/Splash_1` asset in the selected vanilla content root.
