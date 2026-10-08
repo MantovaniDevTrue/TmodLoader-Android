@@ -2,7 +2,7 @@
 
 Experimental Android ARM64 bootstrap for running the desktop tModLoader/FNA stack through MonoVM on Android.
 
-> **Status:** work in progress. Latest validated baseline: **Phase 2.22.99 — FAudio No-Device Fallback**. Current test baseline: **Phase 2.23.01 — FNA3D SpriteBatch Buffer Bridge**.
+> **Status:** work in progress. Latest validated baseline: **Phase 2.22.99 — FAudio No-Device Fallback**. Latest validated baseline: **Phase 2.23.01 — FNA3D SpriteBatch Buffer Bridge**.
 
 ## Current progress
 
