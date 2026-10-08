@@ -21,7 +21,8 @@ This file tracks the diagnostic/fix chain that led to the current Android bootst
 | 2.22.97 | FNA3D Texture Upload Metadata Bridge | Converted `SetTextureData2D`; real 1×1 texture upload completed. |
 | 2.22.98 | Post-Texture LoadContent Isolation | Identified `SoundEngine.Initialize` and missing `libFAudio.so` as the first post-texture compatibility boundary. |
 | 2.22.99 | FAudio No-Device Fallback | Validated: the zero-device bridge reaches the native Terraria/tML no-audio fallback, `SoundEngine.Initialize` returns, asset services initialize, and shader loading is reached. |
-| 2.23.00 | FNA3D Effect Metadata Bridge | Bridge validated on-device: three real shader effect blobs reached APK FNA3D and returned non-null effect/effectData handles. A later managed exception is now the active boundary. |
+| 2.23.00 | FNA3D Effect Metadata Bridge | Validated: three real shader effect blobs reached APK FNA3D and returned non-null effect/effectData handles. The next failure was isolated to `FNA3D_GenVertexBuffer` during `SpriteBatch` construction. |
+| 2.23.01 | FNA3D SpriteBatch Buffer Bridge | Current test phase: bridges `GenVertexBuffer`, `GenIndexBuffer`, `SetIndexBufferData` and `SupportsNoOverwrite` through the real APK FNA3D implementation. |
 
 ## Major breakthroughs
 
@@ -86,3 +87,9 @@ With the shader file now found, the focused trace ends immediately after `TMLCon
 Phase 2.23.00 applies the same proven ARM64 metadata conversion pattern to `FNA3D_CreateEffect`, but additionally resolves the managed `byte[]` through Mono's public array embedding APIs before forwarding the shader bytes to the real APK FNA3D implementation.
 
 The bridge is now validated on-device. Three effect blobs (91,904, 34,052 and 39,320 bytes) returned non-null `effect` and `effectData` handles. The next blocker is a managed exception occurring only after those successful native effect creations; its exact `Exception.ToString()` is being isolated before the next code change.
+
+### Phase 2.23.01
+
+The managed exception from Phase 2.23.00 was resolved to an invalid generated P/Invoke wrapper for `FNA3D_GenVertexBuffer`. Source inspection of FNA shows the first `SpriteBatch` constructor immediately uses `GenVertexBuffer`, `GenIndexBuffer`, `SetIndexBufferData`, the already-working `CreateEffect`, and `SupportsNoOverwrite`.
+
+Phase 2.23.01 therefore bridges that exact constructor path rather than guessing at unrelated FNA3D methods. All four new bridges forward to the real `libFNA3D.so` functions.
