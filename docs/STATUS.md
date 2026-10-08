@@ -8,7 +8,7 @@ Validated baseline:
 
 Current test baseline:
 
-**Phase 2.23.00 — FNA3D Effect Metadata Bridge**
+**Phase 2.23.01 — FNA3D SpriteBatch Buffer Bridge**
 
 Target:
 
@@ -112,7 +112,15 @@ Observed native effect creations:
 
 This proves the real shader byte arrays are reaching the APK FNA3D implementation and three effects are being created successfully.
 
-The current run still ends in a managed exception **after** those three successful effect creations. The exact exception text/stack is the next item to capture before changing bootstrap code.
+The exact next exception is now known:
+
+`System.InvalidProgramException` in `FNA3D_Impl.FNA3D_GenVertexBuffer`.
+
+The stack is:
+
+`FNA3D_GenVertexBuffer -> VertexBuffer..ctor -> DynamicVertexBuffer..ctor -> SpriteBatch..ctor -> Terraria.Main.LoadContent`.
+
+This proves the effect bridge is complete and the next boundary is the SpriteBatch buffer allocation path.
 
 ## Rules for the current bootstrap
 
@@ -123,3 +131,14 @@ The current run still ends in a managed exception **after** those three successf
 - Preserve the validated FNA3D texture bridges.
 - Keep proprietary/non-source-controlled game content out of the public repository.
 - Bridge one verified unmanaged boundary at a time.
+
+## Phase 2.23.01
+
+The new test phase preserves all validated bridges and converts the exact SpriteBatch buffer path to InternalCalls before first JIT:
+
+- `FNA3D_GenVertexBuffer`;
+- `FNA3D_GenIndexBuffer`;
+- `FNA3D_SetIndexBufferData`;
+- `FNA3D_SupportsNoOverwrite`.
+
+Each bridge forwards to the real symbol from the APK `libFNA3D.so`; no fake graphics buffers are created. The build also traces `SpriteBatch`, `VertexBuffer`, `DynamicVertexBuffer` and `IndexBuffer` constructors to expose the next boundary cleanly.
