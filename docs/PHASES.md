@@ -22,7 +22,7 @@ This file tracks the diagnostic/fix chain that led to the current Android bootst
 | 2.22.98 | Post-Texture LoadContent Isolation | Identified `SoundEngine.Initialize` and missing `libFAudio.so` as the first post-texture compatibility boundary. |
 | 2.22.99 | FAudio No-Device Fallback | Validated: the zero-device bridge reaches the native Terraria/tML no-audio fallback, `SoundEngine.Initialize` returns, asset services initialize, and shader loading is reached. |
 | 2.23.00 | FNA3D Effect Metadata Bridge | Validated: three real shader effect blobs reached APK FNA3D and returned non-null effect/effectData handles. The next failure was isolated to `FNA3D_GenVertexBuffer` during `SpriteBatch` construction. |
-| 2.23.01 | FNA3D SpriteBatch Buffer Bridge | Validated: vertex/index buffers allocate successfully, index data uploads, SpriteBatch effects are created, SupportsNoOverwrite returns, and Main.LoadContent advances into later render-target creation. |
+| 2.23.01 | FNA3D SpriteBatch Buffer Bridge | Validated: vertex/index buffers allocate successfully, index data uploads, SpriteBatch effects are created, SupportsNoOverwrite returns, render targets are created, and the next blocker is missing vanilla PC content (`Images/SplashScreens/Splash_1`). |
 
 ## Major breakthroughs
 
@@ -96,4 +96,4 @@ Phase 2.23.01 therefore bridges that exact constructor path rather than guessing
 
 ### Phase 2.23.01 validation
 
-The exact SpriteBatch constructor path is now proven on-device. Multiple vertex and index buffers returned non-null native handles, index data uploads completed, the internal SpriteBatch effect was created through the already-proven effect bridge, and `SupportsNoOverwrite` returned normally. The run then continued into additional texture and 2048x2048 render-target creation before the next managed exception.
+The exact SpriteBatch constructor path is now proven on-device. Multiple vertex and index buffers returned non-null native handles, index data uploads completed, the internal SpriteBatch effect was created through the already-proven effect bridge, and `SupportsNoOverwrite` returned normally. The run then continued into additional texture and 2048x2048 render-target creation. The next exception is an `AssetLoadException` for `Images/SplashScreens/Splash_1`, confirming that startup has reached vanilla asset loading and now needs a complete matching Terraria PC Content tree.
