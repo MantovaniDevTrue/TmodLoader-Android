@@ -6,38 +6,38 @@ The bootstrap writes logs under:
 
 ## Phase 2.23.00 files
 
-- `monovm_phase2_23_00.txt` — main bootstrap/runtime log.
-- `monovm_phase2_23_00_state.txt` — last known high-level state.
-- `monovm_phase2_23_00_loadcontent.txt` — focused shader/XNB `LoadContent` trace.
-- `monovm_phase2_23_00_fna3d_binding.txt` — FNA3D metadata/binding audit, including `CreateEffect`.
-- `monovm_phase2_23_00_audio.txt` — retained FAudio no-device audit.
-- `monovm_phase2_23_00_stack.txt` — large-stack pthread diagnostics.
+- `monovm_phase2_23_01.txt` — main bootstrap/runtime log.
+- `monovm_phase2_23_01_state.txt` — last known high-level state.
+- `monovm_phase2_23_01_loadcontent.txt` — focused shader/XNB `LoadContent` trace.
+- `monovm_phase2_23_01_fna3d_binding.txt` — FNA3D metadata/binding audit, including `CreateEffect`.
+- `monovm_phase2_23_01_audio.txt` — retained FAudio no-device audit.
+- `monovm_phase2_23_01_stack.txt` — large-stack pthread diagnostics.
 
 ## Useful commands
 
 FNA3D effect metadata audit:
 
 ```bash
-cat /storage/emulated/0/Android/media/com.mantovani.tmlmono8/monovm_phase2_23_00_fna3d_binding.txt
+cat /storage/emulated/0/Android/media/com.mantovani.tmlmono8/monovm_phase2_23_01_fna3d_binding.txt
 ```
 
 Focused shader/content trace:
 
 ```bash
-tail -n 350 /storage/emulated/0/Android/media/com.mantovani.tmlmono8/monovm_phase2_23_00_loadcontent.txt
+tail -n 350 /storage/emulated/0/Android/media/com.mantovani.tmlmono8/monovm_phase2_23_01_loadcontent.txt
 ```
 
 Effect bridge and exception context:
 
 ```bash
 grep -E "CreateEffect|EffectReader|PixelShader|TileShader|ScreenShader|LOADCONTENT_|FIRST_CHANCE_EXCEPTION|RUNONEFRAME_EXCEPTION|MANAGED EXCEPTION" \
-/storage/emulated/0/Android/media/com.mantovani.tmlmono8/monovm_phase2_23_00.txt | tail -n 450
+/storage/emulated/0/Android/media/com.mantovani.tmlmono8/monovm_phase2_23_01.txt | tail -n 450
 ```
 
 Last state:
 
 ```bash
-cat /storage/emulated/0/Android/media/com.mantovani.tmlmono8/monovm_phase2_23_00_state.txt
+cat /storage/emulated/0/Android/media/com.mantovani.tmlmono8/monovm_phase2_23_01_state.txt
 ```
 
 ## Expected Phase 2.23.00 transition
