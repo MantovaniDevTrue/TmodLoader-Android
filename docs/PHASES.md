@@ -22,7 +22,7 @@ This file tracks the diagnostic/fix chain that led to the current Android bootst
 | 2.22.98 | Post-Texture LoadContent Isolation | Identified `SoundEngine.Initialize` and missing `libFAudio.so` as the first post-texture compatibility boundary. |
 | 2.22.99 | FAudio No-Device Fallback | Validated: the zero-device bridge reaches the native Terraria/tML no-audio fallback, `SoundEngine.Initialize` returns, asset services initialize, and shader loading is reached. |
 | 2.23.00 | FNA3D Effect Metadata Bridge | Validated: three real shader effect blobs reached APK FNA3D and returned non-null effect/effectData handles. The next failure was isolated to `FNA3D_GenVertexBuffer` during `SpriteBatch` construction. |
-| 2.23.01 | FNA3D SpriteBatch Buffer Bridge | Current test phase: bridges `GenVertexBuffer`, `GenIndexBuffer`, `SetIndexBufferData` and `SupportsNoOverwrite` through the real APK FNA3D implementation. |
+| 2.23.01 | FNA3D SpriteBatch Buffer Bridge | Validated: vertex/index buffers allocate successfully, index data uploads, SpriteBatch effects are created, SupportsNoOverwrite returns, and Main.LoadContent advances into later render-target creation. |
 
 ## Major breakthroughs
 
@@ -93,3 +93,7 @@ The bridge is now validated on-device. Three effect blobs (91,904, 34,052 and 39
 The managed exception from Phase 2.23.00 was resolved to an invalid generated P/Invoke wrapper for `FNA3D_GenVertexBuffer`. Source inspection of FNA shows the first `SpriteBatch` constructor immediately uses `GenVertexBuffer`, `GenIndexBuffer`, `SetIndexBufferData`, the already-working `CreateEffect`, and `SupportsNoOverwrite`.
 
 Phase 2.23.01 therefore bridges that exact constructor path rather than guessing at unrelated FNA3D methods. All four new bridges forward to the real `libFNA3D.so` functions.
+
+### Phase 2.23.01 validation
+
+The exact SpriteBatch constructor path is now proven on-device. Multiple vertex and index buffers returned non-null native handles, index data uploads completed, the internal SpriteBatch effect was created through the already-proven effect bridge, and `SupportsNoOverwrite` returned normally. The run then continued into additional texture and 2048x2048 render-target creation before the next managed exception.
