@@ -2,7 +2,7 @@
 
 Experimental Android ARM64 bootstrap for running the desktop tModLoader/FNA stack through MonoVM on Android.
 
-> **Status:** work in progress. Latest validated baseline: **Phase 2.22.99 — FAudio No-Device Fallback**. Latest validated baseline: **Phase 2.23.01 — FNA3D SpriteBatch Buffer Bridge**.
+> **Status:** work in progress. Latest validated baseline: **Phase 2.23.01 — FNA3D SpriteBatch Buffer Bridge**.
 
 ## Current progress
 
@@ -26,13 +26,17 @@ Phase 2.22.99 is validated. The FAudio bridge reports zero devices, FNA raises t
 
 The shader content payload is also no longer missing. With the correct XNB files in `Content/`, `TMLContentManager.OpenStream` returns successfully for `PixelShader`.
 
-The current test boundary is the next FNA effect stage. Upstream FNA reads the compiled effect blob and constructs an `Effect`, which calls `FNA3D_CreateEffect`. Phase 2.23.00 converts that one method from P/Invoke to an Android-safe InternalCall and forwards the real managed shader byte array to the APK's FNA3D.
+Phase 2.23.00 and 2.23.01 are validated. Real shader effects are created through the APK FNA3D, and SpriteBatch vertex/index buffers are now allocated and initialized successfully.
+
+The active startup blocker is no longer native graphics. `Main.LoadContent` reaches `AssetInitializer.LoadSplashAssets` and fails because the selected vanilla content tree does not contain `Images/SplashScreens/Splash_1.xnb`.
+
+The port therefore now needs the complete matching **Terraria PC** vanilla `Content` tree, while keeping the tModLoader/platform `Content` files as a separate override layer. This mirrors upstream tModLoader's content-manager design instead of mixing mobile and desktop assets.
 
 ## Latest source
 
 The sanitized source snapshot for the current test baseline is:
 
-`source-snapshots/phase2.23.00/tML_Phase2_23_00_FNA3DEffectMetadataBridge_Fontes.zip` (latest published snapshot; Phase 2.23.01 source is being tested locally before snapshot publication)
+`source-snapshots/phase2.23.00/tML_Phase2_23_00_FNA3DEffectMetadataBridge_Fontes.zip` (latest published public snapshot; Phase 2.23.01 is the validated runtime baseline)
 
 Its SHA-256 and exact contents/exclusions are documented beside the archive in:
 
@@ -45,6 +49,7 @@ Its SHA-256 and exact contents/exclusions are documented beside the archive in:
 - `docs/ARCHITECTURE.md` — MonoVM/bootstrap/FNA bridge architecture.
 - `docs/DEBUGGING.md` — current logs and diagnostic commands.
 - `docs/BUILD.md` — local build requirements.
+- `docs/CONTENT.md` — required Android layout for vanilla Terraria PC content and tModLoader overrides.
 - `docs/ROADMAP.md` — milestones from first frame to menu/mod/world support.
 - `source-snapshots/` — sanitized source-only snapshots for important baselines.
 - `SECURITY.md` — signing-key and runtime-payload policy.
