@@ -2,7 +2,7 @@
 
 Experimental Android ARM64 bootstrap for running the desktop tModLoader/FNA stack through MonoVM on Android.
 
-> **Status:** work in progress. Latest validated baseline: **Phase 2.22.99 — FAudio No-Device Fallback**. Current test baseline: **Phase 2.23.00 — FNA3D Effect Metadata Bridge**.
+> **Status:** work in progress. Latest validated baseline: **Phase 2.22.99 — FAudio No-Device Fallback**. Current test baseline: **Phase 2.23.01 — FNA3D SpriteBatch Buffer Bridge**.
 
 ## Current progress
 
@@ -32,7 +32,7 @@ The current test boundary is the next FNA effect stage. Upstream FNA reads the c
 
 The sanitized source snapshot for the current test baseline is:
 
-`source-snapshots/phase2.23.00/tML_Phase2_23_00_FNA3DEffectMetadataBridge_Fontes.zip`
+`source-snapshots/phase2.23.00/tML_Phase2_23_00_FNA3DEffectMetadataBridge_Fontes.zip` (latest published snapshot; Phase 2.23.01 source is being tested locally before snapshot publication)
 
 Its SHA-256 and exact contents/exclusions are documented beside the archive in:
 
