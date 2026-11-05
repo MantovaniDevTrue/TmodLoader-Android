@@ -2,9 +2,22 @@
 
 Experimental Android ARM64 bootstrap for running the desktop tModLoader/FNA stack through MonoVM on Android.
 
-> **Status:** work in progress. Latest validated baseline: **Phase 2.23.01 — FNA3D SpriteBatch Buffer Bridge**.
+> **Active work:** Phase 3.0 — .NET 10 / ARM64 mobile foundation. The new source builds a touch/runtime diagnostic APK; it does **not** launch Terraria yet. [Implementation and limitations](docs/NET10_MOBILE.md).
+>
+> **Historical game baseline:** Phase 2.23.01 — FNA3D SpriteBatch Buffer Bridge. Its gameplay host still uses MonoVM 8 and remains blocked on matching PC content.
 
-## Current progress
+## New .NET 10 mobile source
+
+- `src/Tml.Mobile.Core/` — shared multi-touch state and content/runtime preflight.
+- `src/Tml.Mobile.Android/` — ARM64 Android controls/runtime diagnostic app.
+- `integration/fna/` — direct FNA input integration, with no per-field JNI bridge.
+- `tools/prepare_fna.py` — revision-checked patching of the pinned FNA source into a separate build directory.
+- `tests/` — gesture, allocation and actual FNA input tests.
+- `.github/workflows/mobile-net10.yml` — repeatable APK and FNA checks.
+
+See [build instructions](docs/BUILD.md) and [remaining game integration](docs/NET10_MOBILE.md). Full in-game touch, mobile menus and desktop mod compatibility are objectives still requiring implementation and device tests.
+
+## Historical game progress
 
 The bootstrap already reaches the first controlled game frame and has passed several major startup blockers:
 

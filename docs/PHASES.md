@@ -97,3 +97,8 @@ Phase 2.23.01 therefore bridges that exact constructor path rather than guessing
 ### Phase 2.23.01 validation
 
 The exact SpriteBatch constructor path is now proven on-device. Multiple vertex and index buffers returned non-null native handles, index data uploads completed, the internal SpriteBatch effect was created through the already-proven effect bridge, and `SupportsNoOverwrite` returned normally. The run then continued into additional texture and 2048x2048 render-target creation. The next exception is an `AssetLoadException` for `Images/SplashScreens/Splash_1`, confirming that startup has reached vanilla asset loading and now needs a complete matching Terraria PC Content tree.
+
+
+## Phase 3.0 — .NET 10 / ARM64 mobile foundation
+
+New platform source lives under `src/`, with touch routing, an Android diagnostic activity, dynamic assembly/runtime probes, content preflight, pinned FNA input patches and repeatable build/test workflows. The old game bootstrap remains preserved. This phase establishes the new platform/input layer; it does not yet run Terraria or replace the validated game baseline. See `NET10_MOBILE.md` and `NET10_VALIDATION.md`.

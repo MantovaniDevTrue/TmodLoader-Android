@@ -39,3 +39,12 @@ __pycache__/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# .NET 10 platform builds and local game payloads
+**/bin/
+**/obj/
+artifacts/
+vendor/
+payload/
+*.user
+*.suo

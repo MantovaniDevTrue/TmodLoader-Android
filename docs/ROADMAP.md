@@ -1,5 +1,7 @@
 # Roadmap
 
+Active work is the .NET 10 ARM64 mobile track in [NET10_MOBILE.md](NET10_MOBILE.md). The new input/runtime diagnostic is buildable; migrating the actual game host and supplying matching PC payload/content are the next gates. The historical game milestones below remain pending until verified under the new runtime.
+
 The project advances by proving one compatibility boundary at a time rather than hiding exceptions.
 
 ## 1. Finish Main.LoadContent

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
+    <ApplicationId>com.mantovani.tmlmobile</ApplicationId>
+    <ApplicationTitle>tML Android — Controles</ApplicationTitle>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+    <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
+    <UseMonoRuntime>true</UseMonoRuntime>
+    <PublishAot>false</PublishAot>
+    <RunAOTCompilation>false</RunAOTCompilation>
+    <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    <PublishTrimmed>false</PublishTrimmed>
+    <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+    <AndroidUseAssemblyStore>true</AndroidUseAssemblyStore>
+    <AndroidPackageFormats>apk</AndroidPackageFormats>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Tml.Mobile.Core/Tml.Mobile.Core.csproj" />
+    <AndroidAsset Include="../../artifacts/probe/Tml.RuntimeProbe.dll" Link="Tml.RuntimeProbe.dll" />
+  </ItemGroup>
+</Project>

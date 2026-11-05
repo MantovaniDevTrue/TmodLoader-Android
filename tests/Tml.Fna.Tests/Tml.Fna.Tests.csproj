@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType><TreatWarningsAsErrors>true</TreatWarningsAsErrors></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Tml.Mobile.Core/Tml.Mobile.Core.csproj" />
+    <Reference Include="FNA"><HintPath>$(FnaAssembly)</HintPath></Reference>
+  </ItemGroup>
+</Project>

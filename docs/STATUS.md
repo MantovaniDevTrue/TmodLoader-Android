@@ -1,5 +1,16 @@
 # Current status
 
+## Active track — Phase 3.0 (.NET 10 / ARM64 mobile foundation)
+
+The new source compiles a standalone ARM64 Android input/runtime diagnostic APK. Shared touch routing and actual FNA input integration are implemented; the desktop game entrypoint/SDL host has **not** been migrated to this app yet. No playable world, full mobile UI or general `.tmod` compatibility is claimed.
+
+Completed local validation: .NET 10 shared input checks, separate-assembly/Reflection.Emit probes on desktop, and compilation/input checks against the exact upstream FNA revision. APK build/signature/ABI checks are recorded in [NET10_VALIDATION.md](NET10_VALIDATION.md). Device validation is pending.
+
+The historical phase 2.23.01 APK was inspected and has no managed game/runtime/content payload. Advancing to a playable .NET 10 port requires the matching PC executable/assemblies and complete PC Content tree, followed by SDL/native-host and MonoMod validation. [Scope and integration requirements](NET10_MOBILE.md).
+
+## Historical game track
+
+
 ## Baselines
 
 Latest validated baseline:

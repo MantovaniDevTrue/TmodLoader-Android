@@ -1,0 +1,51 @@
+name: .NET 10 Android foundation
+on:
+  push:
+    paths: ['src/**', 'tests/**', 'tools/**', 'integration/**', 'global.json', 'upstream.lock.json', 'Directory.Build.props', '.github/workflows/mobile-net10.yml']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.100'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android toolchain
+        run: |
+          dotnet workload install android --version 10.0.100
+          sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Build and check ARM64 diagnostic APK
+        run: bash tools/build_mobile.sh -p:AndroidSdkDirectory="$ANDROID_HOME" -p:JavaSdkDirectory="$JAVA_HOME"
+      - name: Check APK signature
+        run: "$ANDROID_HOME/build-tools/36.0.0/apksigner verify --verbose artifacts/mobile/*.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tML-Android-NET10-ARM64-controls
+          path: artifacts/mobile/*.apk
+  fna:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.100'
+      - name: Fetch pinned FNA source and managed dependencies
+        run: |
+          git clone --no-checkout https://github.com/tModLoader/FNA.git "$RUNNER_TEMP/fna"
+          git -C "$RUNNER_TEMP/fna" checkout "$(python3 -c 'import json; print(json.load(open("upstream.lock.json"))["fna"]["commit"])')"
+          git -C "$RUNNER_TEMP/fna" submodule update --init --depth 1 lib/SDL2-CS lib/SDL3-CS lib/FAudio lib/Theorafile
+      - name: Apply mobile input and build actual FNA
+        run: |
+          python3 tools/prepare_fna.py "$RUNNER_TEMP/fna" "$RUNNER_TEMP/fna-mobile"
+          dotnet build "$RUNNER_TEMP/fna-mobile/FNA.Core.csproj" -c Release
+      - name: Test FNA input integration
+        run: dotnet run --project tests/Tml.Fna.Tests -c Release -p:FnaAssembly="$RUNNER_TEMP/fna-mobile/bin/Release/net10.0/FNA.dll"

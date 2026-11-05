@@ -1,0 +1,23 @@
+{
+  "tmodloader": {
+    "repository": "https://github.com/tModLoader/tModLoader",
+    "branch": "1.4.5",
+    "commit": "20a7d832721bdc7fd62b42c0aa00fe26db409a6b"
+  },
+  "fna": {
+    "repository": "https://github.com/tModLoader/FNA",
+    "commit": "48d51381ec303aed06aa84e24c8562bf42d25dd6",
+    "files": {
+      "src/Input/Keyboard.cs": "8a4f6240915f60e36883e42ee06920f80625caba2b373989ab9c9a4b23d9f768",
+      "src/Input/Mouse.cs": "7304974d037cb1073474402b07750f9be3892526fefa0cb288495ba1cec6964e",
+      "src/Game.cs": "020f360748c1215877981a23cf9d632d5100f562d622cc52e026e0ee7ad6722d",
+      "src/Input/KeyboardState.cs": "d513fad7a1cff39835aadc6a770296e6c774218728b26e8be8305619c680ee63"
+    }
+  },
+  "runtime": {
+    "framework": "net10.0-android",
+    "rid": "android-arm64",
+    "strategy": "Mono JIT; preserve IL and dynamic assembly loading"
+  },
+  "stage": "platform foundation; game host not migrated yet"
+}
