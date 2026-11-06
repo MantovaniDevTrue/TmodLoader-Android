@@ -70,10 +70,10 @@ internal static class HostDiagnostics
                 foreach (var exit in manager.GetHistoricalProcessExitReasons(owner.PackageName, 0, 4) ?? [])
                 {
                     report.AppendLine($"\nAndroid: {DateTimeOffset.FromUnixTimeMilliseconds(exit.Timestamp):O}");
-                    report.AppendLine($"process={exit.ProcessName} reason={exit.Reason} status={exit.Status}");
+                    report.AppendLine($"process={exit.ProcessName} reason={(ApplicationExitInfoReason)exit.Reason}({exit.Reason}) status={exit.Status}");
                     report.AppendLine($"{exit.Description} RSS={exit.Rss}KiB PSS={exit.Pss}KiB");
                     if (!nativeTraceRead && OperatingSystem.IsAndroidVersionAtLeast(31) &&
-                        exit.Reason == ApplicationExitInfo.ReasonCrashNative)
+                        (ApplicationExitInfoReason)exit.Reason == ApplicationExitInfoReason.CrashNative)
                     {
                         nativeTraceRead = true;
                         try

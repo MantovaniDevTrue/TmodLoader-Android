@@ -1,6 +1,6 @@
 # SDK-managed SDL3 Android host
 
-The new `src/Tml.Game.Android` project builds an experimental .NET 10 Android host. It is separate from the original input diagnostic and uses the same application ID with version 0.2.1. The Java SDL activity, native entry stub, C# game host, mobile core, FNA and private game payload share one process and one SDK-managed Mono runtime.
+The new `src/Tml.Game.Android` project builds an experimental .NET 10 Android host. It is separate from the original input diagnostic and uses the same application ID with version 0.2.2. The Java SDL activity, native entry stub, C# game host, mobile core, FNA and private game payload share one process and one SDK-managed Mono runtime.
 
 ## Implemented
 
@@ -56,3 +56,11 @@ The `Android SDL game host` workflow builds both native ABIs without game files 
 Source-only workflow run [42311139412](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/runs/42311139412) passed on Android API 30 x86_64: SDK-managed entry, GLES 3.0 FNA3D device, texture upload and SpriteBatch presentation. The screenshot contains the centered SeaGreen rectangle above the clear color with the transparent touch overlay; the pixel check found 6240/8192 matching center pixels. Before the GLES capability fix the same test produced only the clear color and controls, with unsupported GL calls. This validates the emulator rendering path, not ARM64 phone gameplay or a Terraria menu/world.
 
 The private ARM64 0.2.1 APK builds with zero warnings/errors and passes ABI/16 KiB alignment, v2/v3 signature and dynamic JNI metadata checks. Its development signing certificate differs from the older candidate; back up imported files/saves before removing an installed app if Android rejects an update for a signature mismatch. The new development key is retained privately for subsequent builds.
+
+## Startup crash capture — 0.2.2
+
+An ARM64 device report reached `TML_ENTRY_BEGIN` and then ended without an exception. This is not enough evidence to identify the cause. Version 0.2.2 records assembly-load/type/invocation boundaries, managed stdout/stderr, the first 64 startup exceptions (which may be handled), unhandled exceptions and managed process exit. A native bridge redirects stdout/stderr to a private file without installing signal handlers.
+
+The launcher report includes bounded tails of host/native/game logs and Android process exit history. On Android 12+ it decodes the latest available native tombstone: signal, abort message, causes and up to 24 frames of the crashing thread. Register/memory dumps and unrelated threads are omitted. The decoder follows AOSP Android 14 tombstone.proto, rejects malformed/truncated wire fields, and has 11 host-side checks. Updating preserves imported content, saves and the 0.2.1 signing key; the private game payload is unchanged.
+
+After updating, first open the report before launching another session: Android may retain a useful native trace from the previous failure. If no useful trace is available, reproduce once and reopen the report. This update improves diagnosis; it does not claim the reported game startup crash is fixed.
