@@ -9,6 +9,19 @@ import subprocess
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def prepare_gles(fna):
+    """Do not mistake Android EGL's non-null unsupported stubs for GL features."""
+    source = fna / "lib/FNA3D/src/FNA3D_Driver_OpenGL.c"
+    text = source.read_text()
+    anchor = "\t/* Some stuff is okay for ES3, not for desktop. */"
+    patch = (ROOT / "integration/native/gles_capabilities.inc").read_text()
+    if patch in text:
+        return
+    if text.count(anchor) != 1:
+        raise SystemExit("FNA3D GLES capability context changed")
+    source.write_text(text.replace(anchor, patch + "\n" + anchor))
+
+
 def revision(path, expected):
     actual = subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD"], text=True).strip()
     if actual != expected:
@@ -19,6 +32,7 @@ def main(args):
     lock = json.loads((ROOT / "upstream.lock.json").read_text())
     revision(args.fna, lock["fna"]["commit"])
     revision(args.sdl, lock["sdl"]["commit"])
+    prepare_gles(args.fna)
     cmake = args.sdk / "cmake/3.22.1/bin/cmake"
     ninja = cmake.parent / "ninja"
     ndk = args.sdk / "ndk/28.2.13676358"

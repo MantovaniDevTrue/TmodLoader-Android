@@ -40,12 +40,14 @@ if [ "$found_button" != 1 ]; then
 fi
 for attempt in $(seq 1 45); do
   adb logcat -d > artifacts/sdl-smoke/logcat.txt
-  if rg -q 'SDL_FNA_FIRST_FRAME' artifacts/sdl-smoke/logcat.txt; then
+  if grep -q 'SDL_FNA_FIRST_FRAME' artifacts/sdl-smoke/logcat.txt; then
+    sleep 2
     adb exec-out screencap -p > artifacts/sdl-smoke/frame.png
+    python3 tools/verify_probe_frame.py artifacts/sdl-smoke/frame.png
     echo 'PASS: SDK-managed .NET entry, SDL3 Android surface, FNA3D texture/SpriteBatch frame'
     exit 0
   fi
-  if rg -q 'HOST_ERROR|FATAL EXCEPTION' artifacts/sdl-smoke/logcat.txt; then
+  if grep -Eq 'HOST_ERROR|FATAL EXCEPTION' artifacts/sdl-smoke/logcat.txt; then
     tail -n 100 artifacts/sdl-smoke/logcat.txt
     exit 1
   fi
