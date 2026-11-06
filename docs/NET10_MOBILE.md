@@ -46,7 +46,7 @@ The ARM64 diagnostic APK can test runtime loading and touch behavior on a real p
 
 ## Remaining work
 
-1. Supply/build the matching desktop game/tModLoader managed payload and complete PC content tree outside the public repository.
+1. Build the matching tModLoader managed payload outside the public repository using the privately received vanilla Terraria PC 1.4.5.8 input. The supplied executable and Content passed [archive/basic validation](PC_INPUT_VALIDATION.md); they are not a .NET 10 Android game build.
 2. Migrate the real SDL/FNA game host to the SDK-managed .NET 10 runtime. Revalidate interop rather than transplanting Mono 8 metadata offsets.
 3. Reach menu, load a normal `.tmod`, enter a world and save/reenter.
 4. Integrate the overlay with real gameplay, menus, inventory/crafting dragging, virtual keyboard, scrolling, pinch zoom and configurable mod hotkeys.

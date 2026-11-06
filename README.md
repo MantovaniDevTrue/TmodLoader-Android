@@ -4,11 +4,11 @@ Dedicated Android ARM64 adaptation of tModLoader: preserve the C# mod ecosystem 
 
 > **Active work:** Phase 3.0 — .NET 10 / ARM64 mobile foundation. The new source builds a touch/runtime diagnostic APK; it does **not** launch Terraria yet. [Implementation and limitations](docs/NET10_MOBILE.md).
 >
-> **Historical game baseline:** Phase 2.23.01 — FNA3D SpriteBatch Buffer Bridge. Its gameplay host still uses MonoVM 8 and remains blocked on matching PC content.
+> **Historical game baseline:** Phase 2.23.01 — FNA3D SpriteBatch Buffer Bridge. Its gameplay host still uses MonoVM 8. Matching vanilla PC input was received privately on 2026-11-06; the new .NET 10 host remains to be integrated.
 
 ## Dedicated Android direction
 
-The selected direction is a Terraria-specific Android port. The working APK is still a controls/runtime diagnostic; actual game startup requires the matching PC inputs and SDL/FNA host integration. Optional FNA phase timing and bounded reports are now prepared for that first playable baseline. See [PERFORMANCE.md](docs/PERFORMANCE.md).
+The selected direction is a Terraria-specific Android port. The working APK is still a controls/runtime diagnostic; the matching vanilla PC 1.4.5.8 input has now passed [archive/basic content validation](docs/PC_INPUT_VALIDATION.md). Actual game startup still requires a built tModLoader managed payload and SDL/FNA host integration. Optional FNA phase timing and bounded reports are now prepared for that first playable baseline. See [PERFORMANCE.md](docs/PERFORMANCE.md).
 
 ## New .NET 10 mobile source
 
@@ -45,9 +45,9 @@ The shader content payload is also no longer missing. With the correct XNB files
 
 Phase 2.23.00 and 2.23.01 are validated. Real shader effects are created through the APK FNA3D, and SpriteBatch vertex/index buffers are now allocated and initialized successfully.
 
-The active startup blocker is no longer native graphics. `Main.LoadContent` reaches `AssetInitializer.LoadSplashAssets` and fails because the selected vanilla content tree does not contain `Images/SplashScreens/Splash_1.xnb`.
+The last historical run reached `AssetInitializer.LoadSplashAssets` and failed because its selected content tree lacked `Images/SplashScreens/Splash_1.xnb`. The privately supplied PC Content now contains that file; the historical game has not yet been rerun with it.
 
-The port therefore now needs the complete matching **Terraria PC** vanilla `Content` tree, while keeping the tModLoader/platform `Content` files as a separate override layer. This mirrors upstream tModLoader's content-manager design instead of mixing mobile and desktop assets.
+The supplied **Terraria PC 1.4.5.8** vanilla `Content` tree must be integrated while keeping tModLoader/platform `Content` files as a separate override layer. This mirrors upstream tModLoader's content-manager design instead of mixing mobile and desktop assets.
 
 ## Latest source
 

@@ -4,7 +4,7 @@
 
 The project will adapt tModLoader specifically for Android, preserving the selected upstream C# API and mod behavior. The user confirmed that the 0.1.1 diagnostic opens and its on-screen DLL/Emit probes succeed on ARM64. Optional phase timing and a bounded reporting collector are now implemented in the pinned FNA source; real game timing and performance advantages remain unmeasured.
 
-See [ANDROID_PORT.md](ANDROID_PORT.md) for delivery gates and [PERFORMANCE.md](PERFORMANCE.md) for measurement scope. The next blocking input remains the matching desktop executable/managed payload and complete PC Content tree, followed by integration of the real SDL game surface and startup.
+See [ANDROID_PORT.md](ANDROID_PORT.md) for delivery gates and [PERFORMANCE.md](PERFORMANCE.md) for measurement scope. The user's private Terraria PC 1.4.5.8 installation was received and passed archive and basic content validation on 2026-11-06. See [PC_INPUT_VALIDATION.md](PC_INPUT_VALIDATION.md). The next blocker is producing the matching tModLoader managed payload and integrating the real SDL/FNA game surface/startup in the SDK-managed .NET 10 runtime; the supplied vanilla executable is not that payload.
 
 
 ## Latest device report and correction
@@ -18,7 +18,11 @@ The new source compiles a standalone ARM64 Android input/runtime diagnostic APK.
 
 Completed local validation: .NET 10 shared input checks, separate-assembly/Reflection.Emit probes on desktop, and compilation/input checks against the exact upstream FNA revision. APK build/signature/ABI checks are recorded in [NET10_VALIDATION.md](NET10_VALIDATION.md). Device validation is pending.
 
-The historical phase 2.23.01 APK was inspected and has no managed game/runtime/content payload. Advancing to a playable .NET 10 port requires the matching PC executable/assemblies and complete PC Content tree, followed by SDL/native-host and MonoMod validation. [Scope and integration requirements](NET10_MOBILE.md).
+The historical phase 2.23.01 APK was inspected and has no managed game/runtime/content payload. The matching vanilla PC executable and Content tree are now available privately and have passed the checks in [PC_INPUT_VALIDATION.md](PC_INPUT_VALIDATION.md). Advancing to a playable .NET 10 port still requires building the tModLoader managed payload, SDL/native-host integration and MonoMod validation. [Scope and integration requirements](NET10_MOBILE.md).
+
+## Private PC input validation — 2026-11-06
+
+Terraria PC 1.4.5.8 was received in four private archive parts. The reconstructed ZIP passed CRC checks; its Content tree has 15,997 files, including the previously missing splash asset. All 15,994 XNB files passed signature and declared-size checks. This validates input availability, not Android asset decoding, shader compatibility or game startup. No proprietary bytes or private download links are committed.
 
 ## Historical game track
 
