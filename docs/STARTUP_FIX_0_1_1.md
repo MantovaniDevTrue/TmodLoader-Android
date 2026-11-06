@@ -35,6 +35,8 @@ ARM64 APK SHA-256:
 
 ## Runtime validation
 
-Emulator execution is pending in the new workflow. The smoke test waits for actual Activity creation, first draw and successful external DLL/Reflection.Emit probes, sends a touch, moves the app into the background, resumes it and checks that the process survives without fatal exceptions. It retains its log and a screenshot as workflow artifacts.
+All three jobs (`mobile`, `fna`, `startup`) passed in [GitHub Actions run 42135041115](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/runs/42135041115) for commit `4e9f97b7dbc56c087d1ddcabf64a1c95ef8484d0`. The Android 14/API 34 x86_64 emulator launched the actual app, reached first draw, loaded the separate DLL and executed Reflection.Emit, received a touch, went into the background and resumed without a fatal exception. The smoke test reported: `PASS: Activity started, first draw completed, touch callback ran, DLL/Emit probes passed`. Its log and screenshot are retained as workflow artifacts.
+
+The first emulator execution already showed Activity creation, first draw and successful DLL/Emit probes, but its assertion script depended on an unavailable `rg` executable. The script now uses standard `grep`; the subsequent complete smoke test passed. No additional application binary changes were needed.
 
 No ARM64 device is attached to the local build environment. Confirmation on the user's phone remains necessary. This remains a controls/runtime diagnostic APK; it does not start Terraria yet.
