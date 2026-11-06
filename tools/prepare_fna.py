@@ -24,8 +24,11 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
             ("return new MouseState(", "return MobileInputEXT.MergeMouse(new MouseState(", 1),
             ("\t\t\t\tx2\n\t\t\t);", "\t\t\t\tx2\n\t\t\t));", 1)],
         "src/Game.cs": [
-            ("\n\t\t\t\t\tUpdate(gameTime);", "\n\t\t\t\t\tMobileInputEXT.BeginUpdate();\n\t\t\t\t\tUpdate(gameTime);", 1),
-            ("\n\t\t\t\tUpdate(gameTime);", "\n\t\t\t\tMobileInputEXT.BeginUpdate();\n\t\t\t\tUpdate(gameTime);", 1)],
+            ("\n\t\t\tAdvanceElapsedTime();", "\n\t\t\tMobilePerformanceEXT.BeginFrame();\n\t\t\tAdvanceElapsedTime();", 1),
+            ("\n\t\t\t\t\tUpdate(gameTime);", "\n\t\t\t\t\tlong mobileUpdateStart = MobilePerformanceEXT.BeginSection();\n\t\t\t\t\tMobileInputEXT.BeginUpdate();\n\t\t\t\t\tUpdate(gameTime);\n\t\t\t\t\tMobilePerformanceEXT.EndUpdate(mobileUpdateStart);", 1),
+            ("\n\t\t\t\tUpdate(gameTime);", "\n\t\t\t\tlong mobileUpdateStart = MobilePerformanceEXT.BeginSection();\n\t\t\t\tMobileInputEXT.BeginUpdate();\n\t\t\t\tUpdate(gameTime);\n\t\t\t\tMobilePerformanceEXT.EndUpdate(mobileUpdateStart);", 1),
+            ("\t\t\t\t\tDraw(gameTime);\n\t\t\t\t\tEndDraw();", "\t\t\t\t\tlong mobileDrawStart = MobilePerformanceEXT.BeginSection();\n\t\t\t\t\tDraw(gameTime);\n\t\t\t\t\tMobilePerformanceEXT.EndDraw(mobileDrawStart);\n\t\t\t\t\tlong mobilePresentStart = MobilePerformanceEXT.BeginSection();\n\t\t\t\t\tEndDraw();\n\t\t\t\t\tMobilePerformanceEXT.EndPresent(mobilePresentStart);", 1),
+            ("\t\t\t\t\tEndDraw();\n\t\t\t\t\tMobilePerformanceEXT.EndPresent(mobilePresentStart);\n\t\t\t\t}\n\t\t\t}\n\t\t}\n", "\t\t\t\t\tEndDraw();\n\t\t\t\t\tMobilePerformanceEXT.EndPresent(mobilePresentStart);\n\t\t\t\t}\n\t\t\t}\n\t\t\tMobilePerformanceEXT.EndFrame();\n\t\t}\n", 1)],
     }
     # Validate all edits before copying or writing anything.
     modified = {}
@@ -43,6 +46,7 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
     for filename, text in modified.items():
         (destination / filename).write_text(text)
     shutil.copyfile(ROOT / "integration/fna/MobileInputEXT.cs", destination / "src/Input/MobileInputEXT.cs")
+    shutil.copyfile(ROOT / "integration/fna/MobilePerformanceEXT.cs", destination / "src/MobilePerformanceEXT.cs")
     project = destination / "FNA.Core.csproj"
     text = project.read_text()
     reference = ROOT / "src/Tml.Mobile.Core/Tml.Mobile.Core.csproj"
@@ -50,6 +54,7 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
     from xml.sax.saxutils import escape
     text = text.replace("</Project>", f'''  <ItemGroup>
     <Compile Include="src/Input/MobileInputEXT.cs" />
+    <Compile Include="src/MobilePerformanceEXT.cs" />
     <ProjectReference Include="{escape(str(reference))}" />
   </ItemGroup>
 </Project>''')

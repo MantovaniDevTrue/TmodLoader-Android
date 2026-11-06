@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Reflection;
+using MobilePerformanceEXT = Microsoft.Xna.Framework.MobilePerformanceEXT;
 using Microsoft.Xna.Framework.Input;
 using Tml.Mobile;
 
@@ -76,4 +77,50 @@ RunBatch();
 long allocated = GC.GetAllocatedBytesForCurrentThread()-before;
 Console.WriteLine($"FNA allocation measurement: {allocated} bytes");
 Check(allocated == 0, "10,000 FNA merge/update cycles allocate zero managed bytes");
+MobilePerformanceEXT.Destination = null;
+MobilePerformanceEXT.BeginFrame();
+Check(MobilePerformanceEXT.BeginSection() == 0, "performance capture defaults to disabled");
+MobilePerformanceEXT.EndUpdate(0); MobilePerformanceEXT.EndFrame();
+var capture = new FrameTimingWindow();
+MobilePerformanceEXT.Destination = capture;
+MobilePerformanceEXT.BeginFrame();
+long section = MobilePerformanceEXT.BeginSection();
+MobilePerformanceEXT.EndUpdate(section);
+section = MobilePerformanceEXT.BeginSection(); MobilePerformanceEXT.EndUpdate(section);
+section = MobilePerformanceEXT.BeginSection(); MobilePerformanceEXT.EndDraw(section);
+section = MobilePerformanceEXT.BeginSection(); MobilePerformanceEXT.EndPresent(section);
+MobilePerformanceEXT.EndFrame();
+MobilePerformanceEXT.EndFrame();
+var timing = capture.Snapshot();
+Check(timing.TotalRecorded == 1 && timing.Samples[0].UpdatePasses == 2 && timing.PresentedFrames == 1,
+    "FNA timing adapter aggregates catch-up passes and records one presentation per completed tick");
+Check(timing.Samples[0].TickTicks >= timing.Samples[0].UpdateTicks + timing.Samples[0].DrawTicks + timing.Samples[0].PresentTicks,
+    "phase timers fit inside measured tick duration");
+MobilePerformanceEXT.BeginFrame();
+section = MobilePerformanceEXT.BeginSection(); MobilePerformanceEXT.EndUpdate(section);
+MobilePerformanceEXT.EndFrame();
+Check(capture.Snapshot().Samples[1].PresentationTimestamp == 0, "suppressed drawing does not create a presentation timestamp");
+MobilePerformanceEXT.BeginFrame();
+MobilePerformanceEXT.Destination = null;
+MobilePerformanceEXT.EndFrame();
+Check(capture.Snapshot().TotalRecorded == 2, "detaching capture discards a partially measured frame");
+MobilePerformanceEXT.Destination = capture;
+void CaptureBatch()
+{
+    for (int i = 0; i < 10000; i++)
+    {
+        MobilePerformanceEXT.BeginFrame();
+        long started = MobilePerformanceEXT.BeginSection();
+        MobilePerformanceEXT.EndUpdate(started);
+        started = MobilePerformanceEXT.BeginSection(); MobilePerformanceEXT.EndDraw(started);
+        started = MobilePerformanceEXT.BeginSection(); MobilePerformanceEXT.EndPresent(started);
+        MobilePerformanceEXT.EndFrame();
+    }
+}
+CaptureBatch();
+long captureAllocationStart = GC.GetAllocatedBytesForCurrentThread();
+CaptureBatch();
+Check(GC.GetAllocatedBytesForCurrentThread() - captureAllocationStart == 0,
+    "10,000 warmed enabled FNA capture cycles allocate zero managed bytes");
+MobilePerformanceEXT.Destination = null;
 Console.WriteLine($"{passed} FNA integration checks passed.");

@@ -83,3 +83,12 @@ The exact public source snapshot for the active baseline is stored under `source
 - APK/game binaries;
 - runtime payloads;
 - signing private keys.
+
+
+## Performance collector checks
+
+```bash
+dotnet run --project tests/Tml.Performance.Tests -c Release
+```
+
+These checks use synthetic timing samples to validate reports, not to measure Terraria FPS. The FNA test command above additionally checks the opt-in timing adapter compiled inside actual FNA. See [PERFORMANCE.md](PERFORMANCE.md).

@@ -1,5 +1,12 @@
 # Current status
 
+## Active direction — dedicated Android port
+
+The project will adapt tModLoader specifically for Android, preserving the selected upstream C# API and mod behavior. The user confirmed that the 0.1.1 diagnostic opens and its on-screen DLL/Emit probes succeed on ARM64. Optional phase timing and a bounded reporting collector are now implemented in the pinned FNA source; real game timing and performance advantages remain unmeasured.
+
+See [ANDROID_PORT.md](ANDROID_PORT.md) for delivery gates and [PERFORMANCE.md](PERFORMANCE.md) for measurement scope. The next blocking input remains the matching desktop executable/managed payload and complete PC Content tree, followed by integration of the real SDL game surface and startup.
+
+
 ## Latest device report and correction
 
 The user reported that diagnostic APK 0.1.0 failed before showing its UI: `UnsatisfiedLinkError` for `MainActivity.n_onCreate`. Version 0.1.1 explicitly disables native marshal-method optimization and restores dynamic JNI registration. A packaged-registration check and an Android emulator startup job were added. See [STARTUP_FIX_0_1_1.md](STARTUP_FIX_0_1_1.md) for evidence and remaining validation.

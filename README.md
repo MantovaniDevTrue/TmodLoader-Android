@@ -1,10 +1,14 @@
 # tModLoader Android
 
-Experimental Android ARM64 bootstrap for running the desktop tModLoader/FNA stack through MonoVM on Android.
+Dedicated Android ARM64 adaptation of tModLoader: preserve the C# mod ecosystem while adapting the game host, interface, input and performance to mobile. See [architecture and delivery gates](docs/ANDROID_PORT.md).
 
 > **Active work:** Phase 3.0 — .NET 10 / ARM64 mobile foundation. The new source builds a touch/runtime diagnostic APK; it does **not** launch Terraria yet. [Implementation and limitations](docs/NET10_MOBILE.md).
 >
 > **Historical game baseline:** Phase 2.23.01 — FNA3D SpriteBatch Buffer Bridge. Its gameplay host still uses MonoVM 8 and remains blocked on matching PC content.
+
+## Dedicated Android direction
+
+The selected direction is a Terraria-specific Android port. The working APK is still a controls/runtime diagnostic; actual game startup requires the matching PC inputs and SDL/FNA host integration. Optional FNA phase timing and bounded reports are now prepared for that first playable baseline. See [PERFORMANCE.md](docs/PERFORMANCE.md).
 
 ## New .NET 10 mobile source
 

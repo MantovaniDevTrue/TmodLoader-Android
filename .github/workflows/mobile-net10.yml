@@ -28,6 +28,8 @@ jobs:
           sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
       - name: Build and check ARM64 diagnostic APK
         run: bash tools/build_mobile.sh -p:AndroidSdkDirectory="$ANDROID_HOME" -p:JavaSdkDirectory="$JAVA_HOME"
+      - name: Test bounded performance recording and reports
+        run: dotnet run --project tests/Tml.Performance.Tests -c Release
       - name: Check APK signature
         run: "$ANDROID_HOME/build-tools/36.0.0/apksigner verify --verbose artifacts/mobile/*.apk"
       - uses: actions/upload-artifact@v4

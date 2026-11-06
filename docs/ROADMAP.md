@@ -1,61 +1,40 @@
 # Roadmap
 
-Active work is the .NET 10 ARM64 mobile track in [NET10_MOBILE.md](NET10_MOBILE.md). The new input/runtime diagnostic is buildable; migrating the actual game host and supplying matching PC payload/content are the next gates. The historical game milestones below remain pending until verified under the new runtime.
+The project is a dedicated Android variant of tModLoader. Architecture, acceptance criteria and delivery gates are recorded in [ANDROID_PORT.md](ANDROID_PORT.md).
 
-The project advances by proving one compatibility boundary at a time rather than hiding exceptions.
+## Validated foundation
 
-## 1. Finish Main.LoadContent
+- .NET 10 / ARM64 diagnostic opened on the user's phone.
+- Dynamic DLL loading and Reflection.Emit succeeded on-device.
+- JNI startup, drawing, touch and pause/resume are covered by Android emulator checks.
+- Shared multi-touch input and its FNA integration are implemented.
 
-Current target.
+## Current development
 
-- identify the first blocker after the successful dummy texture upload;
-- validate asset reader/service initialization;
-- validate audio initialization;
-- validate asset source setup;
-- reach `ModLoader.PrepareAssets()`;
-- complete the first `RunOneFrame()` without a managed exception.
+- Optional per-tick/update/draw/present timing in the pinned FNA source.
+- Bounded performance capture, allocation/collection counters and report statistics.
+- This is measurement infrastructure, not evidence of higher game FPS. See [PERFORMANCE.md](PERFORMANCE.md).
 
-## 2. Reach the tModLoader menu
+## Next: actual game startup
 
-- complete deferred content loading;
-- verify shaders/effects;
-- verify font and texture loading;
-- verify input and Android window/display behavior;
-- stabilize rendering and frame presentation.
+1. Obtain the matching desktop Terraria executable/managed payload and complete PC Content tree privately.
+2. Prepare the selected upstream tModLoader build and maintain separate vanilla/platform content roots.
+3. Connect SDL's Android surface/lifecycle to the SDK-managed .NET 10 game host.
+4. Revalidate graphics, audio and interop and reach the menu without hiding exceptions.
 
-## 3. Load desktop mods
+## First playable baseline
 
-- discover and load a normal `.tmod`;
-- validate assembly resolution;
-- validate mod assets;
-- validate hooks/content registration;
-- test Split as a real-world compatibility target.
+- Load one small supported desktop mod.
+- Enter a world and verify gameplay hooks, saving and reentry.
+- Test pause/resume, surface recreation and audio recovery on-device.
+- Record baseline frame timings before attempting performance changes.
 
-## 4. Enter a world
+## Mobile interface and optimization
 
-- character selection;
-- world selection/creation;
-- world load;
-- gameplay update/draw loop;
-- save path and persistence.
+- Mobile menus and settings.
+- Inventory/crafting touch interactions and dragging.
+- Native text entry, scrolling, pinch zoom and configurable mod hotkeys.
+- User-editable layouts, controller/mouse coexistence and safe-area scaling.
+- Matched, thermally warmed comparisons of rendering, memory, frame pacing and heavier mods.
 
-## 5. Android integration
-
-- native touch/control path;
-- lifecycle pause/resume;
-- orientation/display handling;
-- storage/file picker behavior;
-- audio lifecycle;
-- crash recovery/log export.
-
-## 6. Performance and compatibility
-
-- remove diagnostic overhead that is no longer needed;
-- profile JNI/native/managed transitions;
-- reduce unnecessary compatibility bridges;
-- test a wider set of desktop mods;
-- document known incompatibilities.
-
-## Current rule
-
-A bridge or managed workaround is only added after the failing call is identified in logs and its expected upstream behavior/signature is verified.
+The 0.1.1 APK remains a controls/runtime diagnostic. A new playable APK will only be described as such after the real game-startup and world gates pass. Historical bootstrap milestones remain in [PHASES.md](PHASES.md).

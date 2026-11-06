@@ -19,5 +19,5 @@
     "rid": "android-arm64",
     "strategy": "Mono JIT; preserve IL and dynamic assembly loading"
   },
-  "stage": "platform foundation; game host not migrated yet"
+  "stage": "dedicated Android port: validated platform foundation; opt-in FNA timing; game host pending"
 }

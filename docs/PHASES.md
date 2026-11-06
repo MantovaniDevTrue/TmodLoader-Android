@@ -107,3 +107,8 @@ New platform source lives under `src/`, with touch routing, an Android diagnosti
 ## Phase 3.0.1 — diagnostic startup registration
 
 The first diagnostic APK crashed on the user's phone with unresolved `MainActivity.n_onCreate`. APK 0.1.1 switches from native marshal methods to dynamic JNI registration, adds checks against the generated Java and packaged DEX descriptors, and introduces an emulator test covering Activity startup, first draw, input, DLL loading, Reflection.Emit and returning from the background. Device confirmation for the ARM64 release is tracked separately.
+
+
+## Dedicated Android direction — optional FNA phase timing
+
+The port now follows a Terraria-specific Android architecture with preservation of the C# mod API and explicit mobile UI/performance gates. After the user confirmed that 0.1.1 opens on ARM64, the next source milestone adds opt-in timing to the pinned FNA Tick/update/draw/present path, bounded capture and report statistics. No game FPS gain or playable game startup is claimed; the PC payload/content and SDL game host remain required.
