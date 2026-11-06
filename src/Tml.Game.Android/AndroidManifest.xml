@@ -1,0 +1,13 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.VIBRATE" />
+  <uses-feature android:glEsVersion="0x00030000" android:required="true" />
+  <application android:allowBackup="false" android:extractNativeLibs="true" android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen">
+    <activity android:name="com.mantovani.tmlmobile.SdlGameActivity" android:exported="false"
+      android:screenOrientation="sensorLandscape" android:launchMode="singleTop"
+      android:configChanges="orientation|screenSize|screenLayout|keyboard|keyboardHidden|navigation|uiMode|smallestScreenSize|locale|layoutDirection|fontScale|density">
+      <meta-data android:name="SDL_ENV.SDL_TOUCH_MOUSE_EVENTS" android:value="0" />
+      <meta-data android:name="SDL_ENV.SDL_MOUSE_TOUCH_EVENTS" android:value="0" />
+    </activity>
+  </application>
+</manifest>

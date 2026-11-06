@@ -19,5 +19,10 @@
     "rid": "android-arm64",
     "strategy": "Mono JIT; preserve IL and dynamic assembly loading"
   },
-  "stage": "validated .NET 10 managed tModLoader build with mobile FNA; Android SDL game host pending"
+  "stage": "experimental SDL3 Android host and ARM64 dependencies built; runtime game validation pending",
+  "sdl": {
+    "repository": "https://github.com/libsdl-org/SDL",
+    "tag": "release-3.4.20",
+    "commit": "f00dc919ca35b9756316e86c4777392de442f9b2"
+  }
 }

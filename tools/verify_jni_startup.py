@@ -5,11 +5,14 @@ import pathlib
 import zipfile
 
 
-def verify(java_root, apk_path):
+def verify(java_root, apk_path, game_host=False):
     callbacks = {
         "MainActivity": ["n_onCreate", "n_onPause", "n_onResume", "n_onWindowFocusChanged"],
         "TouchControlsView": ["n_onDraw", "n_onTouchEvent", "n_onSizeChanged"],
     }
+    if game_host:
+        callbacks["MainActivity"] = ["n_onCreate", "n_onActivityResult"]
+        callbacks["GameEntry"] = ["n_Attach", "n_RunGame", "n_SuspendInput", "n_ResumeInput", "n_Detach"]
     with zipfile.ZipFile(apk_path) as apk:
         dex = b"".join(apk.read(name) for name in apk.namelist() if name.endswith(".dex"))
     if not dex:
@@ -35,5 +38,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("java_root", type=pathlib.Path)
     parser.add_argument("apk", type=pathlib.Path)
+    parser.add_argument("--game-host", action="store_true")
     args = parser.parse_args()
-    verify(args.java_root, args.apk)
+    verify(args.java_root, args.apk, game_host=args.game_host)

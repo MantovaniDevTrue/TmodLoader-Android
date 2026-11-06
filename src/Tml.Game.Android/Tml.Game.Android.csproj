@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
+    <ApplicationId>com.mantovani.tmlmobile</ApplicationId>
+    <ApplicationTitle>tML Android</ApplicationTitle>
+    <ApplicationVersion>3</ApplicationVersion>
+    <ApplicationDisplayVersion>0.2.0</ApplicationDisplayVersion>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">android-arm64</RuntimeIdentifier>
+    <UseMonoRuntime>true</UseMonoRuntime>
+    <AndroidEnableMarshalMethods>false</AndroidEnableMarshalMethods>
+    <PublishAot>false</PublishAot>
+    <RunAOTCompilation>false</RunAOTCompilation>
+    <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    <PublishTrimmed>false</PublishTrimmed>
+    <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+    <AndroidUseAssemblyStore>true</AndroidUseAssemblyStore>
+    <AndroidPackageFormats>apk</AndroidPackageFormats>
+    <AndroidManifest>AndroidManifest.xml</AndroidManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <AndroidJavaSource Remove="Java/**/*.java" />
+    <ProjectReference Include="../Tml.Mobile.Core/Tml.Mobile.Core.csproj" />
+    <ProjectReference Include="$(TmlMobileFnaProject)" />
+    <Compile Include="../Tml.Mobile.Android/TouchControlsView.cs" Link="TouchControlsView.cs" />
+    <AndroidJavaSource Include="$(TmlNativeDirectory)/java/**/*.java" Bind="false" />
+    <AndroidJavaSource Include="Java/**/*.java" Bind="false" />
+    <AndroidNativeLibrary Include="$(TmlNativeDirectory)/jniLibs/arm64-v8a/*.so" Condition="'$(RuntimeIdentifier)' == 'android-arm64'" />
+    <AndroidNativeLibrary Include="$(TmlNativeDirectory)/jniLibs/x86_64/*.so" Condition="'$(RuntimeIdentifier)' == 'android-x64'" />
+    <AndroidAsset Include="$(TmlGamePayload)" Link="game-payload.zip" Condition="Exists('$(TmlGamePayload)')" />
+  </ItemGroup>
+  <Target Name="RequireSdlInputs" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('$(TmlMobileFnaProject)')" Text="Pass the prepared TmlMobileFnaProject." />
+    <Error Condition="!Exists('$(TmlNativeDirectory)/java/org/libsdl/app/SDLActivity.java')" Text="Build the pinned Android native dependencies first." />
+  </Target>
+</Project>

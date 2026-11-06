@@ -2,18 +2,20 @@
 
 Dedicated Android ARM64 adaptation of tModLoader: preserve the C# mod ecosystem while adapting the game host, interface, input and performance to mobile. See [architecture and delivery gates](docs/ANDROID_PORT.md).
 
-> **Active work:** Phase 3.0 — .NET 10 / ARM64 mobile foundation. The new source builds a touch/runtime diagnostic APK; it does **not** launch Terraria yet. [Implementation and limitations](docs/NET10_MOBILE.md).
+> **Active work:** Experimental SDL3 Android game host (0.2.0). Native ARM64 SDL3/FNA3D/FAudio, a real FNA graphics probe, transparent controls, PC content import and private game entry wiring now build. Reaching Terraria menu/world on-device remains unvalidated. [Host build and verification scope](docs/SDL_HOST.md).
 >
 > **Historical game baseline:** Phase 2.23.01 — FNA3D SpriteBatch Buffer Bridge. Its gameplay host still uses MonoVM 8. Matching vanilla PC input was received privately on 2026-11-06; the new .NET 10 host remains to be integrated.
 
 ## Dedicated Android direction
 
-The selected direction is a Terraria-specific Android port. The working APK is still a controls/runtime diagnostic; the matching vanilla PC 1.4.5.8 input has now passed [archive/basic content validation](docs/PC_INPUT_VALIDATION.md). The [private managed game candidate](docs/GAME_BUILD.md) now builds in .NET 10 against mobile FNA and passes assembly/type checks. Actual Android game startup still requires SDL/FNA host integration and ARM64 native dependencies. Optional FNA phase timing and bounded reports are now prepared for that first playable baseline. See [PERFORMANCE.md](docs/PERFORMANCE.md).
+The selected direction is a Terraria-specific Android port. The original 0.1.1 APK remains the validated controls/runtime diagnostic; a separate 0.2.0 SDL3 host is now built ([details](docs/SDL_HOST.md)). the matching vanilla PC 1.4.5.8 input has now passed [archive/basic content validation](docs/PC_INPUT_VALIDATION.md). The [private managed game candidate](docs/GAME_BUILD.md) now builds in .NET 10 against mobile FNA and passes assembly/type checks. SDL3/FNA Android host wiring and native ARM64 builds are now implemented; game startup still needs runtime validation. Optional FNA phase timing and bounded reports are now prepared for that first playable baseline. See [PERFORMANCE.md](docs/PERFORMANCE.md).
 
 ## New .NET 10 mobile source
 
 - `src/Tml.Mobile.Core/` — shared multi-touch state and content/runtime preflight.
-- `src/Tml.Mobile.Android/` — ARM64 Android controls/runtime diagnostic app.
+- `src/Tml.Mobile.Android/` — original ARM64 input/runtime diagnostic.
+- `src/Tml.Game.Android/` — experimental SDL3 Android game host and private PC content importer.
+- `integration/native/` — pinned SDL3/FNA3D/FAudio build and managed entry stub.
 - `integration/fna/` — direct FNA input integration, with no per-field JNI bridge.
 - `tools/prepare_fna.py` — revision-checked patching of the pinned FNA source into a separate build directory.
 - `tests/` — gesture, allocation and actual FNA input tests.

@@ -20,6 +20,7 @@ public sealed class TouchControlsView : View
     private string heldLabel = "Ativos: None";
     public string Report { set { reportLines = value.Split('\n'); Invalidate(); } }
     public bool ConsumeFrames { get; set; } = true;
+    public bool ShowDiagnostics { get; set; } = true;
     public TouchRouter Router => router;
 
     public TouchControlsView(Context context) : base(context)
@@ -128,6 +129,11 @@ public sealed class TouchControlsView : View
                 paint.TextAlign = Paint.Align.Center;
                 canvas.DrawText(control.Label, control.Center.X, control.Center.Y + paint.TextSize*.35f, paint);
             }
+        }
+        if (!ShowDiagnostics)
+        {
+            if (running) PostInvalidateOnAnimation();
+            return;
         }
         paint.TextAlign = Paint.Align.Center;
         paint.Color = Color.White;

@@ -8,7 +8,7 @@ import struct
 import zipfile
 
 
-def verify(path):
+def verify(path, require_probe=True):
     libraries = []
     with zipfile.ZipFile(path) as apk, open(path, "rb") as raw:
         for item in apk.infolist():
@@ -42,15 +42,21 @@ def verify(path):
             libraries.append(item.filename)
         if not libraries:
             raise ValueError("No native ARM64 libraries packaged")
-        if "assets/Tml.RuntimeProbe.dll" not in apk.namelist():
+        if require_probe and "assets/Tml.RuntimeProbe.dll" not in apk.namelist():
             raise ValueError("External assembly runtime probe is missing")
+        if not require_probe:
+            for name in ["SDL3", "FNA3D", "FAudio", "tmlhost"]:
+                if f"lib/arm64-v8a/lib{name}.so" not in apk.namelist():
+                    raise ValueError(f"SDL game-host library is missing: {name}")
     return {"apk": pathlib.Path(path).name, "sha256": hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest(),
             "abi": "arm64-v8a", "elf_page_alignment": 16384, "native_libraries": libraries,
-            "scope": "Input/runtime diagnostic APK; does not launch Terraria"}
+            "scope": "Input/runtime diagnostic APK; does not launch Terraria" if require_probe else
+                     "Android SDL game-host package; does not certify runtime startup or gameplay"}
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("apk", type=pathlib.Path)
+    parser.add_argument("--game-host", action="store_true")
     args = parser.parse_args()
-    print(json.dumps(verify(args.apk), indent=2))
+    print(json.dumps(verify(args.apk, require_probe=not args.game_host), indent=2))
