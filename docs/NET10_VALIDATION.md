@@ -34,6 +34,9 @@ Size: 20,821,307 bytes.
 - Dynamic DLL loading or Reflection.Emit on Android; these are tested at startup by the diagnostic app, but only desktop execution has been observed here.
 - Real SDL Android game surface creation, MonoMod detours, Terraria startup/worlds/audio and `.tmod` loading under the new host.
 - In-game touch controls, mobile inventory/menu adaptation, mod keybind UI, GPU context recovery or Android performance/FPS.
-- GitHub Actions execution; the workflow is committed for subsequent runs, while the listed results come from the local build environment.
 
 This APK contains the input/runtime diagnostic, not the game. The previous game baseline and partial source snapshots are preserved separately.
+
+## GitHub Actions result
+
+Both `fna` and `mobile` jobs passed for code commit `3230e5be9934a509ff5d8d477854095eeaa43fa4` in [run 42133408404](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/runs/42133408404). The workflow rebuilt the ARM64 diagnostic APK, verified its signature/alignment, uploaded the artifact and passed the FNA input tests. The first run exposed setup-android's obsolete default `tools` package; the workflow now explicitly installs `platform-tools`.
