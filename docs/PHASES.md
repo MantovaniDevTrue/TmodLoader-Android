@@ -102,3 +102,8 @@ The exact SpriteBatch constructor path is now proven on-device. Multiple vertex 
 ## Phase 3.0 — .NET 10 / ARM64 mobile foundation
 
 New platform source lives under `src/`, with touch routing, an Android diagnostic activity, dynamic assembly/runtime probes, content preflight, pinned FNA input patches and repeatable build/test workflows. The old game bootstrap remains preserved. This phase establishes the new platform/input layer; it does not yet run Terraria or replace the validated game baseline. See `NET10_MOBILE.md` and `NET10_VALIDATION.md`.
+
+
+## Phase 3.0.1 — diagnostic startup registration
+
+The first diagnostic APK crashed on the user's phone with unresolved `MainActivity.n_onCreate`. APK 0.1.1 switches from native marshal methods to dynamic JNI registration, adds checks against the generated Java and packaged DEX descriptors, and introduces an emulator test covering Activity startup, first draw, input, DLL loading, Reflection.Emit and returning from the background. Device confirmation for the ARM64 release is tracked separately.

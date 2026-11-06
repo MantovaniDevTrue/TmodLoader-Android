@@ -13,6 +13,8 @@ public sealed class TouchControlsView : View
     private TouchControl[] layout = [];
     private InputFrame frame;
     private bool running = true;
+    private bool firstDraw = true;
+    private bool firstTouch = true;
     private string[] reportLines = ["Testando o runtime…"];
     private MobileAction shownActions;
     private string heldLabel = "Ativos: None";
@@ -66,6 +68,11 @@ public sealed class TouchControlsView : View
     public override bool OnTouchEvent(MotionEvent? e)
     {
         if (e is null || !running) return false;
+        if (firstTouch)
+        {
+            firstTouch = false;
+            global::Android.Util.Log.Info("TmlMobile", "MOBILE_TOUCH_RECEIVED");
+        }
         switch (e.ActionMasked)
         {
             case MotionEventActions.Cancel: router.CancelAll(); break;
@@ -92,6 +99,11 @@ public sealed class TouchControlsView : View
     protected override void OnDraw(Canvas canvas)
     {
         base.OnDraw(canvas);
+        if (firstDraw)
+        {
+            firstDraw = false;
+            global::Android.Util.Log.Info("TmlMobile", "MOBILE_FIRST_DRAW");
+        }
         frame = ConsumeFrames ? router.ConsumeFrame() : router.PeekFrame();
         foreach (var control in layout)
         {

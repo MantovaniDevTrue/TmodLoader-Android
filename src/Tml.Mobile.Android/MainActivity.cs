@@ -18,6 +18,7 @@ public sealed class MainActivity : Activity
         Window?.AddFlags(WindowManagerFlags.KeepScreenOn);
         controls = new TouchControlsView(this);
         SetContentView(controls);
+        global::Android.Util.Log.Info("TmlMobile", "MOBILE_STARTUP_READY");
         _ = ProbeAsync();
     }
 
@@ -30,6 +31,9 @@ public sealed class MainActivity : Activity
             using (var output = File.Create(path)) await input.CopyToAsync(output);
             var report = await Task.Run(() => RuntimeProbe.Run(path));
             if (IsDestroyed) return;
+            global::Android.Util.Log.Info("TmlMobile", report.Details);
+            if (report.AssemblyLoaded && report.EmitSucceeded)
+                global::Android.Util.Log.Info("TmlMobile", "MOBILE_RUNTIME_PROBE_OK");
             controls!.Report = $"{report.Framework} · {report.Architecture}\n" +
                 $"Código dinâmico: {report.DynamicCodeSupported} · Compilado: {report.DynamicCodeCompiled}\n{report.Details}";
         }

@@ -1,5 +1,7 @@
 # Phase 3.0 validation — 2026-11-05
 
+These are the original 0.1.0 build checks. The subsequent device launch failed before the UI. See [STARTUP_FIX_0_1_1.md](STARTUP_FIX_0_1_1.md) for the JNI startup correction and new runtime validation.
+
 ## Completed locally
 
 | Check | Result |

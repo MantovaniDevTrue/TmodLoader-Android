@@ -9,7 +9,7 @@ dotnet workload install android --version 10.0.100
 bash tools/build_mobile.sh -p:AndroidSdkDirectory=/path/to/android-sdk -p:JavaSdkDirectory=/path/to/jdk21
 ```
 
-Output: `artifacts/mobile/tML_Android_0.1.0_Controles_NET10_ARM64.apk`. This is an input/runtime diagnostic app, not a playable game. The build script generates its separate test DLL, runs the shared input checks, signs the APK with the local SDK test identity and checks native ABI/page alignment. Keep signing keys outside Git. Run `apksigner verify --verbose` separately to validate signatures.
+Output: `artifacts/mobile/tML_Android_0.1.1_Controles_NET10_ARM64.apk`. This is an input/runtime diagnostic app, not a playable game. The build script generates its separate test DLL, runs the shared input checks, signs the APK with the local SDK test identity and checks native ABI/page alignment. Keep signing keys outside Git. Run `apksigner verify --verbose` separately to validate signatures.
 
 Core tests do not require Android:
 

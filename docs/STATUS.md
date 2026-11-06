@@ -1,5 +1,10 @@
 # Current status
 
+## Latest device report and correction
+
+The user reported that diagnostic APK 0.1.0 failed before showing its UI: `UnsatisfiedLinkError` for `MainActivity.n_onCreate`. Version 0.1.1 explicitly disables native marshal-method optimization and restores dynamic JNI registration. A packaged-registration check and an Android emulator startup job were added. See [STARTUP_FIX_0_1_1.md](STARTUP_FIX_0_1_1.md) for evidence and remaining validation.
+
+
 ## Active track — Phase 3.0 (.NET 10 / ARM64 mobile foundation)
 
 The new source compiles a standalone ARM64 Android input/runtime diagnostic APK. Shared touch routing and actual FNA input integration are implemented; the desktop game entrypoint/SDL host has **not** been migrated to this app yet. No playable world, full mobile UI or general `.tmod` compatibility is claimed.
