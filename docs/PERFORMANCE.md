@@ -53,3 +53,9 @@ A snapshot describes only the retained window. `TotalRecorded - Samples.Length` 
 Tests cover chronological wraparound, bounded memory, report isolation, percentiles, suppressed presentation, update aggregation, clock monotonicity, empty captures, JSON serialization, concurrent reporting and steady-state record allocations. Adapter checks run against the compiled actual FNA assembly. Compilation and adapter tests do not exercise a real Terraria update/render loop or measure Android overhead.
 
 The next verification is a real game run, first without mods and then with one small supported mod, before comparing heavier workloads on the Xiaomi Mi 11 Lite 5G NE.
+
+## Source milestone validation
+
+Local checks passed: 16 collector/report checks, 17 actual-FNA input/timing-adapter checks and 22 shared input/runtime checks (55 total). The patched pinned FNA compiled successfully. Steady-state record and enabled-adapter allocation samples reported zero managed bytes across 10,000 cycles; these are desktop synthetic checks, not Android game benchmarks.
+
+[GitHub Actions run 42226566650](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/runs/42226566650) passed `fna`, `mobile` and `startup` for code commit `f91a3ada38304181351ff7f525cf69119d660a3f`. The startup job exercises the diagnostic app on an Android emulator; it still does not launch Terraria.
