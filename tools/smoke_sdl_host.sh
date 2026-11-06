@@ -1,20 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 apk="$1"
+mkdir -p artifacts/sdl-smoke
+trap 'adb logcat -d > artifacts/sdl-smoke/logcat.txt || true; adb exec-out screencap -p > artifacts/sdl-smoke/frame.png || true' EXIT
 adb install -r "$apk"
 adb logcat -c
+adb shell input keyevent 224
+adb shell wm dismiss-keyguard || true
 adb shell monkey -p com.mantovani.tmlmobile -c android.intent.category.LAUNCHER 1
-for attempt in $(seq 1 20); do
-  adb shell uiautomator dump /sdcard/tml-window.xml >/dev/null 2>&1 || true
-  adb shell cat /sdcard/tml-window.xml > /tmp/tml-sdl-window.xml
+found_button=0
+for attempt in $(seq 1 12); do
+  timeout 20 adb shell uiautomator dump /sdcard/tml-window.xml >/dev/null 2>&1 || true
+  adb shell cat /sdcard/tml-window.xml > artifacts/sdl-smoke/window.xml
   if python3 - <<'PY' > /tmp/tml-sdl-tap.txt
 import re, xml.etree.ElementTree as ET
 try:
-    tree = ET.parse('/tmp/tml-sdl-window.xml')
+    tree = ET.parse('artifacts/sdl-smoke/window.xml')
 except ET.ParseError:
     raise SystemExit(1)
 for node in tree.iter('node'):
-    if node.get('text') == 'Testar gráficos e controles':
+    if node.get('text', '').casefold() == 'testar gráficos e controles':
         a = list(map(int, re.findall(r'\d+', node.get('bounds'))))
         print((a[0]+a[2])//2, (a[1]+a[3])//2)
         break
@@ -24,11 +29,15 @@ PY
   then
     read -r tap_x tap_y < /tmp/tml-sdl-tap.txt
     adb shell input tap "$tap_x" "$tap_y"
+    found_button=1
     break
   fi
   sleep 2
 done
-mkdir -p artifacts/sdl-smoke
+if [ "$found_button" != 1 ]; then
+  echo 'Graphics probe button not found in launcher'
+  exit 1
+fi
 for attempt in $(seq 1 45); do
   adb logcat -d > artifacts/sdl-smoke/logcat.txt
   if rg -q 'SDL_FNA_FIRST_FRAME' artifacts/sdl-smoke/logcat.txt; then
