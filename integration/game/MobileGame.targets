@@ -1,0 +1,10 @@
+<Project>
+  <ItemGroup Condition="'$(TmlMobileFnaProject)' != ''">
+    <_TmlOriginalFna Include="@(ProjectReference->WithMetadataValue('Filename', 'FNA.Core'))" />
+    <ProjectReference Remove="@(_TmlOriginalFna)" />
+    <ProjectReference Include="$(TmlMobileFnaProject)" Condition="'@(_TmlOriginalFna)' != ''" />
+  </ItemGroup>
+  <Target Name="ValidateMobileFnaProject" BeforeTargets="PrepareForBuild" Condition="'@(_TmlOriginalFna)' != ''">
+    <Error Condition="!Exists('$(TmlMobileFnaProject)')" Text="Prepare the pinned mobile FNA project before building the game." />
+  </Target>
+</Project>

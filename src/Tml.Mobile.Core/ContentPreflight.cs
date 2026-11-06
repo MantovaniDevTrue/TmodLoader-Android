@@ -15,7 +15,11 @@ public static class ContentPreflight
     {
         var issues = new List<ContentIssue>();
         Check(vanillaRoot, VanillaAssets, issues);
-        Check(platformRoot, PlatformAssets, issues);
+        foreach (string asset in PlatformAssets)
+        {
+            string root = File.Exists(Path.Combine(platformRoot, asset)) ? platformRoot : vanillaRoot;
+            Check(root, [asset], issues);
+        }
         return issues;
     }
 

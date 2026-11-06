@@ -16,7 +16,7 @@ Maintain a Terraria-specific Android variant of tModLoader, preserving the origi
 | Gate | Deliverable | Required evidence |
 | --- | --- | --- |
 | Platform foundation | .NET 10 ARM64, dynamic DLLs, JNI callbacks and touch router | 0.1.1 opened on the user's phone; emulator startup/touch/resume checks passed |
-| Matching PC inputs | Vanilla Terraria PC 1.4.5.8 executable and Content received privately; tModLoader managed payload remains to be built | Archive CRC and basic XNB checks passed; see [PC_INPUT_VALIDATION.md](PC_INPUT_VALIDATION.md). Separate vanilla/platform content roots still required |
+| Matching PC inputs | Vanilla Terraria PC 1.4.5.8 executable and Content received privately; tModLoader managed candidate now builds in .NET 10 | Archive CRC and basic XNB checks passed; see [PC_INPUT_VALIDATION.md](PC_INPUT_VALIDATION.md). Separate vanilla/platform content roots still required |
 | Game host | Real SDL/FNA Android surface and game startup in the SDK-managed runtime | Reach menu without masking initialization exceptions; validate audio and graphics recovery |
 | First playable baseline | Load a small supported mod, enter a world, save and reenter | Repeated device runs, correct hooks/assets, stable lifecycle and persistence |
 | Mobile interface | Touch-oriented menus, inventory/crafting drag/drop, text, scrolling, zoom and mod hotkeys | Device interaction checks; hardware input coexistence and cutout/scale handling |
@@ -36,4 +36,4 @@ The new optional FNA timing hooks and bounded capture window are described in [P
 
 The runnable Android app is still the controls/runtime diagnostic. It has not constructed the SDL game surface or launched Terraria. The dedicated-port decision does not change that status.
 
-The matching vanilla Terraria PC 1.4.5.8 executable and Content tree are now available privately and passed archive/basic asset validation. They remain outside the repository. The tModLoader managed payload still needs to be built from the selected upstream and integrated with the SDL/FNA Android host before the next game-startup gate. The legacy Mono 8 bootstrap remains historical reference; its internal metadata offsets must not be transplanted into Mono 10.
+The matching vanilla Terraria PC 1.4.5.8 executable and Content tree are now available privately and passed archive/basic asset validation. They remain outside the repository. The private tModLoader managed candidate now builds from the selected upstream against mobile FNA and passes API/type loading checks; see [GAME_BUILD.md](GAME_BUILD.md). It still needs the SDL/FNA Android host and ARM64 native dependencies before the next game-startup gate. The legacy Mono 8 bootstrap remains historical reference; its internal metadata offsets must not be transplanted into Mono 10.

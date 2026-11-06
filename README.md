@@ -8,7 +8,7 @@ Dedicated Android ARM64 adaptation of tModLoader: preserve the C# mod ecosystem 
 
 ## Dedicated Android direction
 
-The selected direction is a Terraria-specific Android port. The working APK is still a controls/runtime diagnostic; the matching vanilla PC 1.4.5.8 input has now passed [archive/basic content validation](docs/PC_INPUT_VALIDATION.md). Actual game startup still requires a built tModLoader managed payload and SDL/FNA host integration. Optional FNA phase timing and bounded reports are now prepared for that first playable baseline. See [PERFORMANCE.md](docs/PERFORMANCE.md).
+The selected direction is a Terraria-specific Android port. The working APK is still a controls/runtime diagnostic; the matching vanilla PC 1.4.5.8 input has now passed [archive/basic content validation](docs/PC_INPUT_VALIDATION.md). The [private managed game candidate](docs/GAME_BUILD.md) now builds in .NET 10 against mobile FNA and passes assembly/type checks. Actual Android game startup still requires SDL/FNA host integration and ARM64 native dependencies. Optional FNA phase timing and bounded reports are now prepared for that first playable baseline. See [PERFORMANCE.md](docs/PERFORMANCE.md).
 
 ## New .NET 10 mobile source
 

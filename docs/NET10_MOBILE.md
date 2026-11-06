@@ -9,7 +9,7 @@ This is the first source milestone of the new Android port. It is **not a playab
 - `Tml.RuntimeProbe`: a separate DLL, not referenced by the Android host, copied from assets into app storage and loaded at runtime. It shares the host's typed `IRuntimeProbe` interface. The diagnostic also exercises `Reflection.Emit`.
 - FNA integration: small reproducible source edits merge touch input into actual FNA `KeyboardState`/`MouseState` values. Sampling happens once per game update in both fixed and variable timestep paths. Hardware keyboard keys and unrelated mouse buttons are retained.
 - Default buttons: jump, use item, interact, grapple, inventory, menu, heal, mana, buffs, mount, smart cursor, map, previous/next hotbar item.
-- Content preflight: identifies six known startup assets across separate Terraria PC and tModLoader content roots, including the missing splash asset from the old baseline. This is a basic presence/header check, not certification of a complete content installation.
+- Content preflight: identifies six known startup assets across separate Terraria PC and tModLoader content roots, including the missing splash asset from the old baseline. Shader lookup falls back to vanilla when no platform override is supplied. This is a basic presence/header check, not certification of a complete content installation.
 - GitHub Actions builds the diagnostic APK and compiles/tests the patched FNA without proprietary payloads.
 
 ## Runtime decision
@@ -46,7 +46,7 @@ The ARM64 diagnostic APK can test runtime loading and touch behavior on a real p
 
 ## Remaining work
 
-1. Build the matching tModLoader managed payload outside the public repository using the privately received vanilla Terraria PC 1.4.5.8 input. The supplied executable and Content passed [archive/basic validation](PC_INPUT_VALIDATION.md); they are not a .NET 10 Android game build.
+1. The private managed candidate now builds in .NET 10 against mobile FNA and passes assembly/type checks ([GAME_BUILD.md](GAME_BUILD.md)). It is not yet an Android game build; platform dependencies still require integration. The supplied executable and Content passed [archive/basic validation](PC_INPUT_VALIDATION.md).
 2. Migrate the real SDL/FNA game host to the SDK-managed .NET 10 runtime. Revalidate interop rather than transplanting Mono 8 metadata offsets.
 3. Reach menu, load a normal `.tmod`, enter a world and save/reenter.
 4. Integrate the overlay with real gameplay, menus, inventory/crafting dragging, virtual keyboard, scrolling, pinch zoom and configurable mod hotkeys.

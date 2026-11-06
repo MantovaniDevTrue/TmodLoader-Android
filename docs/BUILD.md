@@ -92,3 +92,7 @@ dotnet run --project tests/Tml.Performance.Tests -c Release
 ```
 
 These checks use synthetic timing samples to validate reports, not to measure Terraria FPS. The FNA test command above additionally checks the opt-in timing adapter compiled inside actual FNA. See [PERFORMANCE.md](PERFORMANCE.md).
+
+## Private managed game candidate
+
+The pinned upstream tModLoader now compiles in .NET 10 against the mobile FNA extension. Use `tools/build_game.py` after preparing private source with upstream setup; see [GAME_BUILD.md](GAME_BUILD.md) for the tested commands, Linux reference-assembly requirements and exact verification limits. This is not an Android APK build.

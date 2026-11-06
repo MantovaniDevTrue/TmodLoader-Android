@@ -4,7 +4,7 @@
 
 The project will adapt tModLoader specifically for Android, preserving the selected upstream C# API and mod behavior. The user confirmed that the 0.1.1 diagnostic opens and its on-screen DLL/Emit probes succeed on ARM64. Optional phase timing and a bounded reporting collector are now implemented in the pinned FNA source; real game timing and performance advantages remain unmeasured.
 
-See [ANDROID_PORT.md](ANDROID_PORT.md) for delivery gates and [PERFORMANCE.md](PERFORMANCE.md) for measurement scope. The user's private Terraria PC 1.4.5.8 installation was received and passed archive and basic content validation on 2026-11-06. See [PC_INPUT_VALIDATION.md](PC_INPUT_VALIDATION.md). The next blocker is producing the matching tModLoader managed payload and integrating the real SDL/FNA game surface/startup in the SDK-managed .NET 10 runtime; the supplied vanilla executable is not that payload.
+See [ANDROID_PORT.md](ANDROID_PORT.md) for delivery gates and [PERFORMANCE.md](PERFORMANCE.md) for measurement scope. The user's private Terraria PC 1.4.5.8 installation was received and passed archive and basic content validation on 2026-11-06. See [PC_INPUT_VALIDATION.md](PC_INPUT_VALIDATION.md). The matching tModLoader managed candidate now compiles for .NET 10 against mobile FNA and passes assembly-loading checks; see [GAME_BUILD.md](GAME_BUILD.md). The next blocker is integrating the SDL/FNA Android game surface and ARM64 native dependencies into the SDK-managed runtime.
 
 
 ## Latest device report and correction
@@ -18,7 +18,11 @@ The new source compiles a standalone ARM64 Android input/runtime diagnostic APK.
 
 Completed local validation: .NET 10 shared input checks, separate-assembly/Reflection.Emit probes on desktop, and compilation/input checks against the exact upstream FNA revision. APK build/signature/ABI checks are recorded in [NET10_VALIDATION.md](NET10_VALIDATION.md). Device validation is pending.
 
-The historical phase 2.23.01 APK was inspected and has no managed game/runtime/content payload. The matching vanilla PC executable and Content tree are now available privately and have passed the checks in [PC_INPUT_VALIDATION.md](PC_INPUT_VALIDATION.md). Advancing to a playable .NET 10 port still requires building the tModLoader managed payload, SDL/native-host integration and MonoMod validation. [Scope and integration requirements](NET10_MOBILE.md).
+The historical phase 2.23.01 APK was inspected and has no managed game/runtime/content payload. The matching vanilla PC executable and Content tree are now available privately and have passed the checks in [PC_INPUT_VALIDATION.md](PC_INPUT_VALIDATION.md). The .NET 10 managed payload now builds against mobile FNA and passes API/type resolution checks. Advancing to a playable port still requires SDL/native-host integration and on-device MonoMod validation. [Scope and integration requirements](NET10_MOBILE.md).
+
+## Managed game build — 2026-11-06
+
+Pinned upstream sources were generated and patched in strict EXACT mode. tModLoader, ReLogic, mobile FNA and shared core compiled for .NET 10; the API/type loading check passed. The final build has zero errors and 927 upstream warnings. The 57 shared/FNA/performance checks passed. This remains a private managed candidate with desktop development dependencies, not an Android game build. See [GAME_BUILD.md](GAME_BUILD.md).
 
 ## Private PC input validation — 2026-11-06
 

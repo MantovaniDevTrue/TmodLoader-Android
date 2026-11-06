@@ -88,6 +88,26 @@ Check(GC.GetAllocatedBytesForCurrentThread()-start == 0, "10,000 warmed touch/up
 var issues = ContentPreflight.Validate(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()),
     Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
 Check(issues.Count == 6 && issues.Any(i => i.Asset == "Images/SplashScreens/Splash_1.xnb"), "missing desktop content reports the known splash blocker");
+string contentTest = Path.Combine(Path.GetTempPath(), "tml-content-" + Guid.NewGuid());
+try
+{
+    string vanilla = Path.Combine(contentTest, "vanilla"), overrides = Path.Combine(contentTest, "overrides");
+    foreach (string asset in new[] { "Images/SplashScreens/Splash_1.xnb", "Images/Item_1.xnb", "Images/Tiles_0.xnb",
+        "PixelShader.xnb", "TileShader.xnb", "ScreenShader.xnb" })
+    {
+        string path = Path.Combine(vanilla, asset);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllBytes(path, [(byte)'X', (byte)'N', (byte)'B', 0, 0, 0, 0, 0, 0, 0]);
+    }
+    Check(ContentPreflight.Validate(vanilla, overrides).Count == 0,
+        "complete vanilla content does not require duplicate shader overrides");
+    Directory.CreateDirectory(overrides);
+    File.WriteAllText(Path.Combine(overrides, "PixelShader.xnb"), "broken");
+    var overrideIssues = ContentPreflight.Validate(vanilla, overrides);
+    Check(overrideIssues.Count == 1 && overrideIssues[0].Root == overrides,
+        "preflight reports a broken selected override instead of silently choosing vanilla");
+}
+finally { Directory.Delete(contentTest, recursive: true); }
 if (args.Length > 0)
 {
     var runtime = RuntimeProbe.Run(args[0]);

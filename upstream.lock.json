@@ -19,5 +19,5 @@
     "rid": "android-arm64",
     "strategy": "Mono JIT; preserve IL and dynamic assembly loading"
   },
-  "stage": "dedicated Android port: validated platform foundation; opt-in FNA timing; game host pending"
+  "stage": "validated .NET 10 managed tModLoader build with mobile FNA; Android SDL game host pending"
 }
