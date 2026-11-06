@@ -207,3 +207,7 @@ Observed successful native calls include:
 This proves the first SpriteBatch and subsequent SpriteBatch instances cross the previously failing native buffer path successfully.
 
 The current run advances further into `Main.LoadContent`, creates additional 4x4 textures and 2048x2048 render targets, and then reaches the vanilla splash asset load. The next blocker is a missing `Images/SplashScreens/Splash_1` asset in the selected vanilla content root.
+
+### GLES rendering verified (0.2.1)
+
+Android SDL host workflow [42311139412](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/runs/42311139412) passed on API 30 x86_64, including a screenshot pixel check for the actual SpriteBatch rectangle. Fixed GLES base-vertex detection so unsupported EGL stubs are not treated as implemented drawing functions. The private ARM64 0.2.1 package builds cleanly and passes ABI/alignment/signature/JNI checks. ARM64 phone launch and Terraria menu/world validation remain pending.
