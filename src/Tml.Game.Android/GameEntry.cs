@@ -29,6 +29,7 @@ public sealed class GameEntry : Java.Lang.Object
         activity = owner;
         logPath = Path.Combine(owner.FilesDir!.AbsolutePath, "host-session.log");
         File.WriteAllText(logPath, $"Session {DateTimeOffset.UtcNow:O}\n");
+        HostDiagnostics.Start(owner);
         overlay = new TouchControlsView(owner) { ConsumeFrames = false, ShowDiagnostics = false };
         overlay.SetBackgroundColor(global::Android.Graphics.Color.Transparent);
         owner.AddContentView(overlay, new ViewGroup.LayoutParams(-1, -1));
@@ -75,6 +76,7 @@ public sealed class GameEntry : Java.Lang.Object
         catch (Exception error)
         {
             Log("HOST_ERROR " + error);
+            ShowFailure(error);
             return 1;
         }
         finally
@@ -106,10 +108,18 @@ public sealed class GameEntry : Java.Lang.Object
             Environment.SetEnvironmentVariable("TML_ANDROID_TERRARIA", vanilla);
             Environment.SetEnvironmentVariable("TML_ANDROID_NATIVE_DIR", activity!.ApplicationInfo!.NativeLibraryDir!);
             Log("TML_ENTRY_BEGIN");
+            Log("TML_ASSEMBLY_LOAD_BEGIN");
             Assembly game = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.Combine(payload, "tModLoader.dll"));
-            game.GetType("Terraria.Program", true)!.GetMethod("LaunchGame")!.Invoke(null,
+            Log("TML_ASSEMBLY_LOADED");
+            Type program = game.GetType("Terraria.Program", true)!;
+            Log("TML_PROGRAM_TYPE_READY");
+            MethodInfo entry = program.GetMethod("LaunchGame", [typeof(string[]), typeof(bool)])
+                ?? throw new MissingMethodException("Terraria.Program.LaunchGame(string[], bool)");
+            Log("TML_LAUNCH_INVOKE");
+            entry.Invoke(null,
                 [new[] { "-savedirectory", Path.Combine(files, "Saves"), "-tmlsavedirectory", Path.Combine(files, "Saves/tModLoader"),
                     "-nosteam" }, false]);
+            Log("TML_LAUNCH_RETURNED");
         }
         finally { Environment.CurrentDirectory = previous; AssemblyLoadContext.Default.Resolving -= Resolve; }
     }
@@ -118,6 +128,19 @@ public sealed class GameEntry : Java.Lang.Object
     {
         global::Android.Util.Log.Info("TmlHost", message);
         lock (logLock) if (logPath.Length > 0) File.AppendAllText(logPath, message + "\n");
+    }
+
+    private static void ShowFailure(Exception error)
+    {
+        // Only a managed failure can return here. Native process deaths are read
+        // through Android's exit history when the launcher opens again.
+        Activity? owner = activity;
+        owner?.RunOnUiThread(() => {
+            if (owner.IsFinishing || owner.IsDestroyed) return;
+            new AlertDialog.Builder(owner).SetTitle("Falha ao iniciar")!
+                .SetMessage(error.GetBaseException().Message + "\n\nO relatório foi salvo. Volte e abra Ver último relatório.")!
+                .SetPositiveButton("Voltar", (_, _) => owner.Finish())!.Show();
+        });
     }
 
     private sealed class RenderProbe : FnaGame

@@ -1,7 +1,7 @@
 name: Android SDL game host
 on:
   push:
-    paths: ['src/Tml.Game.Android/**', 'integration/native/**', 'tools/build_native.py', 'tools/smoke_sdl_host.sh', '.github/workflows/sdl-host.yml']
+    paths: ['src/Tml.Game.Android/**', 'tests/Tml.Host.Tests/**', 'integration/native/**', 'tools/build_native.py', 'tools/smoke_sdl_host.sh', 'tools/verify_probe_frame.py', '.github/workflows/sdl-host.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -13,6 +13,8 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.100'
+      - name: Check native crash report decoder
+        run: dotnet run --project tests/Tml.Host.Tests -c Release
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

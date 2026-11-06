@@ -41,15 +41,7 @@ public sealed class MainActivity : Activity
         play.Click += async (_, _) => await PlayAsync();
         logs.Click += (_, _) =>
         {
-            string path = Path.Combine(FilesDir!.AbsolutePath, "host-session.log");
-            string message = File.Exists(path) ? File.ReadAllText(path) : "Nenhuma sessão registrada.";
-            string gameLogs = Path.Combine(FilesDir!.AbsolutePath, "game/tModLoader-Logs");
-            if (Directory.Exists(gameLogs))
-            {
-                string? latest = Directory.EnumerateFiles(gameLogs, "client*.log").OrderByDescending(File.GetLastWriteTimeUtc).FirstOrDefault();
-                if (latest != null) message += "\n\n" + File.ReadAllText(latest);
-            }
-            if (message.Length > 24000) message = message[^24000..];
+            string message = HostDiagnostics.ReadReport(this);
             var dialog = new AlertDialog.Builder(this);
             dialog.SetTitle("Relatório");
             dialog.SetMessage(message);
