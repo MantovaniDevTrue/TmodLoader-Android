@@ -52,7 +52,13 @@ for attempt in $(seq 1 45); do
     grep -q 'ANDROID_DETOUR_PROBE_OK' artifacts/sdl-smoke/logcat.txt
     grep -q 'NATIVE_RELATIVE_PATH_MISMATCH_REPRODUCED' artifacts/sdl-smoke/logcat.txt
     grep -q 'NATIVE_FILE_IO_OK' artifacts/sdl-smoke/logcat.txt
-    read -r screen_w screen_h < <(adb shell wm size | sed -n 's/.*size: \([0-9]*\)x\([0-9]*\).*/\1 \2/p' | tail -1)
+    adb exec-out screencap -p > artifacts/sdl-smoke/input-surface.png
+    read -r screen_w screen_h < <(python3 - <<'PYSCREEN'
+from PIL import Image
+with Image.open('artifacts/sdl-smoke/input-surface.png') as image:
+    print(image.width, image.height)
+PYSCREEN
+)
     adb shell input tap "$((screen_w / 2))" "$((screen_h / 2))"
     native_touch=0
     for touch_attempt in $(seq 1 15); do
