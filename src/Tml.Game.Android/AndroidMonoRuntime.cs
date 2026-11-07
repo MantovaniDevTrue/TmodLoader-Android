@@ -35,7 +35,13 @@ internal sealed class AndroidMonoRuntime(IRuntime inner) : IRuntime
         add => inner.OnMethodCompiled += value;
         remove => inner.OnMethodCompiled -= value;
     }
-    public MethodBase GetIdentifiable(MethodBase method) => inner.GetIdentifiable(Normalize(method));
+    public MethodBase GetIdentifiable(MethodBase method)
+    {
+        var identifiable = inner.GetIdentifiable(Normalize(method));
+        // Keep the DynamicMethod identity at the public boundary: its runtime
+        // MethodInfo reports an owner type without a matching metadata member.
+        return owners.TryGetValue(identifiable, out var owner) ? owner : identifiable;
+    }
     public RuntimeMethodHandle GetMethodHandle(MethodBase method) => inner.GetMethodHandle(Normalize(method));
     public bool RequiresGenericContext(MethodBase method) => inner.RequiresGenericContext(Normalize(method));
     public void DisableInlining(MethodBase method) => inner.DisableInlining(Normalize(method));
