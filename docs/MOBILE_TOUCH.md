@@ -37,3 +37,18 @@ The C lifecycle fixture compiles the exact patched destruction body with isolate
 Local checks cover profile persistence/bounds/invalid writes, SDL tap retention, pooled stream reuse and live-reader separation, IL frame-GC policy, the C audio lifecycle and the private integration's hooked API contracts. The public emulator workflow additionally injects an Android touch into the SDL surface and requires it to reach the game thread before checking pixels. It contains no private game bytes.
 
 On the phone, test menu selection, world entry, moving/aiming/jumping simultaneously, inventory taps, the in-world layout editor, save/re-entry, background/resume and complete exit. Collect the performance report and content/save phase markers. Startup/save duration, overall memory reduction, sustained gameplay FPS and the actual native shutdown fix are unmeasured until that run.
+
+
+## 0.2.12 delivery validation
+
+[Android SDL workflow 42387360997](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/runs/42387360997) passed for commit `246dc3a6570055150b98e39186ed0d85f16dcb81`: ARM64 packaging/JNI checks, the isolated FAudio lifecycle fixture, private-access detours/GC, stable resolution, multi-target GPU readback, native SDL touch reaching a game update and presented pixels (5496/8192 center pixels). [Foundation workflow 42387361040](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/runs/42387361040) passed all jobs.
+
+The first SDL workflow 42386585688 built successfully but its touch test failed: `wm size` returned physical portrait dimensions while the actual surface was landscape. The tap landed on/outside the lower boundary. The test now reads the rotated screenshot dimensions; no application change was made for that correction, and no package from the failed run was delivered.
+
+`tools/Tml.TouchProbe` additionally initializes the actual private Main with an isolated save path, installs the real integration hooks, injects a touch into the actual options-header interceptor, opens the editor, drags a button and verifies its saved profile. It uses FNA's NONE backend on desktop CoreCLR and does not draw the game, access the user's saves, play audio or establish Android Mono compatibility for the entire integration. The private build script runs this probe after the assembly/API checks:
+
+```bash
+dotnet run --project tools/Tml.TouchProbe -c Release -- /private/game-output
+```
+
+Final private APK: 51,250,574 bytes; SHA-256 `860e10897a0451f331d0b3951dac95db18ff3702440ce3a553bc890e7ddaad39`. ZIP CRC/entry uniqueness, ARM64 native 16KiB alignment, exact private payload and v2/v3 signing passed. The existing signing certificate is retained. The private payload differs from the previous package only by the added Tml.GameIntegration.dll; updated FNA/core/native libraries are supplied by the host. Install over 0.2.11. Phone-native HUD rendering, simultaneous movement/aim/jump, inventory interaction, startup/save duration, sustained FPS, resident memory and complete audio shutdown still need device verification.

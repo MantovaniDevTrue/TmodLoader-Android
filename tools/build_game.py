@@ -59,6 +59,9 @@ def build(upstream, destination, dotnet):
     run([str(dotnet), "run", "--project", str(ROOT / "tools/Tml.GameCheck"), "-c", "Release",
          "--", str(payload)], ROOT, environment, destination / "assembly-check.log")
 
+    run([str(dotnet), "run", "--project", str(ROOT / "tools/Tml.TouchProbe"), "-c", "Release",
+         "--", str(payload)], ROOT, environment, destination / "touch-probe.log")
+
     names = {"tModLoader.dll", "FNA.dll", "ReLogic.dll", "Tml.Mobile.Core.dll", "Tml.GameIntegration.dll"}
     inventory = []
     for path in sorted(payload.rglob("*.dll")):
