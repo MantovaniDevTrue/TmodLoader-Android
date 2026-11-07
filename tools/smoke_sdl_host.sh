@@ -97,12 +97,13 @@ with Image.open('artifacts/sdl-smoke/input-surface.png') as image:
     print(image.width, image.height)
 PYSCREEN
 )
+    cp artifacts/sdl-smoke/logcat.txt artifacts/sdl-smoke/startup-logcat.txt
+    adb logcat -c
     adb shell input tap "$((screen_w / 2))" "$((screen_h / 2))"
     native_touch=0
     for touch_attempt in $(seq 1 15); do
       adb logcat -d > artifacts/sdl-smoke/logcat.txt
       if grep -q 'ANDROID_NATIVE_TOUCH_EVENT sdl-to-game-thread' artifacts/sdl-smoke/logcat.txt; then native_touch=1; break; fi
-      scroll_launcher
       sleep 1
     done
     if [ "$native_touch" != 1 ]; then echo 'Native SDL touch did not reach the game thread'; exit 1; fi
