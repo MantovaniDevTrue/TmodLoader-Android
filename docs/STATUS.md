@@ -1,5 +1,15 @@
 # Current status
 
+## Android 0.2.15 — OpenGL tile scratch reuse
+
+The next private candidate reuses the per-tile drawing scratch object and its
+nine-color array, with full default reset, per-thread nested scopes and exception
+cleanup. The isolated regression measures 248 B/tile before and zero after
+warming 10,000 patched calls. Physical FPS and allocation improvements are pending;
+effects and resolution are preserved. See [scope and verification](ANDROID_0_2_15.md).
+Vulkan failed during startup on the physical Adreno device in 0.2.14; the reported
+termination is SIGKILL with no established cause. OpenGL remains the baseline.
+
 ## First local mod validated on ARM64 — 2026-11-07
 
 The user confirmed AndroidSwordTest 0.1.1 loaded in 0.2.14/OpenGL, its sword and
@@ -7,8 +17,8 @@ recipe appeared, and the session entered/saved a world and exited normally. The
 log confirms JIT, Load, content setup and finalization. This establishes the first
 simple precompiled local .tmod test on the physical phone, not general PC mod
 compatibility or full hook/effect coverage. Supplied gameplay timings cover
-WorldUi only (roughly 46–51 presentation calls/s); Vulkan remains untested on the
-phone. Split was discovered but not loaded and is from an incompatible build stream.
+WorldUi only (roughly 46–51 presentation calls/s). Split was discovered but not
+loaded and is from an incompatible build stream.
 See [phone evidence and limits](ANDROID_0_2_14.md).
 
 ## Android 0.2.14 — 2026-11-07

@@ -46,6 +46,7 @@ public sealed class MobileGameIntegration : IDisposable
         try
         {
             hooks.Add(new MetadataAssemblyPatch(root, log));
+            hooks.Add(new TileDrawScratchPatch(log));
             if (installedMemory <= 0) throw new InvalidOperationException("Android physical memory unavailable");
             hooks.Add(new Hook(typeof(Main).Assembly.GetType("Terraria.ModLoader.UI.UIMemoryBar", true)!.GetMethod("GetTotalMemory")!,
                 (Func<Func<long>, long>)(_ => installedMemory)));

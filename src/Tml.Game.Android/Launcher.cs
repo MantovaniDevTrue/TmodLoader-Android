@@ -77,7 +77,7 @@ public sealed partial class MainActivity
         header.SetGravity(GravityFlags.CenterVertical);
         var icon = new ImageView(this); icon.SetImageResource(global::Tml.Game.Android.Resource.Drawable.tml_icon); header.AddView(icon, new LinearLayout.LayoutParams(Dp(64), Dp(64)));
         var name = new LinearLayout(this) { Orientation = Orientation.Vertical }; name.SetPadding(Dp(14), 0, 0, 0);
-        var title = Text("tModLoader", 28); title.SetTypeface(Typeface.Default, TypefaceStyle.Bold); name.AddView(title); name.AddView(Text("ANDROID  /  0.2.14  ·  Experimental", 11, true)); header.AddView(name, new LinearLayout.LayoutParams(0, -2, 1));
+        var title = Text("tModLoader", 28); title.SetTypeface(Typeface.Default, TypefaceStyle.Bold); name.AddView(title); name.AddView(Text("ANDROID  /  0.2.15  ·  Experimental", 11, true)); header.AddView(name, new LinearLayout.LayoutParams(0, -2, 1));
         var palette = new Spinner(this); var adapter = new ArrayAdapter<string>(this, global::Android.Resource.Layout.SimpleSpinnerDropDownItem, themes.Select(t => t.Name).ToArray()); palette.Adapter = adapter;
         palette.BackgroundTintList = global::Android.Content.Res.ColorStateList.ValueOf(Color(theme.Accent)); palette.SetSelection(Array.IndexOf(themes, theme));
         palette.ItemSelected += (_, e) => { if (themes[e.Position].Name == theme.Name) return; Preferences.Edit()!.PutString("theme", themes[e.Position].Name)!.Apply(); BuildLauncher(); };
