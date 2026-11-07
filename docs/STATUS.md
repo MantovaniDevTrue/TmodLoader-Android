@@ -2,7 +2,9 @@
 
 ## Active direction — dedicated Android port
 
-The active 0.2.5 candidate runs tModLoader through a .NET 10 Android SDL3 host, preserving the selected upstream C# API. The ARM64 phone has reached Adreno GLES 3.2, AAudio initialization and the FNA loop. The current device blocker is the missing MonoMod Android system implementation; the new adapter passed basic hook lifecycle tests on an Android x86_64 emulator. ARM64 hooks, menu/world/mod behavior and performance still require device validation.
+The 0.2.5 phone report confirms that the .NET 10 ARM64 host created, entered and saved a small world. It also reports severe flicker/black frames, poor performance and high memory use. Repeated portrait/landscape/fullscreen resets appear in the log; no measured gameplay FPS is available. The final managed crash was a desktop `xdg-open` launch from `Terraria.Utils.OpenToURL`; a native save-thread fault followed during shutdown.
+
+The 0.2.6 candidate fixes landscape orientation in the Android activity, enforces a bounded internal render size (1416×640 on the reported 2400×1080 display), coalesces unchanged FNA device settings, skips drawing while the activity is suspended, and routes game links to Android intents. A bounded frame-timing report is now collected automatically. These changes still need phone validation; stable visuals, a 60 FPS target, low memory use and broad mod compatibility are not yet certified.
 
 Historical foundation: The project will adapt tModLoader specifically for Android, preserving the selected upstream C# API and mod behavior. The user confirmed that the 0.1.1 diagnostic opens and its on-screen DLL/Emit probes succeed on ARM64. Optional phase timing and a bounded reporting collector are now implemented in the pinned FNA source; real game timing and performance advantages remain unmeasured.
 

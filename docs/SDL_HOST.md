@@ -1,6 +1,6 @@
 # SDK-managed SDL3 Android host
 
-The new `src/Tml.Game.Android` project builds an experimental .NET 10 Android host. It is separate from the original input diagnostic and uses the same application ID with version 0.2.5. The Java SDL activity, native entry stub, C# game host, mobile core, FNA and private game payload share one process and one SDK-managed Mono runtime.
+The new `src/Tml.Game.Android` project builds an experimental .NET 10 Android host. It is separate from the original input diagnostic and uses the same application ID with version 0.2.6. The Java SDL activity, native entry stub, C# game host, mobile core, FNA and private game payload share one process and one SDK-managed Mono runtime.
 
 ## Implemented
 
@@ -96,3 +96,20 @@ The host supplies an Android ISystem through PlatformTriple.SetPlatformTriple be
 The host pins MonoMod.RuntimeDetour 25.3.4, Core 1.3.4 and Utils 25.0.12 in the managed app so the platform is registered before background static initialization. Startup performs actual managed hook apply/original-call/chain/repeated-removal checks. The private game path additionally initializes the known AssemblyRedirects constructor on the SDL thread before starting graphics or the game preload worker, so a remaining incompatibility can reach HOST_ERROR without an active rendering loop. The game payload and imported content are unchanged.
 
 Workflow [42321846324](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/runs/42321846324) passed on Android API 30 x86_64 Mono: `ANDROID_DETOUR_PLATFORM_READY x86_64 Mono`, `ANDROID_DETOUR_PROBE_OK apply+original+chain+repeat+remove`, native file I/O checks and a presented FNA sprite (6240/8192 center pixels). The later SDL-thread private-game preflight addition builds locally; the private Terraria payload is not included in CI. ARM64 hook behavior, the actual game assembly redirect and broader mod/ILHook/struct-generic compatibility remain device validation boundaries. Upstream NuGet intentionally still emits its unsupported-Android RID warning: this is an experimental host adapter, not upstream Android support.
+
+
+## Stable mobile display and Android links — 0.2.6
+
+The 0.2.5 ARM64 report reached an actual world. It repeatedly changed between landscape and portrait dimensions, then crashed while opening a menu URL through the Linux desktop helper `xdg-open`. The new activity locks sensor-landscape and restores immersive system bars on focus/resume. The FNA preparation applies one landscape render policy after PreparingDeviceSettings, mirrors those dimensions into manager preferences, and avoids device resets when all resulting presentation parameters are unchanged. Terraria.Main.SetDisplayMode is hooked to the same size/fullscreen policy so its screen fields and render targets agree. Drawing/presentation are suppressed while activity input is suspended.
+
+The policy uses at most 1280×720 pixels while preserving Terraria's 800×600 minimum and the display's landscape aspect where possible. On the reported 2400×1080 screen this chooses 1416×640: about 45% fewer pixels than the logged 1920×864 mode. This is a workload reduction, not an FPS measurement. Portrait requests, repeated resolution changes and fullscreen toggles in the graphics probe must produce zero device resets before its first rendered frame (`ANDROID_DISPLAY_STABLE`).
+
+Terraria.Utils.OpenToURL is hooked to an Android ACTION_VIEW intent for supported absolute URLs. Intent failures are logged without throwing through Draw. No desktop process is launched. Private game code is not uploaded to CI; its exact API signatures were checked locally. The on-device hook/game paths remain a validation boundary.
+
+SessionPerformance attaches the existing allocation-free recording adapter on the game thread. Every five seconds a reporting timer writes the last twelve bounded snapshots to frame-performance.log, included in the launcher report. It records CPU update/draw/presentation p95, presentation-call rate, managed bytes, collection deltas and avoided resets. These are overlapping windows, not session averages, GPU timestamps or process PSS. Pause gaps can appear in pacing statistics until they leave the window.
+
+The CI source-host artifact excludes private game assets and signing keys. Local packaging appends the previously validated private game-payload.zip to that APK, preserving existing native-entry offsets, then signs with the existing development certificate. The completed package must pass signature and 16 KiB alignment checks before private delivery.
+
+Validation: [workflow 42359495282](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/runs/42359495282) built ARM64 and x86_64 packages, passed packaged JNI/native alignment checks, and required ANDROID_DISPLAY_STABLE before validating the presented FNA SpriteBatch rectangle (6384/8192 center pixels) on Android API 30. The foundation workflow 42359495226 also passed. Local checks passed: 36 shared mobile, 18 host, 16 collector and 18 actual-FNA adapter checks. These are not private Terraria gameplay or phone FPS benchmarks.
+
+Private 0.2.6 delivery SHA-256: `27c3ed0907963b31baa426203d66aac129701af4c24ccf23596c31328937e1b8` (51,672,661 bytes). APK v2/v3 signatures verify against the existing development certificate, all native libraries remain ARM64 and 16 KiB aligned, and the private runtime payload is byte-identical to 0.2.5. Install over the existing app to retain imported assets and saves. Test an existing world, rotation, background/resume and menu links, then collect the report's new Desempenho section.

@@ -1,6 +1,6 @@
 # Optional FNA performance capture
 
-The mobile FNA integration now includes timing hooks in the actual pinned `Game.Tick()` implementation. Capture is disabled by default. No Terraria performance measurement has been made with these hooks yet.
+The mobile FNA integration now includes timing hooks in the actual pinned `Game.Tick()` implementation. The adapter defaults to disabled; the 0.2.6 SDL host enables it automatically and includes bounded snapshots in its device report. No phone gameplay timing result from this host has been received yet.
 
 ## Measurements
 
