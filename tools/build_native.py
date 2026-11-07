@@ -55,6 +55,15 @@ def prepare_sdlgpu(fna):
         if text.count(old) != 1:
             raise SystemExit("FNA3D Vulkan hardware property context changed")
         text = text.replace(old, new)
+    driver_anchor = "\tresult = SDL_malloc(sizeof(FNA3D_Device));\n\tASSIGN_DRIVER(SDLGPU)"
+    driver_audit = (
+        '\tSDL_LogWarn(SDL_LOG_CATEGORY_GPU, "TML_SDL_GPU_ACTIVE_DRIVER=%s", '
+        'SDL_GetGPUDeviceDriver(device) != NULL ? SDL_GetGPUDeviceDriver(device) : "unknown");\n'
+    )
+    if driver_audit not in text:
+        if text.count(driver_anchor) != 1:
+            raise SystemExit("FNA3D SDL GPU driver audit context changed")
+        text = text.replace(driver_anchor, driver_audit + driver_anchor)
     source.write_text(text)
 
 
