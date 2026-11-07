@@ -123,4 +123,14 @@ CaptureBatch();
 Check(GC.GetAllocatedBytesForCurrentThread() - captureAllocationStart == 0,
     "10,000 warmed enabled FNA capture cycles allocate zero managed bytes");
 MobilePerformanceEXT.Destination = null;
+
+bool rejectedSound = false, rejectedWave = false;
+try { _ = new Microsoft.Xna.Framework.Audio.SoundBank(null!, "unused.xsb"); }
+catch (ArgumentNullException) { rejectedSound = true; }
+try { _ = new Microsoft.Xna.Framework.Audio.WaveBank(null!, "unused.xwb"); }
+catch (ArgumentNullException) { rejectedWave = true; }
+GC.Collect();
+GC.WaitForPendingFinalizers();
+Check(rejectedSound && rejectedWave, "failed audio bank constructors finalize without accessing native null handles");
+
 Console.WriteLine($"{passed} FNA integration checks passed.");

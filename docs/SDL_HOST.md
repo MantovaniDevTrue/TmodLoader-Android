@@ -1,6 +1,6 @@
 # SDK-managed SDL3 Android host
 
-The new `src/Tml.Game.Android` project builds an experimental .NET 10 Android host. It is separate from the original input diagnostic and uses the same application ID with version 0.2.3. The Java SDL activity, native entry stub, C# game host, mobile core, FNA and private game payload share one process and one SDK-managed Mono runtime.
+The new `src/Tml.Game.Android` project builds an experimental .NET 10 Android host. It is separate from the original input diagnostic and uses the same application ID with version 0.2.4. The Java SDL activity, native entry stub, C# game host, mobile core, FNA and private game payload share one process and one SDK-managed Mono runtime.
 
 ## Implemented
 
@@ -76,3 +76,11 @@ The host now scopes the .NET 10 `Assembly.SetEntryAssembly` override to its mana
 Seven additional checks reproduce a null entry assembly and the original null dereference, verify the logger location expression after the fix, and exercise nested scopes and exception cleanup. The emulator smoke test requires the host identity marker as well as the presented FNA sprite. Full Terraria initialization after this point still requires the next phone test.
 
 Workflow [42316353901](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/runs/42316353901) passed for 0.2.3: 18 host regression checks, ARM64 package/JNI checks and an Android API 30 x86_64 Mono/FNA run requiring `HOST_ENTRY_ASSEMBLY_READY Tml.Game.Android` plus a presented sprite pixel check. The private ARM64 APK builds without warnings/errors and retains the 0.2.2 signing certificate. This verifies the entry-assembly API on Android; progression beyond the actual phone game logger still awaits device confirmation.
+
+## Android native audio file paths — 0.2.4
+
+The ARM64 phone advanced through startup logging, PC verification, Adreno GLES 3.2 device creation and AAudio initialization, then faulted at `FACT_INTERNAL_ParseSoundBank+68`. Disassembly places that offset at the first read of the buffer argument; Android reported a null pointer dereference. SDL Android resolves relative native reads from app internal storage, whereas managed `File.Exists` resolves them against the process working directory. A relative path could therefore pass the managed check but produce a null `SDL_LoadFile` result, which FNA previously passed to FACT without validation.
+
+The prepared FNA now resolves native file paths to absolute paths for both in-memory banks/settings and FAudio streaming banks. Failed SDL reads throw an IOException containing the full path and SDL error before entering the parser; missing streaming files throw FileNotFoundException. Partially constructed SoundBank/WaveBank finalizers skip native calls before their engine is assigned. The game payload, imported content and audio playback remain enabled.
+
+The Android graphics probe now includes a native I/O regression fixture in a separate working directory: reproduce the original relative SDL failure, then verify relative/absolute reads with spaces and UTF-8, FAudio streaming bytes and managed exceptions for missing files. This probe uses synthetic bytes without invoking a sound-bank parser or distributing game assets. The emulator smoke check requires `NATIVE_FILE_IO_OK` as well as entry identity and a presented FNA sprite. Actual Terraria audio initialization remains a phone test boundary.

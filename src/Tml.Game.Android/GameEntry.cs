@@ -71,7 +71,7 @@ public sealed class GameEntry : Java.Lang.Object
             }
             MobileInputEXT.Source = overlay!.Router;
             if (owner.Intent?.GetStringExtra("mode") == "game") RunTerraria(owner.FilesDir!.AbsolutePath);
-            else { using var game = new RenderProbe(); game.Run(); }
+            else { NativeFileProbe.Run(owner); using var game = new RenderProbe(); game.Run(); }
             Log("MANAGED_SDL_EXIT");
             return 0;
         }

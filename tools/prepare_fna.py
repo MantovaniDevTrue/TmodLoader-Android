@@ -18,6 +18,14 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
     if destination.exists():
         raise SystemExit("Destination already exists; choose an empty path.")
     replacements = {
+        "src/FNAPlatform/SDL3_FNAPlatform.cs": [
+            ("\t\t\tUIntPtr resultSize;\n\t\t\tIntPtr result = SDL.SDL_LoadFile(path, out resultSize);\n\t\t\tsize = (IntPtr) resultSize.ToPointer();\n\t\t\treturn result;",
+             "\t\t\treturn MobileFileIOEXT.ReadFile(path, out size);", 1)],
+        "src/Audio/WaveBank.cs": [
+            ("bankData = FAudio.FAudio_fopen(safeName);", "bankData = MobileFileIOEXT.OpenStreamingFile(safeName);", 1),
+            ("if (AudioEngine.ProgramExiting)", "if (engine == null || AudioEngine.ProgramExiting)", 1)],
+        "src/Audio/SoundBank.cs": [
+            ("if (AudioEngine.ProgramExiting)", "if (engine == null || AudioEngine.ProgramExiting)", 1)],
         "src/Input/KeyboardState.cs": [("\t\tvoid AddPressedKey(int key)", "\t\tinternal void AddPressedKey(int key)", 1)],
         "src/Input/Keyboard.cs": [("return new KeyboardState(keys);", "return MobileInputEXT.MergeKeyboard(new KeyboardState(keys));", 2)],
         "src/Input/Mouse.cs": [
@@ -47,6 +55,7 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
         (destination / filename).write_text(text)
     shutil.copyfile(ROOT / "integration/fna/MobileInputEXT.cs", destination / "src/Input/MobileInputEXT.cs")
     shutil.copyfile(ROOT / "integration/fna/MobilePerformanceEXT.cs", destination / "src/MobilePerformanceEXT.cs")
+    shutil.copyfile(ROOT / "integration/fna/MobileFileIOEXT.cs", destination / "src/MobileFileIOEXT.cs")
     project = destination / "FNA.Core.csproj"
     text = project.read_text()
     reference = ROOT / "src/Tml.Mobile.Core/Tml.Mobile.Core.csproj"
@@ -55,6 +64,7 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
     text = text.replace("</Project>", f'''  <ItemGroup>
     <Compile Include="src/Input/MobileInputEXT.cs" />
     <Compile Include="src/MobilePerformanceEXT.cs" />
+    <Compile Include="src/MobileFileIOEXT.cs" />
     <ProjectReference Include="{escape(str(reference))}" />
   </ItemGroup>
 </Project>''')

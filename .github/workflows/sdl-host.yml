@@ -1,7 +1,7 @@
 name: Android SDL game host
 on:
   push:
-    paths: ['src/Tml.Game.Android/**', 'tests/Tml.Host.Tests/**', 'integration/native/**', 'tools/build_native.py', 'tools/smoke_sdl_host.sh', 'tools/verify_probe_frame.py', '.github/workflows/sdl-host.yml']
+    paths: ['src/Tml.Game.Android/**', 'tests/Tml.Host.Tests/**', 'integration/native/**', 'integration/fna/**', 'upstream.lock.json', 'tools/prepare_fna.py', 'tools/build_native.py', 'tools/smoke_sdl_host.sh', 'tools/verify_probe_frame.py', '.github/workflows/sdl-host.yml']
   workflow_dispatch:
 permissions:
   contents: read

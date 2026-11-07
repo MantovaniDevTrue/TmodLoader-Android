@@ -5,8 +5,8 @@
     <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
     <ApplicationId>com.mantovani.tmlmobile</ApplicationId>
     <ApplicationTitle>tML Android</ApplicationTitle>
-    <ApplicationVersion>6</ApplicationVersion>
-    <ApplicationDisplayVersion>0.2.3</ApplicationDisplayVersion>
+    <ApplicationVersion>7</ApplicationVersion>
+    <ApplicationDisplayVersion>0.2.4</ApplicationDisplayVersion>
     <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">android-arm64</RuntimeIdentifier>
     <UseMonoRuntime>true</UseMonoRuntime>
     <AndroidEnableMarshalMethods>false</AndroidEnableMarshalMethods>

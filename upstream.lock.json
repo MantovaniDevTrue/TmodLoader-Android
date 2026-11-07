@@ -11,7 +11,10 @@
       "src/Input/Keyboard.cs": "8a4f6240915f60e36883e42ee06920f80625caba2b373989ab9c9a4b23d9f768",
       "src/Input/Mouse.cs": "7304974d037cb1073474402b07750f9be3892526fefa0cb288495ba1cec6964e",
       "src/Game.cs": "020f360748c1215877981a23cf9d632d5100f562d622cc52e026e0ee7ad6722d",
-      "src/Input/KeyboardState.cs": "d513fad7a1cff39835aadc6a770296e6c774218728b26e8be8305619c680ee63"
+      "src/Input/KeyboardState.cs": "d513fad7a1cff39835aadc6a770296e6c774218728b26e8be8305619c680ee63",
+      "src/FNAPlatform/SDL3_FNAPlatform.cs": "778b15a6859ae34ddbb08daffa0497445e76751cf2f0b67760b201f29373f181",
+      "src/Audio/WaveBank.cs": "6d83c0a505378e9f28f421167a4aa24b90db41beb7606a9c1242124984a56fda",
+      "src/Audio/SoundBank.cs": "905fa1c09572224890a9c20872e4ab835de12c7587de6e0768630588fd8a5b4d"
     }
   },
   "runtime": {
