@@ -32,6 +32,21 @@ try
     Require(router.Assembly == window.Assembly && router.Assembly.GetName().Name == "Tml.Mobile.Core",
         "Input and timing must share one mobile core assembly.");
 
+    string bridgePath = Path.Combine(root, "Tml.GameIntegration.dll");
+    if (File.Exists(bridgePath))
+    {
+        var bridge = context.LoadFromAssemblyPath(bridgePath);
+        Require(bridge.GetType("Tml.GameIntegration.MobileGameIntegration", true)!.GetMethod("Initialize")!.ReturnType == typeof(IDisposable), "Mobile integration entry contract");
+        Require(bridge.GetType("Tml.GameIntegration.MobileGameIntegration", true)!.GetMethod("Initialize")!.GetParameters().Length == 4, "Physical-memory integration argument contract");
+        Require(game.GetType("Terraria.ModLoader.UI.UIMemoryBar", true)!.GetMethod("GetTotalMemory")!.ReturnType == typeof(long), "Installed-memory UI hook contract");
+        Require(main.GetMethod("EndDraw", BindingFlags.NonPublic | BindingFlags.Instance) != null, "Frame-end hook contract");
+        Require(main.GetMethod("LoadContent", BindingFlags.NonPublic | BindingFlags.Instance) != null, "Content timing hook contract");
+        Require(game.GetType("Terraria.IO.WorldFile", true)!.GetMethod("SaveWorld", [typeof(bool), typeof(bool), typeof(bool)]) != null, "Save timing hook contract");
+        Require(game.GetType("Terraria.IngameOptions", true)!.GetMethod("Draw")!.GetParameters().Length == 2, "In-world touch options hook contract");
+        Require(input.GetProperty("NativeTouchEnabled") != null && input.GetProperty("DirectActions") != null && input.GetEvent("BeforeUpdate") != null, "Native touch transport contract");
+        Console.WriteLine("PASS: mobile game integration assembly and exact hooked API contracts.");
+    }
+
     Console.WriteLine("PASS: .NET 10 tModLoader API types, FNA Game inheritance, mobile input/timing and shared core resolution.");
     Console.WriteLine("Assembly loading only: no game loop, Android native calls, MonoMod detours or mod gameplay tested.");
     return 0;

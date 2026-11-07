@@ -15,7 +15,8 @@
       "src/FNAPlatform/SDL3_FNAPlatform.cs": "778b15a6859ae34ddbb08daffa0497445e76751cf2f0b67760b201f29373f181",
       "src/Audio/WaveBank.cs": "6d83c0a505378e9f28f421167a4aa24b90db41beb7606a9c1242124984a56fda",
       "src/Audio/SoundBank.cs": "905fa1c09572224890a9c20872e4ab835de12c7587de6e0768630588fd8a5b4d",
-      "src/GraphicsDeviceManager.cs": "4d3cf5931d1c61797f131953cffc893110370ceebbc87fe4ef96945c686dc3b6"
+      "src/GraphicsDeviceManager.cs": "4d3cf5931d1c61797f131953cffc893110370ceebbc87fe4ef96945c686dc3b6",
+      "src/Content/ContentManager.cs": "6e2b62e8186c67e3206a3228779449fc607da9228905e8ff78002461ba42e439"
     }
   },
   "runtime": {

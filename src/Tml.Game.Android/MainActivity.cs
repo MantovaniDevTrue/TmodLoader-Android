@@ -81,7 +81,7 @@ public sealed class MainActivity : Activity
                 if (!Convert.ToHexString(SHA256.HashData(owned)).Equals(TerrariaHash, StringComparison.OrdinalIgnoreCase))
                     throw new InvalidDataException("O executável precisa ser o Terraria PC 1.4.5.8 importado.");
                 string marker = Path.Combine(root, "game/.payload-version");
-                if (!File.Exists(marker) || File.ReadAllText(marker) != "0.2.0")
+                if (!File.Exists(marker) || File.ReadAllText(marker) != "0.2.12")
                 {
                     string cache = Path.Combine(CacheDir!.AbsolutePath, "game-payload.zip");
                     try
@@ -89,7 +89,7 @@ public sealed class MainActivity : Activity
                         using (var source = Assets!.Open("game-payload.zip"))
                         using (var target = File.Create(cache)) source.CopyTo(target);
                         ExtractPayload(cache, Path.Combine(root, "game"));
-                        File.WriteAllText(marker, "0.2.0");
+                        File.WriteAllText(marker, "0.2.12");
                     }
                     finally { if (File.Exists(cache)) File.Delete(cache); }
                 }

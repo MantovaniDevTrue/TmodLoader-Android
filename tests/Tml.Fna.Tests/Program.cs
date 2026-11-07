@@ -135,3 +135,25 @@ Check(rejectedSound && rejectedWave, "failed audio bank constructors finalize wi
 
 BootstrapOrderChecks.Run(Check);
 Console.WriteLine($"{passed} FNA integration checks passed.");
+
+var poolType = typeof(MobileInputEXT).Assembly.GetType("Microsoft.Xna.Framework.Content.PooledContentStream", true)!;
+var rent = poolType.GetMethod("Rent", BindingFlags.Static | BindingFlags.NonPublic)!.CreateDelegate<Func<int, MemoryStream>>();
+byte[] first;
+using (var stream = rent(2000)) { first = stream.GetBuffer(); Check(stream.Length == 2000 && stream.Position == 0, "pooled XNB stream preserves exact logical length and public buffer"); }
+using (var reused = rent(2000))
+using (var concurrent = rent(2000))
+{
+    Check(ReferenceEquals(first, reused.GetBuffer()) && !ReferenceEquals(reused.GetBuffer(), concurrent.GetBuffer()), "XNB buffers are reused after disposal without aliasing live readers");
+    reused.Dispose(); reused.Dispose();
+}
+MobileInputEXT.Source = new TouchRouter();
+MobileInputEXT.Source.Configure(new(0, 0, 100, 100), []);
+MobileInputEXT.NativeTouchEnabled = true;
+var mouseType = typeof(Mouse);
+mouseType.GetField("INTERNAL_BackBufferWidth", BindingFlags.Static | BindingFlags.NonPublic)!.SetValue(null, 100);
+mouseType.GetField("INTERNAL_BackBufferHeight", BindingFlags.Static | BindingFlags.NonPublic)!.SetValue(null, 100);
+MobileInputEXT.NativeTouch(42, .5f, .6f, TouchPhase.Down);
+MobileInputEXT.NativeTouch(42, .7f, .8f, TouchPhase.Up);
+MobileInputEXT.BeginUpdate();
+Check(MobileInputEXT.Frame.PointerPressed && MobileInputEXT.Frame.Pointer.X == .5f, "native SDL short tap survives same-pump release");
+MobileInputEXT.NativeTouchEnabled = false; MobileInputEXT.Source = null;

@@ -51,10 +51,15 @@ def build(upstream, destination, dotnet):
                f"-p:TmlMobileFnaProject={fna / 'FNA.Core.csproj'}",
                f"-p:tModLoaderSteamPath={payload}"]
     run(command, upstream, environment, destination / "build.log")
+    bridge = destination / "mobile-integration"
+    run([str(dotnet), "build", str(ROOT / "src/Tml.GameIntegration"), "-c", "Release", "-o", str(bridge),
+         f"-p:GameDirectory={payload}", f"-p:FnaAssembly={fna / 'bin/Release/net10.0/FNA.dll'}"],
+        ROOT, environment, destination / "mobile-integration.log")
+    shutil.copyfile(bridge / "Tml.GameIntegration.dll", payload / "Tml.GameIntegration.dll")
     run([str(dotnet), "run", "--project", str(ROOT / "tools/Tml.GameCheck"), "-c", "Release",
          "--", str(payload)], ROOT, environment, destination / "assembly-check.log")
 
-    names = {"tModLoader.dll", "FNA.dll", "ReLogic.dll", "Tml.Mobile.Core.dll"}
+    names = {"tModLoader.dll", "FNA.dll", "ReLogic.dll", "Tml.Mobile.Core.dll", "Tml.GameIntegration.dll"}
     inventory = []
     for path in sorted(payload.rglob("*.dll")):
         if path.name in names:

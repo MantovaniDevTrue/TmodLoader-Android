@@ -133,3 +133,23 @@ if (args.Length > 0)
     Check(runtime.AssemblyLoaded && runtime.EmitSucceeded, "external .NET 10 assembly and Reflection.Emit execute");
 }
 Console.WriteLine($"{passed} checks passed.");
+
+var profileDir = Path.Combine(Path.GetTempPath(), "touch-profile-" + Guid.NewGuid());
+try
+{
+    string path = Path.Combine(profileDir, "layout.json");
+    var profile = new TouchProfile { Opacity = .4f, AttackWithAim = true };
+    profile.Buttons["jump"] = new(.92f, .75f, 1.4f, false);
+    profile.Save(path);
+    var loaded = TouchProfile.Load(path);
+    Check(loaded.AttackWithAim && loaded.Opacity == .4f && loaded.Buttons["jump"].Size == 1.4f, "touch profile round trip preserves positions, sizing and options");
+    var bounds = new Viewport(10, 10, 900, 500);
+    Check(loaded.Layout(bounds).All(c => c.Id != "jump") && loaded.Layout(bounds, true).Any(c => c.Id == "jump"), "hidden buttons remain editable without gameplay captures");
+    loaded.Buttons["move"] = new(0, 1, 2);
+    Check(loaded.Layout(bounds, true).All(c => c.Center.X-c.Radius >= bounds.X && c.Center.Y+c.Radius <= bounds.Y+bounds.Height), "custom buttons and sticks stay inside viewport after resize");
+    loaded.Buttons["move"] = new(float.NaN, 0);
+    bool invalid = false;
+    try { loaded.Save(path); } catch (InvalidDataException) { invalid = true; }
+    Check(invalid && TouchProfile.Load(path).Buttons["jump"].Size == 1.4f, "invalid layout cannot replace the last saved profile");
+}
+finally { if (Directory.Exists(profileDir)) Directory.Delete(profileDir, true); }

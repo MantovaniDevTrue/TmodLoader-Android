@@ -52,7 +52,15 @@ for attempt in $(seq 1 45); do
     grep -q 'ANDROID_DETOUR_PROBE_OK' artifacts/sdl-smoke/logcat.txt
     grep -q 'NATIVE_RELATIVE_PATH_MISMATCH_REPRODUCED' artifacts/sdl-smoke/logcat.txt
     grep -q 'NATIVE_FILE_IO_OK' artifacts/sdl-smoke/logcat.txt
-    sleep 2
+    read -r screen_w screen_h < <(adb shell wm size | sed -n 's/.*size: \([0-9]*\)x\([0-9]*\).*/\1 \2/p' | tail -1)
+    adb shell input tap "$((screen_w / 2))" "$((screen_h / 2))"
+    native_touch=0
+    for touch_attempt in $(seq 1 15); do
+      adb logcat -d > artifacts/sdl-smoke/logcat.txt
+      if grep -q 'ANDROID_NATIVE_TOUCH_EVENT sdl-to-game-thread' artifacts/sdl-smoke/logcat.txt; then native_touch=1; break; fi
+      sleep 1
+    done
+    if [ "$native_touch" != 1 ]; then echo 'Native SDL touch did not reach the game thread'; exit 1; fi
     adb exec-out screencap -p > artifacts/sdl-smoke/frame.png
     python3 tools/verify_probe_frame.py artifacts/sdl-smoke/frame.png
     echo 'PASS: SDK-managed .NET entry, SDL3 Android surface, FNA3D texture/SpriteBatch frame'

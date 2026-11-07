@@ -1,7 +1,7 @@
 name: Android SDL game host
 on:
   push:
-    paths: ['src/Tml.Game.Android/**', 'src/Tml.Mobile.Core/**', 'tests/Tml.Host.Tests/**', 'integration/native/**', 'integration/fna/**', 'upstream.lock.json', 'tools/prepare_fna.py', 'tools/build_native.py', 'tools/smoke_sdl_host.sh', 'tools/verify_probe_frame.py', '.github/workflows/sdl-host.yml']
+    paths: ['src/Tml.Game.Android/**', 'src/Tml.GameIntegration/**', 'src/Tml.Mobile.Core/**', 'tests/Tml.Host.Tests/**', 'integration/native/**', 'integration/fna/**', 'upstream.lock.json', 'tools/prepare_fna.py', 'tools/build_native.py', 'tools/smoke_sdl_host.sh', 'tools/verify_probe_frame.py', '.github/workflows/sdl-host.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -38,6 +38,7 @@ jobs:
       - name: Build Android native libraries
         run: |
           python3 tools/build_native.py vendor/sdl vendor/fna "$ANDROID_HOME" artifacts/android-native
+          python3 tools/verify_audio_lifecycle.py vendor/fna/lib/FAudio
           python3 tools/build_native.py vendor/sdl vendor/fna "$ANDROID_HOME" artifacts/android-native --abi x86_64
       - name: Build ARM64 host and check package
         run: |

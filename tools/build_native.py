@@ -29,6 +29,17 @@ def prepare_gles(fna):
     source.write_text(text.replace(anchor, patch + "\n" + anchor))
 
 
+def prepare_audio(fna):
+    source = fna / "lib/FAudio/src/FACT.c"
+    text = source.read_text()
+    patch = (ROOT / "integration/native/fact_cue_cleanup.inc").read_text()
+    anchor = "\t/* Remove this Cue from the SoundBank list */"
+    if patch not in text:
+        if text.count(anchor) != 1:
+            raise SystemExit("FAudio cue cleanup context changed")
+        source.write_text(text.replace(anchor, patch + "\n" + anchor))
+
+
 def revision(path, expected):
     actual = subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD"], text=True).strip()
     if actual != expected:
@@ -40,6 +51,7 @@ def main(args):
     revision(args.fna, lock["fna"]["commit"])
     revision(args.sdl, lock["sdl"]["commit"])
     prepare_gles(args.fna)
+    prepare_audio(args.fna)
     cmake = args.sdk / "cmake/3.22.1/bin/cmake"
     ninja = cmake.parent / "ninja"
     ndk = args.sdk / "ndk/28.2.13676358"

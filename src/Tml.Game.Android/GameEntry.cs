@@ -19,6 +19,7 @@ public sealed class GameEntry : Java.Lang.Object
 {
     private static Activity? activity;
     private static TouchControlsView? overlay;
+    private static Tml.Mobile.TouchRouter? nativeRouter;
     private static readonly object logLock = new();
     private static string logPath = "";
     private static bool resolverInstalled;
@@ -38,20 +39,18 @@ public sealed class GameEntry : Java.Lang.Object
         MobileGraphicsEXT.Enable(metrics.WidthPixels, metrics.HeightPixels);
         MobileGraphicsEXT.Suspend(false);
         Log($"ANDROID_RENDER_POLICY {MobileGraphicsEXT.Size.Width}x{MobileGraphicsEXT.Size.Height} landscape+fullscreen");
-        overlay = new TouchControlsView(owner) { ConsumeFrames = false, ShowDiagnostics = false };
-        overlay.SetBackgroundColor(global::Android.Graphics.Color.Transparent);
-        owner.AddContentView(overlay, new ViewGroup.LayoutParams(-1, -1));
+        nativeRouter = new Tml.Mobile.TouchRouter();
         Log("SDL_ACTIVITY_ATTACHED");
     }
 
     [Export("suspendInput")]
-    public static void SuspendInput() { MobileGraphicsEXT.Suspend(true); overlay?.Suspend(); Log("SDL_INPUT_SUSPENDED"); }
+    public static void SuspendInput() { MobileGraphicsEXT.Suspend(true); overlay?.Suspend(); nativeRouter?.SetContext(Tml.Mobile.InputContext.Suspended); Log("SDL_INPUT_SUSPENDED"); }
 
     [Export("resumeInput")]
-    public static void ResumeInput() { MobileGraphicsEXT.Suspend(false); overlay?.Resume(); Log("SDL_INPUT_RESUMED"); }
+    public static void ResumeInput() { MobileGraphicsEXT.Suspend(false); overlay?.Resume(); nativeRouter?.SetContext(Tml.Mobile.InputContext.Menu); Log("SDL_INPUT_RESUMED"); }
 
     [Export("detach")]
-    public static void Detach() { overlay = null; activity = null; }
+    public static void Detach() { overlay = null; nativeRouter = null; activity = null; }
 
     [Export("runGame")]
     public static int RunGame()
@@ -77,7 +76,7 @@ public sealed class GameEntry : Java.Lang.Object
                 });
                 resolverInstalled = true;
             }
-            MobileInputEXT.Source = overlay!.Router;
+            MobileInputEXT.Source = nativeRouter ?? overlay!.Router;
             AndroidDetours.Initialize();
             using var performance = new SessionPerformance(owner.FilesDir!.AbsolutePath);
             using var glMonitor = new AndroidGraphicsProbe.FrameMonitor();
@@ -86,6 +85,9 @@ public sealed class GameEntry : Java.Lang.Object
             {
                 NativeFileProbe.Run(owner);
                 using var ordering = AndroidDetours.VerifyDeferredBootstrap(typeof(RenderProbe));
+                nativeRouter!.Configure(new(0, 0, MobileGraphicsEXT.Size.Width, MobileGraphicsEXT.Size.Height), []);
+                nativeRouter.SetContext(Tml.Mobile.InputContext.Menu);
+                MobileInputEXT.NativeTouchEnabled = true;
                 using var game = new RenderProbe();
                 game.Run();
             }
@@ -100,6 +102,7 @@ public sealed class GameEntry : Java.Lang.Object
         }
         finally
         {
+            MobileInputEXT.NativeTouchEnabled = false;
             MobileInputEXT.Source = null;
             Interlocked.Exchange(ref active, 0);
         }
@@ -137,6 +140,7 @@ public sealed class GameEntry : Java.Lang.Object
             RuntimeHelpers.RunClassConstructor(redirects.TypeHandle);
             Log("TML_ASSEMBLY_REDIRECTS_READY");
             AndroidGameHooks? androidHooks = null;
+            IDisposable? integration = null;
             using var ready = new GameRunScope(game.GetType("Terraria.Main", true)!, () =>
             {
                 var savePath = game.GetType("Terraria.Program", true)!.GetField("SavePath")!.GetValue(null) as string;
@@ -144,6 +148,12 @@ public sealed class GameEntry : Java.Lang.Object
                     throw new InvalidOperationException("Game.Run reached before Terraria prepared its save paths");
                 Log("TML_GAME_RUN_READY save-path-initialized");
                 androidHooks = new AndroidGameHooks(game, activity!);
+                Assembly bridge = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.Combine(payload, "Tml.GameIntegration.dll"));
+                var initialize = bridge.GetType("Tml.GameIntegration.MobileGameIntegration", true)!.GetMethod("Initialize")!;
+                using var memory = new ActivityManager.MemoryInfo();
+                ((ActivityManager)activity!.GetSystemService(Activity.ActivityService)!).GetMemoryInfo(memory);
+                Log($"ANDROID_SYSTEM_MEMORY installed={memory.TotalMem / 1048576}MiB available={memory.AvailMem / 1048576}MiB");
+                integration = (IDisposable)initialize.Invoke(null, [nativeRouter!, files, (Action<string>)Log, memory.TotalMem])!;
             });
             Type program = game.GetType("Terraria.Program", true)!;
             Log("TML_PROGRAM_TYPE_READY");
@@ -157,7 +167,7 @@ public sealed class GameEntry : Java.Lang.Object
                     [new[] { "-savedirectory", Path.Combine(files, "Saves"), "-tmlsavedirectory", Path.Combine(files, "Saves/tModLoader"),
                         "-nosteam" }, false]);
             }
-            finally { androidHooks?.Dispose(); }
+            finally { integration?.Dispose(); androidHooks?.Dispose(); }
             Log("TML_LAUNCH_RETURNED");
         }
         finally { Environment.CurrentDirectory = previous; AssemblyLoadContext.Default.Resolving -= Resolve; }
@@ -188,6 +198,7 @@ public sealed class GameEntry : Java.Lang.Object
         private SpriteBatch? batch;
         private Texture2D? pixel;
         private bool firstFrame = true;
+        private bool touched;
         public RenderProbe()
         {
             graphics = new GraphicsDeviceManager(this) { PreferredBackBufferWidth = 1280, PreferredBackBufferHeight = 720,
@@ -231,6 +242,7 @@ public sealed class GameEntry : Java.Lang.Object
         }
         protected override void Update(GameTime time)
         {
+            if (!touched && MobileInputEXT.Frame.PointerPressed) { touched = true; Log("ANDROID_NATIVE_TOUCH_EVENT sdl-to-game-thread"); }
             if (Keyboard.GetState().IsKeyDown(Keys.Escape)) Exit();
             base.Update(time);
         }

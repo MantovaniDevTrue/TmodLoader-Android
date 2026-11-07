@@ -8,5 +8,8 @@
   <ItemGroup>
     <Compile Include="../../src/Tml.Game.Android/NativeCrashTrace.cs" Link="NativeCrashTrace.cs" />
     <Compile Include="../../src/Tml.Game.Android/EntryAssemblyScope.cs" Link="EntryAssemblyScope.cs" />
+    <Compile Include="../../src/Tml.GameIntegration/FrameGcPatch.cs" Link="FrameGcPatch.cs" />
+    <PackageReference Include="MonoMod.RuntimeDetour" Version="25.3.4" />
+    <PackageReference Include="MonoMod.Utils" Version="25.0.12" />
   </ItemGroup>
 </Project>

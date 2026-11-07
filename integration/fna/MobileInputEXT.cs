@@ -6,6 +6,17 @@ namespace Microsoft.Xna.Framework.Input
     // Compiled inside FNA, sharing its real KeyboardState and MouseState types.
     public static class MobileInputEXT
     {
+        public static bool DirectActions { get; set; }
+        public static bool NativeTouchEnabled { get; set; }
+        public static event Action BeforeUpdate;
+        public static Func<TouchPoint, bool> TouchInterceptor { get; set; }
+        public static void NativeTouch(int id, float x, float y, TouchPhase phase)
+        {
+            if (!NativeTouchEnabled || Source == null) return;
+            var point = new TouchPoint(id, new System.Numerics.Vector2(x * Math.Max(1, Mouse.INTERNAL_BackBufferWidth), y * Math.Max(1, Mouse.INTERNAL_BackBufferHeight)), phase);
+            if (TouchInterceptor == null || !TouchInterceptor(point)) Source.Handle(point);
+        }
+
         public static TouchRouter Source { get; set; }
         public static InputFrame Frame { get; private set; }
         public static float AimOriginX { get; set; } = .5f;
@@ -35,6 +46,7 @@ namespace Microsoft.Xna.Framework.Input
         // Called on the game thread once before each fixed/variable update, not each GetState.
         public static void BeginUpdate()
         {
+            BeforeUpdate?.Invoke();
             if (Source == null) { Frame = default(InputFrame); hasAim = false; return; }
             Frame = Source.ConsumeFrame();
             if (Source.Context == InputContext.Suspended || Source.Context == InputContext.TextEntry)
@@ -55,7 +67,7 @@ namespace Microsoft.Xna.Framework.Input
 
         internal static KeyboardState MergeKeyboard(KeyboardState physical)
         {
-            if (Source == null) return physical;
+            if (Source == null || DirectActions) return physical;
             for (int i = 0; i < bindings.Length; i++)
                 if (Frame.IsHeld(bindings[i].Action)) physical.AddPressedKey((int)bindings[i].Key);
             return physical;

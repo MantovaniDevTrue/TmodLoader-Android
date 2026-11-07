@@ -46,6 +46,19 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
             ("\t\t\t\t\tDraw(gameTime);\n\t\t\t\t\tEndDraw();", "\t\t\t\t\tlong mobileDrawStart = MobilePerformanceEXT.BeginSection();\n\t\t\t\t\tDraw(gameTime);\n\t\t\t\t\tMobilePerformanceEXT.EndDraw(mobileDrawStart);\n\t\t\t\t\tlong mobilePresentStart = MobilePerformanceEXT.BeginSection();\n\t\t\t\t\tEndDraw();\n\t\t\t\t\tMobilePerformanceEXT.EndPresent(mobilePresentStart);", 1),
             ("\t\t\t\t\tEndDraw();\n\t\t\t\t\tMobilePerformanceEXT.EndPresent(mobilePresentStart);\n\t\t\t\t}\n\t\t\t}\n\t\t}\n", "\t\t\t\t\tEndDraw();\n\t\t\t\t\tMobilePerformanceEXT.EndPresent(mobilePresentStart);\n\t\t\t\t}\n\t\t\t}\n\t\t\tMobilePerformanceEXT.EndFrame();\n\t\t}\n", 1)],
     }
+    for event, phase in [("SDL_EVENT_FINGER_DOWN", "Down"), ("SDL_EVENT_FINGER_MOTION", "Move")]:
+        old = "else if (evt.type == (uint) SDL.SDL_EventType." + event + ")\n\t\t\t\t{"
+        new = old + "\n\t\t\t\t\tMobileInputEXT.NativeTouch((int) evt.tfinger.fingerID, evt.tfinger.x, evt.tfinger.y, Tml.Mobile.TouchPhase." + phase + ");"
+        replacements["src/FNAPlatform/SDL3_FNAPlatform.cs"].append((old, new, 1))
+    old = "else if (evt.type == (uint) SDL.SDL_EventType.SDL_EVENT_FINGER_UP || evt.type == (uint) SDL.SDL_EventType.SDL_EVENT_FINGER_CANCELED)\n\t\t\t\t{"
+    new = old + "\n\t\t\t\t\tMobileInputEXT.NativeTouch((int) evt.tfinger.fingerID, evt.tfinger.x, evt.tfinger.y, evt.type == (uint) SDL.SDL_EventType.SDL_EVENT_FINGER_CANCELED ? Tml.Mobile.TouchPhase.Cancel : Tml.Mobile.TouchPhase.Up);"
+    replacements["src/FNAPlatform/SDL3_FNAPlatform.cs"].append((old, new, 1))
+    replacements["src/Content/ContentManager.cs"] = [
+        ("MemoryStream decompressedStream = new MemoryStream(\n\t\t\t\t\tnew byte[decompressedSize],\n\t\t\t\t\t0,\n\t\t\t\t\tdecompressedSize,\n\t\t\t\t\ttrue,\n\t\t\t\t\ttrue // This MUST be true! Readers may need GetBuffer()!\n\t\t\t\t);", "MemoryStream decompressedStream = PooledContentStream.Rent(decompressedSize);\n\t\t\t\ttry {", 1),
+        ("MemoryStream compressedStream = new MemoryStream(\n\t\t\t\t\tnew byte[compressedSize],\n\t\t\t\t\t0,\n\t\t\t\t\tcompressedSize,\n\t\t\t\t\ttrue,\n\t\t\t\t\ttrue\n\t\t\t\t);", "using MemoryStream compressedStream = PooledContentStream.Rent(compressedSize);", 1),
+        ("stream.Read(compressedStream.GetBuffer(), 0, compressedSize);", "stream.ReadExactly(compressedStream.GetBuffer(), 0, compressedSize);", 1),
+        ("\n\t\t\t}\n\t\t\telse\n\t\t\t{\n\t\t\t\treader = new ContentReader(", "\n\t\t\t\t} catch { decompressedStream.Dispose(); throw; }\n\t\t\t}\n\t\t\telse\n\t\t\t{\n\t\t\t\treader = new ContentReader(", 1)
+    ]
     # Validate all edits before copying or writing anything.
     modified = {}
     for filename, edits in replacements.items():
@@ -61,6 +74,7 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
     shutil.copytree(source, destination, ignore=shutil.ignore_patterns(".git", "bin", "obj"))
     for filename, text in modified.items():
         (destination / filename).write_text(text)
+    shutil.copyfile(ROOT / "integration/fna/PooledContentStream.cs", destination / "src/PooledContentStream.cs")
     shutil.copyfile(ROOT / "integration/fna/MobileInputEXT.cs", destination / "src/Input/MobileInputEXT.cs")
     shutil.copyfile(ROOT / "integration/fna/MobilePerformanceEXT.cs", destination / "src/MobilePerformanceEXT.cs")
     shutil.copyfile(ROOT / "integration/fna/MobileFileIOEXT.cs", destination / "src/MobileFileIOEXT.cs")
@@ -73,6 +87,7 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
     from xml.sax.saxutils import escape
     text = text.replace("</Project>", f'''  <ItemGroup>
     <Compile Include="src/Input/MobileInputEXT.cs" />
+    <Compile Include="src/PooledContentStream.cs" />
     <Compile Include="src/MobilePerformanceEXT.cs" />
     <Compile Include="src/MobileFileIOEXT.cs" />
     <Compile Include="src/MobileGraphicsEXT.cs" />

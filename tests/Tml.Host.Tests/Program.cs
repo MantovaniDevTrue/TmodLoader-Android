@@ -67,3 +67,5 @@ try
     Require(Assembly.GetEntryAssembly() == game, "restore existing entry assembly after failure");
 }
 finally { Assembly.SetEntryAssembly(original); }
+
+FrameGcChecks.Run(Require);

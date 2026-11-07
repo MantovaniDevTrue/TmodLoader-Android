@@ -95,3 +95,5 @@ As the Android port advances, each new phase should update:
 4. debugging/build notes when the workflow changes.
 
 The objective is to keep the repository useful as both the current source-of-truth and a readable record of how the Android bootstrap reached each milestone.
+
+Native touch controls and mobile runtime work: [implementation and validation scope](docs/MOBILE_TOUCH.md).
