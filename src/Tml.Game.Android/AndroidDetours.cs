@@ -40,6 +40,34 @@ internal static class AndroidDetours
         GameEntry.Log("ANDROID_DETOUR_PROBE_OK apply+original+chain+repeat+remove");
     }
 
+    internal static GameRunScope VerifyDeferredBootstrap(Type gameType)
+    {
+        BootstrapState.PathsReady = false;
+        var scope = new GameRunScope(gameType, () =>
+        {
+            if (!BootstrapState.PathsReady) throw new InvalidOperationException("Hook ran before bootstrap paths");
+            var method = typeof(BootstrapProbe).GetMethod(nameof(BootstrapProbe.Target))!;
+            using (var hook = new Hook(method, (Func<Func<int, int>, int, int>)((original, value) => original(value) * 2)))
+                if (BootstrapProbe.Target(3) != 8) throw new InvalidOperationException("Deferred hook failed");
+            if (BootstrapProbe.Target(3) != 4) throw new InvalidOperationException("Deferred hook removal failed");
+            GameEntry.Log("ANDROID_DEFERRED_BOOTSTRAP_OK path-before-type-initializer+hook+remove");
+        });
+        // Registration above must not run BootstrapProbe's static constructor.
+        BootstrapState.PathsReady = true;
+        return scope;
+    }
+
+    private static class BootstrapState { internal static bool PathsReady; }
+    private static class BootstrapProbe
+    {
+        static BootstrapProbe()
+        {
+            if (!BootstrapState.PathsReady) throw new InvalidOperationException("Static initializer ran before paths were ready");
+        }
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public static int Target(int value) => value + 1;
+    }
+
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
     private static int Probe(int value) => value + 1;
 }

@@ -81,7 +81,13 @@ public sealed class GameEntry : Java.Lang.Object
             AndroidDetours.Initialize();
             using var performance = new SessionPerformance(owner.FilesDir!.AbsolutePath);
             if (owner.Intent?.GetStringExtra("mode") == "game") RunTerraria(owner.FilesDir!.AbsolutePath);
-            else { NativeFileProbe.Run(owner); using var game = new RenderProbe(); game.Run(); }
+            else
+            {
+                NativeFileProbe.Run(owner);
+                using var ordering = AndroidDetours.VerifyDeferredBootstrap(typeof(RenderProbe));
+                using var game = new RenderProbe();
+                game.Run();
+            }
             Log("MANAGED_SDL_EXIT");
             return 0;
         }
@@ -129,15 +135,28 @@ public sealed class GameEntry : Java.Lang.Object
             Type redirects = game.GetType("Terraria.ModLoader.Core.AssemblyManager+AssemblyRedirects", true)!;
             RuntimeHelpers.RunClassConstructor(redirects.TypeHandle);
             Log("TML_ASSEMBLY_REDIRECTS_READY");
-            using var androidHooks = new AndroidGameHooks(game, activity!);
+            AndroidGameHooks? androidHooks = null;
+            using var ready = new GameRunScope(game.GetType("Terraria.Main", true)!, () =>
+            {
+                var savePath = game.GetType("Terraria.Program", true)!.GetField("SavePath")!.GetValue(null) as string;
+                if (string.IsNullOrWhiteSpace(savePath))
+                    throw new InvalidOperationException("Game.Run reached before Terraria prepared its save paths");
+                Log("TML_GAME_RUN_READY save-path-initialized");
+                androidHooks = new AndroidGameHooks(game, activity!);
+            });
             Type program = game.GetType("Terraria.Program", true)!;
             Log("TML_PROGRAM_TYPE_READY");
             MethodInfo entry = program.GetMethod("LaunchGame", [typeof(string[]), typeof(bool)])
                 ?? throw new MissingMethodException("Terraria.Program.LaunchGame(string[], bool)");
             Log("TML_LAUNCH_INVOKE");
-            entry.Invoke(null,
-                [new[] { "-savedirectory", Path.Combine(files, "Saves"), "-tmlsavedirectory", Path.Combine(files, "Saves/tModLoader"),
-                    "-nosteam" }, false]);
+            try
+            {
+                Log("TML_GAME_HOOKS_DEFERRED until-game-run");
+                entry.Invoke(null,
+                    [new[] { "-savedirectory", Path.Combine(files, "Saves"), "-tmlsavedirectory", Path.Combine(files, "Saves/tModLoader"),
+                        "-nosteam" }, false]);
+            }
+            finally { androidHooks?.Dispose(); }
             Log("TML_LAUNCH_RETURNED");
         }
         finally { Environment.CurrentDirectory = previous; AssemblyLoadContext.Default.Resolving -= Resolve; }

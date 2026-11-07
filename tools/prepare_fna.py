@@ -39,6 +39,7 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
             ("return new MouseState(", "return MobileInputEXT.MergeMouse(new MouseState(", 1),
             ("\t\t\t\tx2\n\t\t\t);", "\t\t\t\tx2\n\t\t\t));", 1)],
         "src/Game.cs": [
+            ("\t\tpublic void Run()\n\t\t{", "\t\tpublic void Run()\n\t\t{\n\t\t\tMobileGameLifecycleEXT.OnBeforeRun(this);", 1),
             ("\n\t\t\tAdvanceElapsedTime();", "\n\t\t\tMobilePerformanceEXT.BeginFrame();\n\t\t\tAdvanceElapsedTime();", 1),
             ("\n\t\t\t\t\tUpdate(gameTime);", "\n\t\t\t\t\tlong mobileUpdateStart = MobilePerformanceEXT.BeginSection();\n\t\t\t\t\tMobileInputEXT.BeginUpdate();\n\t\t\t\t\tUpdate(gameTime);\n\t\t\t\t\tMobilePerformanceEXT.EndUpdate(mobileUpdateStart);", 1),
             ("\n\t\t\t\tUpdate(gameTime);", "\n\t\t\t\tlong mobileUpdateStart = MobilePerformanceEXT.BeginSection();\n\t\t\t\tMobileInputEXT.BeginUpdate();\n\t\t\t\tUpdate(gameTime);\n\t\t\t\tMobilePerformanceEXT.EndUpdate(mobileUpdateStart);", 1),
@@ -64,6 +65,7 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
     shutil.copyfile(ROOT / "integration/fna/MobilePerformanceEXT.cs", destination / "src/MobilePerformanceEXT.cs")
     shutil.copyfile(ROOT / "integration/fna/MobileFileIOEXT.cs", destination / "src/MobileFileIOEXT.cs")
     shutil.copyfile(ROOT / "integration/fna/MobileGraphicsEXT.cs", destination / "src/MobileGraphicsEXT.cs")
+    shutil.copyfile(ROOT / "integration/fna/MobileGameLifecycleEXT.cs", destination / "src/MobileGameLifecycleEXT.cs")
     project = destination / "FNA.Core.csproj"
     text = project.read_text()
     reference = ROOT / "src/Tml.Mobile.Core/Tml.Mobile.Core.csproj"
@@ -74,6 +76,7 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
     <Compile Include="src/MobilePerformanceEXT.cs" />
     <Compile Include="src/MobileFileIOEXT.cs" />
     <Compile Include="src/MobileGraphicsEXT.cs" />
+    <Compile Include="src/MobileGameLifecycleEXT.cs" />
     <ProjectReference Include="{escape(str(reference))}" />
   </ItemGroup>
 </Project>''')
