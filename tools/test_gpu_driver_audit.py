@@ -23,7 +23,7 @@ class GpuDriverAuditTests(unittest.TestCase):
             patched = source.read_text()
             self.assertIn("TML_SDL_GPU_ACTIVE_DRIVER=%s", patched)
             self.assertIn("SDL_GetGPUDeviceDriver(device)", patched)
-            self.assertIn("requirehardwareacceleration\", !SDL_GetHintBoolean", patched)
+            self.assertIn('requirehardwareacceleration", !SDL_GetHintBoolean', patched)
             self.assertEqual(patched.count("TML_SDL_GPU_ACTIVE_DRIVER="), 1)
             prepare_sdlgpu(Path(root))
             self.assertEqual(source.read_text(), patched)
