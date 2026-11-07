@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using FnaGame = Microsoft.Xna.Framework.Game;
 
 namespace Tml.Mobile.Android;
 
@@ -15,7 +16,7 @@ internal sealed class GameRunScope : IDisposable
         MobileGameLifecycleEXT.BeforeRun += BeforeRun;
     }
 
-    private void BeforeRun(Game game)
+    private void BeforeRun(FnaGame game)
     {
         if (initialized || game.GetType() != expectedType) return;
         initialize();
