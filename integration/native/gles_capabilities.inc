@@ -4,7 +4,9 @@
 	 */
 	if (renderer->useES3)
 	{
+		/* GLES exposes ClearDepthf/DepthRangef, not desktop double APIs. */
+		renderer->supports_DoublePrecisionDepth = 0;
 		renderer->supports_ARB_map_buffer_range = 0;
 		renderer->supports_ARB_draw_elements_base_vertex = 0;
-		FNA3D_LogInfo("ANDROID_GLES_STREAMING subdata+attribute-offsets");
+		FNA3D_LogInfo("ANDROID_GLES_STREAMING subdata+attribute-offsets+float-depth");
 	}
