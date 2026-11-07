@@ -18,9 +18,9 @@ public sealed class TouchRouter
     private InputContext context = InputContext.Gameplay;
     private MobileAction held, pendingPressed, sampledHeld;
     private Vector2 movement, aim, pointer = new(.5f, .5f);
-    private bool pointerDown, pointerPressed, sampledPointerDown, hasPointer;
+    private bool pointerDown, pointerPressed, sampledPointerDown;
     private InputFrame lastFrame;
-    private long sequence;
+    private long sequence, gestureRevision, pointerRevision, aimRevision, gestureEpoch;
 
     public InputContext Context { get { lock (gate) return context; } }
 
@@ -81,6 +81,13 @@ public sealed class TouchRouter
                 fingers[slot].Position = point.Position;
                 if (point.Phase == TouchPhase.Up) fingers[slot].Active = false;
             }
+            int captured = fingers[slot].Control;
+            if (captured == -1) pointer = viewport.Normalize(point.Position);
+            if (point.Phase is TouchPhase.Down or TouchPhase.Move)
+            {
+                if (captured == -1) pointerRevision = ++gestureRevision;
+                else if (controls[captured].Kind == ControlKind.AimStick) aimRevision = ++gestureRevision;
+            }
             Recalculate();
             return true;
         }
@@ -97,8 +104,9 @@ public sealed class TouchRouter
             MobileAction released = sampledHeld & ~visible;
             bool visiblePointer = pointerDown || pointerPressed;
             var frame = new InputFrame(++sequence, visible, pressed, released,
-                movement, aim, pointer, hasPointer, visiblePointer,
-                visiblePointer && !sampledPointerDown, !visiblePointer && sampledPointerDown);
+                movement, aim, pointer, visiblePointer || sampledPointerDown, visiblePointer,
+                visiblePointer && !sampledPointerDown, !visiblePointer && sampledPointerDown)
+            { PointerRevision = pointerRevision, AimRevision = aimRevision, GestureEpoch = gestureEpoch };
             sampledHeld = visible;
             sampledPointerDown = visiblePointer;
             pendingPressed = MobileAction.None;
@@ -147,7 +155,7 @@ public sealed class TouchRouter
             if (finger.Control == -1)
             {
                 pointer = viewport.Normalize(finger.Position);
-                hasPointer = nextPointerDown = true;
+                nextPointerDown = true;
                 continue;
             }
             var control = controls[finger.Control];
@@ -176,10 +184,11 @@ public sealed class TouchRouter
 
     private void ResetCore()
     {
+        gestureEpoch++; pointerRevision = aimRevision = 0;
         Array.Clear(fingers);
         held = pendingPressed = MobileAction.None;
         movement = aim = Vector2.Zero;
-        pointerDown = pointerPressed = hasPointer = false;
+        pointerDown = pointerPressed = false;
         lastFrame = default;
         // Keep sampled state until the consumer sees the release frame.
     }

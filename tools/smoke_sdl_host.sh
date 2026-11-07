@@ -28,6 +28,7 @@ else:
 PY
   then
     read -r tap_x tap_y < /tmp/tml-sdl-tap.txt
+    adb exec-out screencap -p > artifacts/sdl-smoke/launcher.png
     adb shell input tap "$tap_x" "$tap_y"
     found_button=1
     break

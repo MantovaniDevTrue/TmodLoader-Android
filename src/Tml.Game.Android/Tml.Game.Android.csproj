@@ -5,11 +5,13 @@
     <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
     <ApplicationId>com.mantovani.tmlmobile</ApplicationId>
     <ApplicationTitle>tML Android</ApplicationTitle>
-    <ApplicationVersion>15</ApplicationVersion>
-    <ApplicationDisplayVersion>0.2.12</ApplicationDisplayVersion>
+    <ApplicationVersion>16</ApplicationVersion>
+    <ApplicationDisplayVersion>0.2.13</ApplicationDisplayVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">android-arm64</RuntimeIdentifier>
     <UseMonoRuntime>true</UseMonoRuntime>
+    <AndroidUseInterpreter>false</AndroidUseInterpreter>
+    <UseInterpreter>false</UseInterpreter>
     <AndroidEnableMarshalMethods>false</AndroidEnableMarshalMethods>
     <PublishAot>false</PublishAot>
     <RunAOTCompilation>false</RunAOTCompilation>

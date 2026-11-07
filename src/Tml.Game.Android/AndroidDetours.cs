@@ -53,6 +53,7 @@ internal static class AndroidDetours
             if (Probe(index) != index + 1) throw new InvalidOperationException("Android repeated hook removal failed");
         }
         GameEntry.Log("ANDROID_PRIVATE_ACCESS_OK private-call+field+generic+original+gc+remove");
+        RuntimeExecution.Report(source);
         initialized = true;
         GameEntry.Log("ANDROID_DETOUR_PROBE_OK apply+original+chain+repeat+remove");
     }

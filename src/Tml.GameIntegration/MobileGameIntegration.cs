@@ -32,6 +32,7 @@ public sealed class MobileGameIntegration : IDisposable
     private string[] commandText = [];
     private string selectedLabel = "";
     private long skippedCollections;
+    private static int saving;
     private readonly Dictionary<MobileAction, Texture2D> icons = new();
 
     public static IDisposable Initialize(TouchRouter router, string root, Action<string> log, long installedMemory) => new MobileGameIntegration(router, root, log, installedMemory);
@@ -56,12 +57,19 @@ public sealed class MobileGameIntegration : IDisposable
                 try { original(self); }
                 finally { log("ANDROID_CONTENT_END ms=" + Stopwatch.GetElapsedTime(start).TotalMilliseconds.ToString("F0")); }
             })));
+            foreach (string name in new[] { "LoadContent_Deferred", "LoadMusic_InSteps" })
+            {
+                string stage = name;
+                var method = typeof(Main).GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic)!;
+                hooks.Add(new Hook(method, (Func<Func<Main, System.Collections.IEnumerator>, Main, System.Collections.IEnumerator>)
+                    ((original, self) => MeasureLoading(original(self), stage))));
+            }
             hooks.Add(new Hook(typeof(Terraria.IO.WorldFile).GetMethod("SaveWorld", [typeof(bool), typeof(bool), typeof(bool)])!,
                 (Action<Action<bool, bool, bool>, bool, bool, bool>)((original, a, b, c) =>
                 {
-                    long start = Stopwatch.GetTimestamp(); log("ANDROID_SAVE_WORLD_BEGIN");
+                    long start = Stopwatch.GetTimestamp(); Interlocked.Increment(ref saving); log("ANDROID_SAVE_WORLD_BEGIN");
                     try { original(a, b, c); }
-                    finally { log("ANDROID_SAVE_WORLD_END ms=" + Stopwatch.GetElapsedTime(start).TotalMilliseconds.ToString("F0")); }
+                    finally { Interlocked.Decrement(ref saving); log("ANDROID_SAVE_WORLD_END ms=" + Stopwatch.GetElapsedTime(start).TotalMilliseconds.ToString("F0")); }
                 })));
             hooks.Add(new Hook(typeof(TriggersPack).GetMethod("Update")!, (Action<Action<TriggersPack>, TriggersPack>)((original, self) => { if (ReferenceEquals(self, PlayerInput.Triggers)) ApplyActions(self.Current); original(self); })));
             hooks.Add(new Hook(typeof(IngameOptions).GetMethod("Draw")!, (Action<Action<Main, SpriteBatch>, Main, SpriteBatch>)((original, main, sb) => { if (!editor) original(main, sb); })));
@@ -75,6 +83,30 @@ public sealed class MobileGameIntegration : IDisposable
             log("ANDROID_FRAME_GC_POLICY automatic; EndDraw forced collections removed=3");
         }
         catch { Dispose(); throw; }
+    }
+
+    private System.Collections.IEnumerator MeasureLoading(System.Collections.IEnumerator source, string stage)
+    {
+        long start = Stopwatch.GetTimestamp(), work = 0, worst = 0;
+        int steps = 0;
+        log("ANDROID_LOADING_STAGE_BEGIN " + stage);
+        try
+        {
+            while (true)
+            {
+                long step = Stopwatch.GetTimestamp();
+                bool more = source.MoveNext();
+                long elapsed = Stopwatch.GetTimestamp() - step;
+                work += elapsed; worst = Math.Max(worst, elapsed); steps++;
+                if (!more) break;
+                yield return source.Current;
+            }
+        }
+        finally
+        {
+            (source as IDisposable)?.Dispose();
+            log($"ANDROID_LOADING_STAGE_END {stage} wall-ms={Stopwatch.GetElapsedTime(start).TotalMilliseconds:F0} work-ms={work * 1000d / Stopwatch.Frequency:F0} worst-step-ms={worst * 1000d / Stopwatch.Frequency:F0} steps={steps}");
+        }
     }
 
     private void SkipFrameCollection(int generation)
@@ -111,6 +143,7 @@ public sealed class MobileGameIntegration : IDisposable
 
     private void Update()
     {
+        MobilePerformanceEXT.Scene = !MobileGraphicsEXT.CanDraw ? CaptureScene.Paused : Volatile.Read(ref saving) > 0 ? CaptureScene.Saving : Main.gameMenu ? CaptureScene.Menu : editor || Main.ingameOptionsWindow || Main.playerInventory ? CaptureScene.WorldUi : CaptureScene.World;
         if (!MobileGraphicsEXT.CanDraw) { router.SetContext(InputContext.Suspended); return; }
         int nextMode = Main.gameMenu ? 0 : editor ? 4 : Main.ingameOptionsWindow ? 3 : Main.playerInventory ? 2 : 1;
         var size = MobileGraphicsEXT.Size;

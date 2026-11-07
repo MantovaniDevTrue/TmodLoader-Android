@@ -11,7 +11,7 @@ namespace Tml.Mobile.Android;
 [Activity(Label = "tML Android", MainLauncher = true, Exported = true,
     ScreenOrientation = ScreenOrientation.SensorLandscape,
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.KeyboardHidden)]
-public sealed class MainActivity : Activity
+public sealed partial class MainActivity : Activity
 {
     private TextView? status;
     private Button? play, import;
@@ -21,40 +21,7 @@ public sealed class MainActivity : Activity
     protected override void OnCreate(Bundle? state)
     {
         base.OnCreate(state);
-        var panel = new LinearLayout(this) { Orientation = Orientation.Vertical };
-        panel.SetPadding(40, 20, 40, 20);
-        var title = new TextView(this) { Text = "tModLoader Android · experimental", TextSize = 24 };
-        status = new TextView(this) { Text = "Importe o ZIP completo do Terraria PC. O teste gráfico funciona sem importar.", TextSize = 16 };
-        var graphics = new Button(this) { Text = "Testar gráficos e controles" };
-        import = new Button(this) { Text = "Importar Terraria-PC.zip" };
-        play = new Button(this) { Text = "Iniciar tModLoader (experimental)" };
-        var logs = new Button(this) { Text = "Ver último relatório" };
-        graphics.Click += (_, _) => Launch("probe");
-        import.Click += (_, _) =>
-        {
-            if (busy) return;
-            var intent = new Intent(Intent.ActionOpenDocument);
-            intent.AddCategory(Intent.CategoryOpenable);
-            intent.SetType("*/*");
-            StartActivityForResult(intent, 10);
-        };
-        play.Click += async (_, _) => await PlayAsync();
-        logs.Click += (_, _) =>
-        {
-            string message = HostDiagnostics.ReadReport(this);
-            var dialog = new AlertDialog.Builder(this);
-            dialog.SetTitle("Relatório");
-            dialog.SetMessage(message);
-            dialog.SetPositiveButton("Fechar", (_, _) => { });
-            dialog.SetNeutralButton("Copiar", (_, _) =>
-            {
-                var clipboard = (ClipboardManager)GetSystemService(ClipboardService)!;
-                clipboard.PrimaryClip = ClipData.NewPlainText("tML Android", message);
-            });
-            dialog.Show();
-        };
-        foreach (var view in new global::Android.Views.View[] { title, status, graphics, import, play, logs }) panel.AddView(view);
-        SetContentView(panel);
+        BuildLauncher();
         global::Android.Util.Log.Info("TmlHost", "HOST_LAUNCHER_READY");
     }
 
@@ -64,6 +31,7 @@ public sealed class MainActivity : Activity
         var intent = new Intent();
         intent.SetClassName(this, "com.mantovani.tmlmobile.SdlGameActivity");
         intent.PutExtra("mode", mode);
+        intent.PutExtra("renderer", Preferences.GetString("renderer", "OpenGL"));
         StartActivity(intent);
     }
 
@@ -81,7 +49,7 @@ public sealed class MainActivity : Activity
                 if (!Convert.ToHexString(SHA256.HashData(owned)).Equals(TerrariaHash, StringComparison.OrdinalIgnoreCase))
                     throw new InvalidDataException("O executável precisa ser o Terraria PC 1.4.5.8 importado.");
                 string marker = Path.Combine(root, "game/.payload-version");
-                if (!File.Exists(marker) || File.ReadAllText(marker) != "0.2.12")
+                if (!File.Exists(marker) || File.ReadAllText(marker) != "0.2.13")
                 {
                     string cache = Path.Combine(CacheDir!.AbsolutePath, "game-payload.zip");
                     try
@@ -89,7 +57,7 @@ public sealed class MainActivity : Activity
                         using (var source = Assets!.Open("game-payload.zip"))
                         using (var target = File.Create(cache)) source.CopyTo(target);
                         ExtractPayload(cache, Path.Combine(root, "game"));
-                        File.WriteAllText(marker, "0.2.12");
+                        File.WriteAllText(marker, "0.2.13");
                     }
                     finally { if (File.Exists(cache)) File.Delete(cache); }
                 }
@@ -122,7 +90,10 @@ public sealed class MainActivity : Activity
     protected override async void OnActivityResult(int requestCode, Result resultCode, Intent? data)
     {
         base.OnActivityResult(requestCode, resultCode, data);
-        if (requestCode != 10 || resultCode != Result.Ok || data?.Data == null) return;
+        if (resultCode != Result.Ok || data == null) return;
+        if (requestCode == 11) { await ImportModsAsync(data); return; }
+        if (requestCode == 12 && data.Data != null) { await ImportThemeAsync(data.Data); return; }
+        if (requestCode != 10 || data.Data == null) return;
         SetBusy(true, "Importando Terraria. Mantenha o aplicativo aberto…");
         string cached = Path.Combine(CacheDir!.AbsolutePath, "terraria-import.zip");
         string root = FilesDir!.AbsolutePath;
@@ -178,6 +149,6 @@ public sealed class MainActivity : Activity
     {
         busy = value;
         status!.Text = message;
-        play!.Enabled = import!.Enabled = !value;
+        foreach (var action in actions) action.Enabled = !value;
     }
 }

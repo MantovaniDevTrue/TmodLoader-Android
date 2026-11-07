@@ -17,6 +17,8 @@ namespace Tml.Mobile.Android;
 [Register("com/mantovani/tmlmobile/GameEntry")]
 public sealed class GameEntry : Java.Lang.Object
 {
+    [DllImport("libSDL3.so", EntryPoint = "SDL_SetHint")]
+    private static extern bool SetHint(string name, string value);
     private static Activity? activity;
     private static TouchControlsView? overlay;
     private static Tml.Mobile.TouchRouter? nativeRouter;
@@ -63,7 +65,12 @@ public sealed class GameEntry : Java.Lang.Object
             Log("HOST_ENTRY_ASSEMBLY_READY " + Assembly.GetEntryAssembly()!.GetName().Name);
             Log($"MANAGED_SDL_ENTRY {RuntimeInformation.FrameworkDescription} {RuntimeInformation.ProcessArchitecture}");
             Environment.SetEnvironmentVariable("FNA_PLATFORM_BACKEND", "SDL3");
-            Environment.SetEnvironmentVariable("FNA3D_FORCE_DRIVER", "OpenGL");
+            string renderer = owner.Intent?.GetStringExtra("renderer") == "SDLGPU" ? "SDLGPU" : "OpenGL";
+            AndroidGraphicsProbe.UseOpenGL = renderer == "OpenGL";
+            Environment.SetEnvironmentVariable("FNA3D_FORCE_DRIVER", renderer);
+            SetHint("FNA3D_FORCE_DRIVER", renderer);
+            SetHint("SDL_GPU_DRIVER", "vulkan");
+            Log("ANDROID_RENDERER_REQUEST " + renderer);
             Environment.SetEnvironmentVariable("SDL_TOUCH_MOUSE_EVENTS", "0");
             if (!resolverInstalled)
             {

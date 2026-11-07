@@ -8,12 +8,13 @@ namespace Tml.Mobile.Android;
 
 internal static class AndroidGraphicsProbe
 {
+    internal static bool UseOpenGL = true;
     [DllImport("libGLESv3.so", EntryPoint = "glGetError")]
     private static extern uint GetError();
 
     private static void CheckErrors(string phase)
     {
-        uint error = GetError();
+        uint error = UseOpenGL ? GetError() : 0;
         if (error != 0) throw new InvalidOperationException($"OpenGL error 0x{error:X} during {phase}");
     }
 
@@ -27,7 +28,7 @@ internal static class AndroidGraphicsProbe
         var raster = device.RasterizerState;
         var sampler = device.SamplerStates[0];
         var texture = device.Textures[0];
-        for (int i = 0; i < 16 && GetError() != 0; i++) { }
+        for (int i = 0; UseOpenGL && i < 16 && GetError() != 0; i++) { }
         using var a = new RenderTarget2D(device, 96, 64, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
         using var b = new RenderTarget2D(device, 128, 96, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
         using var red = new Texture2D(device, 1, 1);
@@ -93,7 +94,7 @@ internal static class AndroidGraphicsProbe
         private void Sample()
         {
             if (++frames % 120 != 0 || errors >= 8) return;
-            uint error = GetError();
+            uint error = UseOpenGL ? GetError() : 0;
             if (error != 0) { errors++; GameEntry.Log($"ANDROID_GL_FRAME_ERROR frame={frames} code=0x{error:X}"); }
         }
         public void Dispose() => MobileGraphicsEXT.FramePresented -= Sample;

@@ -17,13 +17,19 @@ namespace Microsoft.Xna.Framework.Input
             if (TouchInterceptor == null || !TouchInterceptor(point)) Source.Handle(point);
         }
 
-        public static TouchRouter Source { get; set; }
+        private static TouchRouter source;
+        public static TouchRouter Source
+        {
+            get => source;
+            set { if (source != value) { aimState.Reset(); physicalSeen = false; } source = value; }
+        }
         public static InputFrame Frame { get; private set; }
         public static float AimOriginX { get; set; } = .5f;
         public static float AimOriginY { get; set; } = .5f;
         public static float AimRadius { get; set; } = .22f;
-        private static bool hasAim;
-        private static float aimX, aimY;
+        private static readonly TouchAimState aimState = new TouchAimState();
+        private static int physicalX, physicalY;
+        private static bool physicalSeen;
         private static int wheel;
 
         private static readonly (MobileAction Action, Keys Key)[] bindings = {
@@ -47,20 +53,12 @@ namespace Microsoft.Xna.Framework.Input
         public static void BeginUpdate()
         {
             BeforeUpdate?.Invoke();
-            if (Source == null) { Frame = default(InputFrame); hasAim = false; return; }
+            if (Source == null) { Frame = default(InputFrame); aimState.Reset(); return; }
             Frame = Source.ConsumeFrame();
             if (Source.Context == InputContext.Suspended || Source.Context == InputContext.TextEntry)
-            { hasAim = false; return; }
-            if (Frame.HasPointer) { aimX = Frame.Pointer.X; aimY = Frame.Pointer.Y; hasAim = true; }
-            if (Frame.Aim.LengthSquared() > 0)
-            {
-                float w = Math.Max(1, Mouse.INTERNAL_BackBufferWidth);
-                float h = Math.Max(1, Mouse.INTERNAL_BackBufferHeight);
-                float distance = Math.Min(w, h) * AimRadius;
-                aimX = Math.Clamp(AimOriginX + Frame.Aim.X * distance / w, 0, 1);
-                aimY = Math.Clamp(AimOriginY + Frame.Aim.Y * distance / h, 0, 1);
-                hasAim = true;
-            }
+            { return; }
+            aimState.Update(Frame, new System.Numerics.Vector2(AimOriginX, AimOriginY), AimRadius,
+                Math.Max(1, Mouse.INTERNAL_BackBufferWidth), Math.Max(1, Mouse.INTERNAL_BackBufferHeight));
             if ((Frame.Pressed & MobileAction.HotbarPrevious) != 0) wheel += 120;
             if ((Frame.Pressed & MobileAction.HotbarNext) != 0) wheel -= 120;
         }
@@ -75,11 +73,14 @@ namespace Microsoft.Xna.Framework.Input
 
         internal static MouseState MergeMouse(MouseState physical)
         {
-            if (Source == null) return physical;
-            if (hasAim)
+            if (Source == null || Source.Context == InputContext.Suspended || Source.Context == InputContext.TextEntry) return physical;
+            bool moved = physicalSeen && (physical.X != physicalX || physical.Y != physicalY);
+            physicalX = physical.X; physicalY = physical.Y; physicalSeen = true;
+            if (moved && !Frame.HasPointer && Frame.Held == MobileAction.None && Frame.Aim.LengthSquared() == 0) aimState.ReleaseToMouse();
+            if (aimState.HasPosition)
             {
-                physical.X = (int)(aimX * Math.Max(0, Mouse.INTERNAL_BackBufferWidth - 1));
-                physical.Y = (int)(aimY * Math.Max(0, Mouse.INTERNAL_BackBufferHeight - 1));
+                physical.X = (int)(aimState.Position.X * Math.Max(0, Mouse.INTERNAL_BackBufferWidth - 1));
+                physical.Y = (int)(aimState.Position.Y * Math.Max(0, Mouse.INTERNAL_BackBufferHeight - 1));
             }
             if (Frame.PointerDown || Frame.IsHeld(MobileAction.Attack)) physical.LeftButton = ButtonState.Pressed;
             if (Frame.IsHeld(MobileAction.Interact)) physical.RightButton = ButtonState.Pressed;

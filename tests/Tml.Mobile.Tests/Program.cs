@@ -94,16 +94,25 @@ Check(inset.All(c => c.Center.X-c.Radius >= 100 && c.Center.X+c.Radius <= 1500 &
 router.Configure(area, layout);
 for (int i = 0; i < 1000; i++)
 {
-    Touch(17, move.Center, TouchPhase.Down); router.ConsumeFrame(); router.CancelAll(); router.ConsumeFrame();
-}
-long start = GC.GetAllocatedBytesForCurrentThread();
-for (int i = 0; i < 10000; i++)
-{
     Touch(17, move.Center, TouchPhase.Down);
     Touch(17, move.Center+new Vector2(30, 20), TouchPhase.Move);
     router.ConsumeFrame(); router.CancelAll(); router.ConsumeFrame();
 }
-Check(GC.GetAllocatedBytesForCurrentThread()-start == 0, "10,000 warmed touch/update cycles allocate zero managed bytes");
+long MeasureRouting()
+{
+    long start = GC.GetAllocatedBytesForCurrentThread();
+    for (int i = 0; i < 10000; i++)
+    {
+        Touch(17, move.Center, TouchPhase.Down);
+        Touch(17, move.Center+new Vector2(30, 20), TouchPhase.Move);
+        router.ConsumeFrame(); router.CancelAll(); router.ConsumeFrame();
+    }
+    return GC.GetAllocatedBytesForCurrentThread()-start;
+}
+MeasureRouting();
+long measuredAlloc = MeasureRouting();
+Console.WriteLine($"Router allocation measurement: {measuredAlloc} bytes");
+Check(measuredAlloc == 0, "10,000 warmed touch/update cycles allocate zero managed bytes");
 var issues = ContentPreflight.Validate(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()),
     Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
 Check(issues.Count == 6 && issues.Any(i => i.Asset == "Images/SplashScreens/Splash_1.xnb"), "missing desktop content reports the known splash blocker");
@@ -153,3 +162,42 @@ try
     Check(invalid && TouchProfile.Load(path).Buttons["jump"].Size == 1.4f, "invalid layout cannot replace the last saved profile");
 }
 finally { if (Directory.Exists(profileDir)) Directory.Delete(profileDir, true); }
+
+var aimRouter = new TouchRouter();
+var aimArea = new Viewport(0, 0, 1000, 500);
+TouchControl[] aimLayout = [new("aim", "Aim", ControlKind.AimStick, MobileAction.None, new(800,350), 80), new("jump", "Jump", ControlKind.Button, MobileAction.Jump, new(950,400), 30)];
+aimRouter.Configure(aimArea, aimLayout);
+var aimState = new TouchAimState();
+void SampleAim() { var f = aimRouter.ConsumeFrame(); aimState.Update(f, new(.5f,.5f), .22f, 1000, 500); }
+aimRouter.Handle(new(1,new(200,100),TouchPhase.Down)); aimRouter.Handle(new(1,new(200,100),TouchPhase.Up)); SampleAim();
+Check(aimState.Position == new Vector2(.2f,.2f), "world tap sets aim once");
+aimRouter.Handle(new(2,new(800,350),TouchPhase.Down)); aimRouter.Handle(new(2,new(880,350),TouchPhase.Move)); SampleAim();
+var stickPosition = aimState.Position;
+aimRouter.Handle(new(2,new(880,350),TouchPhase.Up)); SampleAim();
+for(int i=0;i<20;i++) SampleAim();
+Check(aimState.Position == stickPosition && stickPosition.X > .5f, "releasing stick never restores the earlier world tap");
+aimRouter.Handle(new(3,new(950,400),TouchPhase.Down)); SampleAim();
+Check(aimState.Position == stickPosition, "HUD button cannot claim aim or move the cursor");
+aimRouter.Handle(new(3,new(950,400),TouchPhase.Up)); SampleAim();
+aimRouter.SetContext(InputContext.Menu); SampleAim();
+Check(aimState.Position == stickPosition, "UI context transitions preserve cursor position");
+aimRouter.Handle(new(4,new(300,200),TouchPhase.Down)); SampleAim();
+Check(aimState.Position == new Vector2(.3f,.4f), "fresh menu touch takes ownership after a stick gesture");
+
+var modRoot = Path.Combine(Path.GetTempPath(), "tml-import-" + Guid.NewGuid());
+try
+{
+    byte[] package = new byte[64]; "TMOD"u8.CopyTo(package);
+    string installedMod = LocalModImport.ImportAsync(new MemoryStream(package), "../Example.tmod", modRoot).GetAwaiter().GetResult();
+    Check(installedMod == "Example.tmod" && File.ReadAllBytes(Path.Combine(modRoot,installedMod)).SequenceEqual(package), "local mod stream imports to sanitized name");
+    byte[] changed = (byte[])package.Clone(); changed[^1] = 8;
+    LocalModImport.ImportAsync(new MemoryStream(changed), "Example.tmod", modRoot).GetAwaiter().GetResult();
+    Check(File.ReadAllBytes(Path.Combine(modRoot,"Example.tmod.previous")).SequenceEqual(package), "mod update preserves previous package");
+    try { LocalModImport.ImportAsync(new MemoryStream(new byte[64]), "Example.tmod", modRoot).GetAwaiter().GetResult(); throw new Exception("Invalid mod accepted"); }
+    catch(InvalidDataException) { Check(File.ReadAllBytes(Path.Combine(modRoot,"Example.tmod")).SequenceEqual(changed), "invalid import preserves installed mod"); }
+    Check(Directory.GetFiles(modRoot,".import-*").Length == 0, "failed import leaves no staging package");
+    Check(LauncherTheme.Parse(System.Text.Json.JsonSerializer.Serialize(LauncherTheme.Presets[1])).Name == "Calamity", "custom palette parses");
+    try { LauncherTheme.Parse("{\"Name\":\"Bad\",\"Background\":\"red\"}"); throw new Exception("Invalid palette accepted"); }
+    catch(InvalidDataException) { Check(true,"invalid custom palette rejected"); }
+}
+finally { Directory.Delete(modRoot,true); }

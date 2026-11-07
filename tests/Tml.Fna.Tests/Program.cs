@@ -155,5 +155,5 @@ mouseType.GetField("INTERNAL_BackBufferHeight", BindingFlags.Static | BindingFla
 MobileInputEXT.NativeTouch(42, .5f, .6f, TouchPhase.Down);
 MobileInputEXT.NativeTouch(42, .7f, .8f, TouchPhase.Up);
 MobileInputEXT.BeginUpdate();
-Check(MobileInputEXT.Frame.PointerPressed && MobileInputEXT.Frame.Pointer.X == .5f, "native SDL short tap survives same-pump release");
+Check(MobileInputEXT.Frame.PointerPressed && MobileInputEXT.Frame.Pointer.X == .7f, "native SDL short tap survives same-pump release");
 MobileInputEXT.NativeTouchEnabled = false; MobileInputEXT.Source = null;

@@ -54,7 +54,7 @@ internal static class HostDiagnostics
         var report = new StringBuilder("tML Android " + owner.PackageManager!.GetPackageInfo(owner.PackageName!, 0)!.VersionName + "\n");
         AppendFile(report, Path.Combine(root, "host-session.log"), "Sessão", 20000);
         AppendFile(report, Path.Combine(root, "native-console.log"), "Saída nativa", 16000);
-        AppendFile(report, Path.Combine(root, "frame-performance.log"), "Desempenho", 16000);
+        AppendFile(report, Path.Combine(root, "frame-performance.log"), "Desempenho", 64000);
         string logs = Path.Combine(root, "game/tModLoader-Logs");
         if (Directory.Exists(logs))
         {

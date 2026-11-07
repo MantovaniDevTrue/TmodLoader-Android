@@ -42,5 +42,8 @@ public readonly record struct InputFrame(
     Vector2 Movement, Vector2 Aim, Vector2 Pointer, bool HasPointer,
     bool PointerDown, bool PointerPressed, bool PointerReleased)
 {
+    public long PointerRevision { get; init; }
+    public long AimRevision { get; init; }
+    public long GestureEpoch { get; init; }
     public bool IsHeld(MobileAction action) => (Held & action) != 0;
 }

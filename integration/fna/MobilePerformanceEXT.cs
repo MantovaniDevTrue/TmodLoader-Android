@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Threading;
 using Tml.Mobile;
 
 namespace Microsoft.Xna.Framework
@@ -7,6 +8,19 @@ namespace Microsoft.Xna.Framework
     public static class MobilePerformanceEXT
     {
         private static FrameTimingWindow destination, active;
+        private static FrameTimingWindow[] sceneDestinations;
+        private static int scene;
+        public static FrameTimingWindow[] SceneDestinations { get => sceneDestinations; set => sceneDestinations = value; }
+        public static CaptureScene Scene
+        {
+            get => (CaptureScene) Volatile.Read(ref scene);
+            set
+            {
+                int next = (int)value;
+                if (next < 0 || next > 5) throw new ArgumentOutOfRangeException(nameof(value));
+                if (Interlocked.Exchange(ref scene, next) != next && sceneDestinations != null) sceneDestinations[next].Reset();
+            }
+        }
         private static long frameStart, allocatedStart, updates, draw, present, presentationStamp;
         private static int passes, gen0, gen1, gen2;
 
@@ -52,7 +66,7 @@ namespace Microsoft.Xna.Framework
         public static void EndFrame()
         {
             if (active == null) return;
-            active.Record(new FrameTimingSample(
+            (sceneDestinations == null ? active : sceneDestinations[Volatile.Read(ref scene)]).Record(new FrameTimingSample(
                 Math.Max(1, Stopwatch.GetTimestamp() - frameStart), updates, draw, present,
                 passes, presentationStamp, GC.GetAllocatedBytesForCurrentThread() - allocatedStart,
                 GC.CollectionCount(0) - gen0, GC.CollectionCount(1) - gen1, GC.CollectionCount(2) - gen2));
