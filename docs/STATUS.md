@@ -20,8 +20,12 @@ passed all `surface` steps for commit `d22f7f8`: local regression tests,
 ARM64 package verification, emulator x64 build, and both OpenGL and SDLGPU
 graphics probes. Both backends presented 5,496/8,192 expected center pixels.
 The `android-source-host` and `sdl-host-checks` artifacts were uploaded.
-The private playable ARM64 APK, in-world performance and phone Vulkan stability
-remain unverified. The public source-host APK is not the private playable game package.
+The private playable ARM64 APK has now been assembled, including the managed game
+payload and freshly built integration. Signature continuity, ABI/alignment, ZIP contents,
+private API contracts and headless touch/editor checks passed. See
+[package verification](ANDROID_0_2_13_PACKAGE.md) for the exact APK SHA-256 and scope.
+In-world performance, phone Vulkan stability and general mod compatibility still require
+device validation. The public source-host artifact remains separate from the playable package.
 
 ## Active direction — dedicated Android port
 
