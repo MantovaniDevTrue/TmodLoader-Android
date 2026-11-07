@@ -2,17 +2,19 @@
 
 ## Active direction — dedicated Android port
 
-The project will adapt tModLoader specifically for Android, preserving the selected upstream C# API and mod behavior. The user confirmed that the 0.1.1 diagnostic opens and its on-screen DLL/Emit probes succeed on ARM64. Optional phase timing and a bounded reporting collector are now implemented in the pinned FNA source; real game timing and performance advantages remain unmeasured.
+The active 0.2.5 candidate runs tModLoader through a .NET 10 Android SDL3 host, preserving the selected upstream C# API. The ARM64 phone has reached Adreno GLES 3.2, AAudio initialization and the FNA loop. The current device blocker is the missing MonoMod Android system implementation; the new adapter passed basic hook lifecycle tests on an Android x86_64 emulator. ARM64 hooks, menu/world/mod behavior and performance still require device validation.
+
+Historical foundation: The project will adapt tModLoader specifically for Android, preserving the selected upstream C# API and mod behavior. The user confirmed that the 0.1.1 diagnostic opens and its on-screen DLL/Emit probes succeed on ARM64. Optional phase timing and a bounded reporting collector are now implemented in the pinned FNA source; real game timing and performance advantages remain unmeasured.
 
 See [ANDROID_PORT.md](ANDROID_PORT.md) for delivery gates and [PERFORMANCE.md](PERFORMANCE.md) for measurement scope. The user's private Terraria PC 1.4.5.8 installation was received and passed archive and basic content validation on 2026-11-06. See [PC_INPUT_VALIDATION.md](PC_INPUT_VALIDATION.md). The matching tModLoader managed candidate now compiles for .NET 10 against mobile FNA and passes assembly-loading checks; see [GAME_BUILD.md](GAME_BUILD.md). The SDL3 surface/managed entry, native ARM64 dependencies, transparent overlay, content importer and private game entry wiring now build in the 0.2.0 host. Runtime graphics/game validation is the next boundary; see [SDL_HOST.md](SDL_HOST.md).
 
 
-## Latest device report and correction
+## Historical JNI startup failure
 
 The user reported that diagnostic APK 0.1.0 failed before showing its UI: `UnsatisfiedLinkError` for `MainActivity.n_onCreate`. Version 0.1.1 explicitly disables native marshal-method optimization and restores dynamic JNI registration. A packaged-registration check and an Android emulator startup job were added. See [STARTUP_FIX_0_1_1.md](STARTUP_FIX_0_1_1.md) for evidence and remaining validation.
 
 
-## Active track — Phase 3.0 (.NET 10 / ARM64 mobile foundation)
+## Historical foundation — Phase 3.0 (.NET 10 / ARM64 mobile foundation)
 
 The new source compiles a standalone ARM64 Android input/runtime diagnostic APK. Shared touch routing and actual FNA input integration are implemented; the desktop game entrypoint/SDL host has **not** been migrated to this app yet. No playable world, full mobile UI or general `.tmod` compatibility is claimed.
 

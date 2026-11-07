@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
 using Color = Microsoft.Xna.Framework.Color;
@@ -116,6 +117,10 @@ public sealed class GameEntry : Java.Lang.Object
             Log("TML_ASSEMBLY_LOADED");
             using var gameEntry = new EntryAssemblyScope(game);
             Log("TML_ENTRY_ASSEMBLY_READY " + Assembly.GetEntryAssembly()!.GetName().Name);
+            Log("TML_ASSEMBLY_REDIRECTS_INIT_BEGIN");
+            Type redirects = game.GetType("Terraria.ModLoader.Core.AssemblyManager+AssemblyRedirects", true)!;
+            RuntimeHelpers.RunClassConstructor(redirects.TypeHandle);
+            Log("TML_ASSEMBLY_REDIRECTS_READY");
             Type program = game.GetType("Terraria.Program", true)!;
             Log("TML_PROGRAM_TYPE_READY");
             MethodInfo entry = program.GetMethod("LaunchGame", [typeof(string[]), typeof(bool)])
