@@ -59,6 +59,10 @@ adb exec-out screencap -p > artifacts/sdl-smoke/launcher-settings.png
 if [ "$backend" == OpenGL ]; then
   tap_launcher launcher-language
   tap_launcher English
+  timeout 20 adb shell uiautomator dump /sdcard/tml-window.xml >/dev/null 2>&1 || true
+  adb shell cat /sdcard/tml-window.xml > artifacts/sdl-smoke/launcher-english.xml
+  grep -q 'text="Settings"' artifacts/sdl-smoke/launcher-english.xml
+  adb exec-out screencap -p > artifacts/sdl-smoke/launcher-english.png
   tap_launcher launcher-language
   tap_launcher 'Português (Brasil)'
 fi

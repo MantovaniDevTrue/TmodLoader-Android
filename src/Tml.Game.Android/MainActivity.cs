@@ -108,7 +108,7 @@ public sealed partial class MainActivity : Activity
         if (requestCode == 11) { await ImportModsAsync(data); return; }
         if (requestCode == 12 && data.Data != null) { await ImportThemeAsync(data.Data); return; }
         if (requestCode != 10 || data.Data == null) return;
-        SetBusy(true, "Importando Terraria. Mantenha o aplicativo aberto…");
+        SetBusy(true, L("Importando Terraria. Mantenha o aplicativo aberto…", "Importing Terraria. Keep the app open…", "Importando Terraria. Mantén la aplicación abierta…"));
         string cached = Path.Combine(CacheDir!.AbsolutePath, "terraria-import.zip");
         string root = FilesDir!.AbsolutePath;
         string staging = Path.Combine(root, "Terraria.import-" + Guid.NewGuid());
@@ -123,9 +123,9 @@ public sealed partial class MainActivity : Activity
             try { Directory.Move(staging, destination); }
             catch { if (Directory.Exists(backup)) Directory.Move(backup, destination); throw; }
             if (Directory.Exists(backup)) Directory.Delete(backup, recursive: true);
-            SetBusy(false, "Terraria 1.4.5.8 importado. Você já pode testar a inicialização.");
+            BuildLauncher(); SetBusy(false, L("Terraria 1.4.5.8 importado. Pronto para iniciar.", "Terraria 1.4.5.8 imported. Ready to launch.", "Terraria 1.4.5.8 importado. Listo para iniciar."));
         }
-        catch (Exception error) { SetBusy(false, "Falha ao importar: " + error.Message); }
+        catch (Exception error) { SetBusy(false, L("Falha ao importar: ", "Import failed: ", "Error al importar: ") + error.Message); }
         finally
         {
             if (File.Exists(cached)) File.Delete(cached);

@@ -20,6 +20,18 @@ public sealed partial class MainActivity
     private string language = "pt", pendingReport = "", exportReport = "", notice = "";
     private bool launcherReady;
     private string ModDirectory => LocalModImport.DirectoryFor(FilesDir!.AbsolutePath);
+    private sealed class PaletteAdapter(Context context, string[] values, AColor foreground, AColor background)
+        : ArrayAdapter<string>(context, global::Android.Resource.Layout.SimpleSpinnerDropDownItem, values)
+    {
+        private View Style(View view)
+        {
+            view.SetBackgroundColor(background);
+            if (view is TextView text) { text.SetTextColor(foreground); text.TextSize = 14; }
+            return view;
+        }
+        public override View GetView(int position, View? convertView, ViewGroup parent) => Style(base.GetView(position, convertView, parent));
+        public override View GetDropDownView(int position, View? convertView, ViewGroup? parent) => Style(base.GetDropDownView(position, convertView, parent)!);
+    }
     private string L(string pt, string en, string es) => language == "en" ? en : language == "es" ? es : pt;
     private int Dp(float value) => (int)(value * Resources!.DisplayMetrics!.Density + .5f);
     private AColor Color(string value) => AColor.ParseColor(value);
@@ -181,7 +193,7 @@ public sealed partial class MainActivity
     private void Choice(LinearLayout panel, string title, string[] values, int selected, Action<int> changed, string id)
     {
         panel.AddView(Text(title, 14)); var picker = new Spinner(this) { ContentDescription = id };
-        picker.Adapter = new ArrayAdapter<string>(this, global::Android.Resource.Layout.SimpleSpinnerDropDownItem, values);
+        picker.Adapter = new PaletteAdapter(this, values, Color(theme.Text), Color(theme.Background));
         picker.BackgroundTintList = global::Android.Content.Res.ColorStateList.ValueOf(Color(theme.Accent)); picker.SetSelection(selected); int current = selected;
         picker.ItemSelected += (_, e) => { if (busy || current == e.Position) return; current = e.Position; changed(e.Position); };
         panel.AddView(picker, new LinearLayout.LayoutParams(-1, Dp(52))); actions.Add(picker);
@@ -213,7 +225,19 @@ public sealed partial class MainActivity
         if (report.Warnings.Length == 0) warnings.AddView(Text(L("Nenhum aviso identificado.", "No warnings identified.", "No se identificaron avisos."), 13, true));
         foreach (var issue in report.Warnings) warnings.AddView(Text($"×{issue.Count}  {issue.Detail}", 12, true));
         var history = Panel(page, L("Histórico do Android", "Android history", "Historial de Android"), L("Registros anteriores. Sinal 9 indica término forçado, mas não comprova sua causa.", "Earlier records. Signal 9 indicates forced termination but does not establish its cause.", "Registros anteriores. La señal 9 indica terminación forzada, pero no determina la causa."));
-        history.AddView(Text(report.History.Length > 0 ? report.History : L("Sem histórico disponível.", "No history available.", "Sin historial disponible."), 12, true));
+        if (report.History.Length == 0) history.AddView(Text(L("Sem histórico disponível.", "No history available.", "Sin historial disponible."), 12, true));
+        foreach (string block in report.History.Split("Android:", StringSplitOptions.RemoveEmptyEntries).Take(4))
+        {
+            string[] lines = block.Trim().Split('\n');
+            string reason = lines.FirstOrDefault(l => l.StartsWith("process=", StringComparison.Ordinal)) ?? "";
+            string explanation = reason.Contains("reason=CrashNative(") ? L("Falha em código nativo", "Native code failure", "Fallo en código nativo") :
+                reason.Contains("reason=LowMemory(") ? L("Android registrou falta de memória", "Android reported low memory", "Android indicó falta de memoria") :
+                reason.Contains("reason=PackageUpdated(") ? L("Aplicativo atualizado", "App updated", "Aplicación actualizada") :
+                reason.Contains("reason=Signaled(") ? L("Encerrado por sinal; causa não informada", "Terminated by signal; cause not provided", "Terminado por señal; causa no indicada") :
+                reason.Contains("reason=UserRequested(") ? L("Encerramento solicitado ao Android", "Termination requested through Android", "Cierre solicitado a Android") :
+                L("Encerramento registrado pelo Android", "Termination recorded by Android", "Cierre registrado por Android");
+            history.AddView(Text(explanation, 14)); history.AddView(Text(lines[0] + "\n" + reason, 11, true));
+        }
         var tools = Panel(page, L("Registro e ferramentas", "Log and tools", "Registro y herramientas"));
         AddAction(tools, Action(L("Salvar diagnóstico (.txt)", "Save diagnostics (.txt)", "Guardar diagnóstico (.txt)"), ExportReport, true, "launcher-export-report"));
         AddAction(tools, Action(L("Ver registro completo", "View full log", "Ver registro completo"), () => Navigate(5)));
