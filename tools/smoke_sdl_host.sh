@@ -10,6 +10,16 @@ adb logcat -c
 adb shell input keyevent 224
 adb shell wm dismiss-keyguard || true
 adb shell monkey -p com.mantovani.tmlmobile -c android.intent.category.LAUNCHER 1
+scroll_launcher() {
+  adb exec-out screencap -p > artifacts/sdl-smoke/navigation.png
+  read -r view_w view_h < <(python3 - <<'PYVIEW'
+from PIL import Image
+with Image.open('artifacts/sdl-smoke/navigation.png') as image:
+    print(image.width,image.height)
+PYVIEW
+)
+  adb shell input swipe "$((view_w / 2))" "$((view_h * 85 / 100))" "$((view_w / 2))" "$((view_h * 30 / 100))" 250
+}
 if [ "$backend" == SDLGPU ]; then
   for label in Renderizador 'Vulkan · experimental'; do
     found=0
@@ -22,6 +32,7 @@ if [ "$backend" == SDLGPU ]; then
         found=1
         break
       fi
+      scroll_launcher
       sleep 1
     done
     if [ "$found" != 1 ]; then echo "Renderer control missing: $label"; exit 1; fi
@@ -31,6 +42,7 @@ found_button=0
 for attempt in $(seq 1 12); do
   timeout 20 adb shell uiautomator dump /sdcard/tml-window.xml >/dev/null 2>&1 || true
   adb shell cat /sdcard/tml-window.xml > artifacts/sdl-smoke/window.xml
+  if [ "$attempt" == 1 ]; then adb exec-out screencap -p > artifacts/sdl-smoke/launcher-top.png; fi
   if python3 - <<'PY' > /tmp/tml-sdl-tap.txt
 import re, xml.etree.ElementTree as ET
 try:
@@ -52,6 +64,7 @@ PY
     found_button=1
     break
   fi
+  scroll_launcher
   sleep 2
 done
 if [ "$found_button" != 1 ]; then
@@ -89,6 +102,7 @@ PYSCREEN
     for touch_attempt in $(seq 1 15); do
       adb logcat -d > artifacts/sdl-smoke/logcat.txt
       if grep -q 'ANDROID_NATIVE_TOUCH_EVENT sdl-to-game-thread' artifacts/sdl-smoke/logcat.txt; then native_touch=1; break; fi
+      scroll_launcher
       sleep 1
     done
     if [ "$native_touch" != 1 ]; then echo 'Native SDL touch did not reach the game thread'; exit 1; fi
