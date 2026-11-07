@@ -1,6 +1,6 @@
 # SDK-managed SDL3 Android host
 
-The new `src/Tml.Game.Android` project builds an experimental .NET 10 Android host. It is separate from the original input diagnostic and uses the same application ID with version 0.2.6. The Java SDL activity, native entry stub, C# game host, mobile core, FNA and private game payload share one process and one SDK-managed Mono runtime.
+The new `src/Tml.Game.Android` project builds an experimental .NET 10 Android host. It is separate from the original input diagnostic and uses the same application ID with version 0.2.7. The Java SDL activity, native entry stub, C# game host, mobile core, FNA and private game payload share one process and one SDK-managed Mono runtime.
 
 ## Implemented
 
@@ -113,3 +113,18 @@ The CI source-host artifact excludes private game assets and signing keys. Local
 Validation: [workflow 42359495282](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/runs/42359495282) built ARM64 and x86_64 packages, passed packaged JNI/native alignment checks, and required ANDROID_DISPLAY_STABLE before validating the presented FNA SpriteBatch rectangle (6384/8192 center pixels) on Android API 30. The foundation workflow 42359495226 also passed. Local checks passed: 36 shared mobile, 18 host, 16 collector and 18 actual-FNA adapter checks. These are not private Terraria gameplay or phone FPS benchmarks.
 
 Private 0.2.6 delivery SHA-256: `27c3ed0907963b31baa426203d66aac129701af4c24ccf23596c31328937e1b8` (51,672,661 bytes). APK v2/v3 signatures verify against the existing development certificate, all native libraries remain ARM64 and 16 KiB aligned, and the private runtime payload is byte-identical to 0.2.5. Install over the existing app to retain imported assets and saves. Test an existing world, rotation, background/resume and menu links, then collect the report's new Desempenho section.
+
+
+## Defer game hooks until startup has completed — 0.2.7
+
+The ARM64 0.2.6 report failed before TML_LAUNCH_INVOKE. MonoMod's GetFunctionPointer on Main.SetDisplayMode ran Terraria.Main's static constructor. Main.SavePath returns Program.SavePath, which is assigned only by ProcessLaunchArgs/SetSavePath during Program.LaunchGame. The constructor called Path.Combine(null, "Worlds"), permanently poisoning Main for that process. Basic hook and graphics probes did not cover this private-game bootstrap ordering.
+
+The host now registers a scoped BeforeRun callback in mobile FNA without binding either Terraria method. The patched Game.Run invokes it only after the derived game instance exists. At that point the private Program.RunGame has passed save-path initialization and constructed Main. The callback checks Program.SavePath, logs TML_GAME_RUN_READY, then installs the existing URL/display hooks. Callback subscriptions and hooks are released when the invocation unwinds. The render policy, imported game data and save paths are unchanged; the host does not assign replacement paths or swallow type-initialization failures.
+
+The Android graphics probe also exercises this boundary: register while a synthetic bootstrap path is unavailable, mark paths ready, enter actual FNA Game.Run, and install/remove a real MonoMod hook on a class whose explicit static constructor requires that bootstrap state. The smoke test requires ANDROID_DEFERRED_BOOTSTRAP_OK in addition to stable graphics, native I/O and presented pixels. This checks the mechanism on Android Mono; actual private Terraria startup still requires another ARM64 phone test.
+
+Local FNA integration validation now has 23 passing checks. Five new checks cover metadata-only registration before paths, unrelated-game isolation, path-dependent static initialization after bootstrap, single installation on repeated run dispatch, and subscription cleanup. The Android smoke fixture additionally exercises actual MonoMod apply/original/removal at the real Game.Run boundary.
+
+Validation: [SDL host workflow 42360692480](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/runs/42360692480) passed for code edbdb1eea5756af73619f4111853d899e31fe280: ARM64 package/JNI checks, Android API 30 x86_64 Mono deferred-bootstrap hook check, stable display and native-file checks, and a presented sprite pixel check (6384/8192). [Foundation workflow 42360808959](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/runs/42360808959) passed with the 23-check FNA suite including bootstrap-order tests.
+
+Private 0.2.7 APK: 51,676,757 bytes; SHA-256 `4511c27040d0ad23b5c246bf8f7ad221f40a7ebde3452ffa850c786e46b0232a`. ZIP CRC/unique-entry, ARM64/16 KiB alignment and APK v2/v3 signature checks passed. The signing certificate and private managed game payload are unchanged. This verifies the repair mechanism, not a new private Terraria phone run or gameplay performance.
