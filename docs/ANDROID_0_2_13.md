@@ -89,3 +89,20 @@ input events from satisfying the assertion.
 Local Python selector tests pass. The modified GitHub Actions emulator run,
 real ARM64 gameplay, Vulkan graphics and private APK contents/signature need
 separate verification; a source commit or prior APK does not prove them.
+
+
+## Emulator workflow #34 — failure triage
+
+The 2026-11-07 Android SDL game host #34 run on commit `a6630a9`
+was reported as **failed** for the `surface` job, with two artifacts.
+The artifact count is consistent with the staged public source-host APK and
+always-uploaded smoke diagnostics, but does not establish a passed Vulkan
+test or a packaged private/playable game payload. The screenshot does not
+include the failing step or log message, so its root cause is unknown.
+
+The next source commit `96daf0e` improves smoke-test fault localization:
+the console reports the active renderer and exact missing log marker, and
+prints relevant SDL/touch diagnostics on failure. The Vulkan and OpenGL
+checks retain their original acceptance requirements. A fresh CI outcome
+and the failing run's `sdl-host-checks` files are still needed before
+claiming that the emulator issue has been fixed.
