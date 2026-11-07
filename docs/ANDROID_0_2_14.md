@@ -62,3 +62,29 @@ continuity and AArch64/16 KiB compatibility checks passed.
 
 Install over 0.2.13 and re-enable AndroidSwordTest 0.1.0 if the earlier failure
 disabled it. Full mod content/gameplay on the physical phone remains pending.
+
+## Physical ARM64 phone validation — 2026-11-07, 18:01–18:07 BRT
+
+The user tested 0.2.14 with OpenGL on Adreno 642L and confirmed the sword appeared
+in the world. AndroidSwordTest 0.1.1 was selected over 0.1.0; it was enabled,
+isolated, JIT-compiled (39 ms), loaded, configured and finalized. Its Load log
+was emitted and mod loading completed in 2,579 ms. The supplied screenshot shows
+the localized item/tooltip and a Demonic prefix (58 displayed damage).
+This validates the simple local precompiled .tmod path, metadata resolution,
+client resources, item registration and recipe availability on the phone. It does
+not establish that every hook/effect or larger PC mod is compatible.
+
+The session entered a 4200×1200 world and saved it (SaveWorld 3,467 ms), then
+returned through TML_LAUNCH_RETURNED / MANAGED_SDL_EXIT with no new crash in this
+trace. The mod's 16.7 KB RAM figure is the loader's attribution, not its complete
+process-memory overhead. The 28 ms immediate asset-loading warning was during
+mod startup and is not evidence of a per-frame cost.
+
+Only WorldUi samples are present in the supplied, truncated gameplay performance
+section: about 46–51 presentation calls/s, draw p95 22–24 ms, update p95 3–4.4 ms,
+and process PSS about 2.36 GiB. These cannot substitute for closed-inventory World
+samples or isolate the sword's performance cost. Vulkan was not tested on-device.
+
+Split 1.0.11 was discovered, but has a different Terraria/LTS build stream
+(tML 2026.4.3.0). It was not loaded in the recorded mod-content sequence. This
+report does not validate Split compatibility; do not bypass that version boundary.
