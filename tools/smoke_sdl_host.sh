@@ -82,6 +82,36 @@ if [ "$backend" == SDLGPU ]; then
 fi
 tap_launcher launcher-diagnostics
 adb exec-out screencap -p > artifacts/sdl-smoke/launcher-diagnostics.png
+if [ "$backend" == OpenGL ]; then
+  tap_launcher launcher-export-report
+  adb exec-out screencap -p > artifacts/sdl-smoke/export-picker.png
+  saved=0
+  for attempt in $(seq 1 6); do
+    timeout 20 adb shell uiautomator dump /sdcard/tml-window.xml >/dev/null 2>&1 || true
+    adb shell cat /sdcard/tml-window.xml > artifacts/sdl-smoke/export-window.xml
+    for label in SAVE Save SALVAR Salvar; do
+      if python3 tools/find_android_control.py artifacts/sdl-smoke/export-window.xml "$label" > /tmp/tml-save-tap.txt; then
+        read -r tap_x tap_y < /tmp/tml-save-tap.txt
+        adb shell input tap "$tap_x" "$tap_y"
+        saved=1
+        break
+      fi
+    done
+    if [ "$saved" == 1 ]; then break; fi
+    if python3 tools/find_android_control.py artifacts/sdl-smoke/export-window.xml Downloads > /tmp/tml-save-tap.txt; then
+      read -r tap_x tap_y < /tmp/tml-save-tap.txt
+      adb shell input tap "$tap_x" "$tap_y"
+    fi
+    sleep 1
+  done
+  if [ "$saved" != 1 ]; then echo 'TXT document picker save control missing'; exit 1; fi
+  sleep 2
+  adb shell find /sdcard/Download -maxdepth 1 -name 'tML-Android-diagnostico-*.txt' > /tmp/tml-export-path.txt
+  document=$(tr -d '\r' < /tmp/tml-export-path.txt | tail -n 1)
+  test -n "$document"
+  adb pull "$document" artifacts/sdl-smoke/diagnostics-export.txt
+  python3 -c 'from pathlib import Path; data=Path("artifacts/sdl-smoke/diagnostics-export.txt").read_text(encoding="utf-8"); assert data.startswith("tML Android 0.2.16")'
+fi
 found_button=0
 for attempt in $(seq 1 12); do
   timeout 20 adb shell uiautomator dump /sdcard/tml-window.xml >/dev/null 2>&1 || true

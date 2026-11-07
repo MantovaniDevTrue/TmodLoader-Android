@@ -24,7 +24,7 @@ public sealed record DiagnosticReport(bool HasSession, bool NormalExit, Diagnost
             l.StartsWith("ANDROID_SYSTEM_MEMORY ", StringComparison.Ordinal) || l.StartsWith("ANDROID_RENDER_POLICY ", StringComparison.Ordinal) ||
             l.StartsWith("ANDROID_RENDERER_REQUEST ", StringComparison.Ordinal) || l.Contains("OpenGL Renderer:", StringComparison.Ordinal) ||
             l.StartsWith("Vulkan Device:", StringComparison.Ordinal)).Distinct().ToArray();
-        return new(lines.Any(l => l.StartsWith("Session ", StringComparison.Ordinal)), current.Contains("MANAGED_SDL_EXIT", StringComparison.Ordinal),
+        return new(current.Contains("--- Sessão ---", StringComparison.Ordinal) || lines.Any(l => l.StartsWith("Session ", StringComparison.Ordinal)), current.Contains("MANAGED_SDL_EXIT", StringComparison.Ordinal),
             Group(errors), Group(warnings), environment, historyAt < 0 ? "" : report[historyAt..].Trim());
     }
 }

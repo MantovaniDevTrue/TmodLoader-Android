@@ -65,6 +65,8 @@ public sealed class GameEntry : Java.Lang.Object
             Log("HOST_ENTRY_ASSEMBLY_READY " + Assembly.GetEntryAssembly()!.GetName().Name);
             Log($"MANAGED_SDL_ENTRY {RuntimeInformation.FrameworkDescription} {RuntimeInformation.ProcessArchitecture}");
             Environment.SetEnvironmentVariable("FNA_PLATFORM_BACKEND", "SDL3");
+            MobileGraphicsEXT.KeepScreenOn = owner.Intent?.GetBooleanExtra("keep-screen-on", true) ?? true;
+            Log("ANDROID_SCREEN_POLICY keep-awake=" + MobileGraphicsEXT.KeepScreenOn);
             string renderer = owner.Intent?.GetStringExtra("renderer") == "SDLGPU" ? "SDLGPU" : "OpenGL";
             AndroidGraphicsProbe.UseOpenGL = renderer == "OpenGL";
             Environment.SetEnvironmentVariable("FNA3D_FORCE_DRIVER", renderer);

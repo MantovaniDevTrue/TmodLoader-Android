@@ -52,5 +52,11 @@ classification with old native crash history. Android smoke navigation checks
 each page, language round-trip, and actual empty enabled.json creation before
 continuing the existing OpenGL/SDL_GPU graphics tests.
 
+The OpenGL emulator smoke also exercises ACTION_CREATE_DOCUMENT, pulls the saved
+TXT from Downloads, decodes it as UTF-8 and checks the app version header. The
+keep-screen-awake preference is passed through the SDL activity and honored at
+FNA's initial and focus-related screensaver calls, rather than being overridden
+by FNA after the activity's window flag is set.
+
 The 0.2.15 tile scratch optimization and compatibility guard are unchanged.
 Physical phone gameplay remains the final performance validation.

@@ -26,6 +26,7 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
             ("\t\t\t\tnew PreparingDeviceSettingsEventArgs(gdi)\n\t\t\t);",
              "\t\t\t\tnew PreparingDeviceSettingsEventArgs(gdi)\n\t\t\t);\n\t\t\tMobileGraphicsEXT.Configure(gdi);\n\t\t\tif (MobileGraphicsEXT.Enabled) { INTERNAL_preferredBackBufferWidth = gdi.PresentationParameters.BackBufferWidth; INTERNAL_preferredBackBufferHeight = gdi.PresentationParameters.BackBufferHeight; INTERNAL_isFullScreen = true; }", 1)],
         "src/FNAPlatform/SDL3_FNAPlatform.cs": [
+            ("SDL.SDL_DisableScreenSaver();", "if (!MobileGraphicsEXT.Enabled || MobileGraphicsEXT.KeepScreenOn) SDL.SDL_DisableScreenSaver(); else SDL.SDL_EnableScreenSaver();", 3),
             ("\t\t\tUIntPtr resultSize;\n\t\t\tIntPtr result = SDL.SDL_LoadFile(path, out resultSize);\n\t\t\tsize = (IntPtr) resultSize.ToPointer();\n\t\t\treturn result;",
              "\t\t\treturn MobileFileIOEXT.ReadFile(path, out size);", 1)],
         "src/Audio/WaveBank.cs": [

@@ -9,6 +9,7 @@ namespace Microsoft.Xna.Framework
         public static event System.Action FramePresented;
         internal static void OnFramePresented() => FramePresented?.Invoke();
         public static bool Enabled { get; private set; }
+        public static bool KeepScreenOn { get; set; } = true;
         public static RenderSize Size { get; private set; }
         private static int resetsAvoided;
         private static int suspended;
