@@ -32,13 +32,14 @@ public sealed partial class MainActivity : Activity
         intent.SetClassName(this, "com.mantovani.tmlmobile.SdlGameActivity");
         intent.PutExtra("mode", mode);
         intent.PutExtra("renderer", Preferences.GetString("renderer", "OpenGL"));
+        intent.PutExtra("keep-screen-on", Preferences.GetBoolean("keep-screen-on", true));
         StartActivity(intent);
     }
 
     private async Task PlayAsync()
     {
         if (busy) return;
-        SetBusy(true, "Preparando os arquivos do jogo…");
+        SetBusy(true, L("Preparando os arquivos do jogo…", "Preparing game files…", "Preparando archivos del juego…"));
         try
         {
             string root = FilesDir!.AbsolutePath;
@@ -49,7 +50,7 @@ public sealed partial class MainActivity : Activity
                 if (!Convert.ToHexString(SHA256.HashData(owned)).Equals(TerrariaHash, StringComparison.OrdinalIgnoreCase))
                     throw new InvalidDataException("O executável precisa ser o Terraria PC 1.4.5.8 importado.");
                 string marker = Path.Combine(root, "game/.payload-version");
-                if (!File.Exists(marker) || File.ReadAllText(marker) != "0.2.15")
+                if (!File.Exists(marker) || File.ReadAllText(marker) != "0.2.16")
                 {
                     string cache = Path.Combine(CacheDir!.AbsolutePath, "game-payload.zip");
                     try
@@ -57,15 +58,15 @@ public sealed partial class MainActivity : Activity
                         using (var source = Assets!.Open("game-payload.zip"))
                         using (var target = File.Create(cache)) source.CopyTo(target);
                         ExtractPayload(cache, Path.Combine(root, "game"));
-                        File.WriteAllText(marker, "0.2.15");
+                        File.WriteAllText(marker, "0.2.16");
                     }
                     finally { if (File.Exists(cache)) File.Delete(cache); }
                 }
             });
-            SetBusy(false, "Arquivos preparados. Abrindo o jogo…");
+            SetBusy(false, L("Abrindo o jogo…", "Opening game…", "Abriendo el juego…"));
             Launch("game");
         }
-        catch (Exception error) { SetBusy(false, "Não foi possível iniciar: " + error.Message); }
+        catch (Exception error) { SetBusy(false, L("Não foi possível iniciar: ", "Could not start: ", "No se pudo iniciar: ") + error.Message); }
     }
 
     private static void ExtractPayload(string archive, string target)
@@ -91,6 +92,19 @@ public sealed partial class MainActivity : Activity
     {
         base.OnActivityResult(requestCode, resultCode, data);
         if (resultCode != Result.Ok || data == null) return;
+        if (requestCode == 13 && data.Data != null)
+        {
+            SetBusy(true, L("Salvando diagnóstico…", "Saving diagnostics…", "Guardando diagnóstico…"));
+            try
+            {
+                using var output = ContentResolver!.OpenOutputStream(data.Data, "wt") ?? throw new IOException("Arquivo indisponível.");
+                await using (var writer = new StreamWriter(output, new System.Text.UTF8Encoding(false), leaveOpen: true))
+                    await writer.WriteAsync(exportReport);
+                SetBusy(false, L("Diagnóstico salvo em .txt.", "Diagnostics saved as .txt.", "Diagnóstico guardado en .txt."));
+            }
+            catch (Exception e) { SetBusy(false, L("Não foi possível salvar: ", "Could not save: ", "No se pudo guardar: ") + e.Message); }
+            return;
+        }
         if (requestCode == 11) { await ImportModsAsync(data); return; }
         if (requestCode == 12 && data.Data != null) { await ImportThemeAsync(data.Data); return; }
         if (requestCode != 10 || data.Data == null) return;
@@ -148,6 +162,7 @@ public sealed partial class MainActivity : Activity
     private void SetBusy(bool value, string message)
     {
         busy = value;
+        notice = message;
         status!.Text = message;
         foreach (var action in actions) action.Enabled = !value;
     }

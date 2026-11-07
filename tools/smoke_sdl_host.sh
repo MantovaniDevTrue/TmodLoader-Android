@@ -29,6 +29,39 @@ PYVIEW
 )
   adb shell input swipe "$((view_w / 2))" "$((view_h * 85 / 100))" "$((view_w / 2))" "$((view_h * 30 / 100))" 250
 }
+tap_launcher() {
+  local label="$1"
+  for attempt in $(seq 1 12); do
+    timeout 20 adb shell uiautomator dump /sdcard/tml-window.xml >/dev/null 2>&1 || true
+    adb shell cat /sdcard/tml-window.xml > artifacts/sdl-smoke/window.xml
+    if python3 tools/find_android_control.py artifacts/sdl-smoke/window.xml "$label" > /tmp/tml-nav-tap.txt; then
+      read -r tap_x tap_y < /tmp/tml-nav-tap.txt
+      adb shell input tap "$tap_x" "$tap_y"
+      sleep 1
+      return
+    fi
+    scroll_launcher
+    sleep 1
+  done
+  echo "Launcher control missing: $label"; exit 1
+}
+tap_launcher launcher-home
+adb exec-out screencap -p > artifacts/sdl-smoke/launcher-home.png
+tap_launcher launcher-mods
+adb exec-out screencap -p > artifacts/sdl-smoke/launcher-mods.png
+tap_launcher launcher-disable-all
+adb shell run-as com.mantovani.tmlmobile cat files/Saves/tModLoader/Mods/enabled.json > artifacts/sdl-smoke/enabled.json
+python3 -c 'import json; assert json.load(open("artifacts/sdl-smoke/enabled.json")) == []'
+tap_launcher launcher-files
+adb exec-out screencap -p > artifacts/sdl-smoke/launcher-files.png
+tap_launcher launcher-settings
+adb exec-out screencap -p > artifacts/sdl-smoke/launcher-settings.png
+if [ "$backend" == OpenGL ]; then
+  tap_launcher launcher-language
+  tap_launcher English
+  tap_launcher launcher-language
+  tap_launcher 'Português (Brasil)'
+fi
 if [ "$backend" == SDLGPU ]; then
   for label in Renderizador 'Vulkan · experimental'; do
     found=0
@@ -47,6 +80,8 @@ if [ "$backend" == SDLGPU ]; then
     if [ "$found" != 1 ]; then echo "Renderer control missing: $label"; exit 1; fi
   done
 fi
+tap_launcher launcher-diagnostics
+adb exec-out screencap -p > artifacts/sdl-smoke/launcher-diagnostics.png
 found_button=0
 for attempt in $(seq 1 12); do
   timeout 20 adb shell uiautomator dump /sdcard/tml-window.xml >/dev/null 2>&1 || true

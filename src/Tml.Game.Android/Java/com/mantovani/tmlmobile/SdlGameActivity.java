@@ -6,6 +6,7 @@ import android.os.Build;
 import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
+import android.view.WindowManager;
 import org.libsdl.app.SDLActivity;
 
 public final class SdlGameActivity extends SDLActivity {
@@ -41,6 +42,8 @@ public final class SdlGameActivity extends SDLActivity {
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
         immersive();
+        if (getIntent().getBooleanExtra("keep-screen-on", true)) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         invoke("attach", new Class<?>[] { android.app.Activity.class }, this);
     }
     @Override protected void onPause() {

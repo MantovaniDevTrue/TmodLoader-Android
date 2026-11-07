@@ -2,6 +2,47 @@ using System.Numerics;
 using Tml.Mobile;
 
 int passed = 0;
+string libraryRoot = Path.Combine(Path.GetTempPath(), "tml-library-" + Guid.NewGuid());
+try
+{
+    Directory.CreateDirectory(libraryRoot);
+    void Package(string file, string name, string version)
+    {
+        using var data = new MemoryStream(); using var writer = new BinaryWriter(data);
+        writer.Write("TMOD"u8); writer.Write("9999.0"); writer.Write(new byte[276]);
+        long size = data.Position; writer.Write(0); long start = data.Position;
+        writer.Write(name); writer.Write(version); writer.Write(0);
+        long end = data.Position; data.Position = size; writer.Write((int)(end - start)); writer.Flush();
+        File.WriteAllBytes(Path.Combine(libraryRoot, file), data.ToArray());
+    }
+    Package("Renamed_0.1.0.tmod", "SwordTest", "0.1.0");
+    Package("OtherFilename.tmod", "SwordTest", "0.1.1");
+    var entries = LocalModLibrary.Scan(libraryRoot);
+    Check(entries.Length == 2 && entries.All(m => m.Name == "SwordTest" && m.Error == null), "library reads internal names rather than filenames");
+    Check(entries[0].Version == "0.1.1", "library orders duplicate package versions");
+    LocalModLibrary.Save(libraryRoot, ["SwordTest", "MissingDependency", "SwordTest"]);
+    Check(LocalModLibrary.Enabled(libraryRoot).SetEquals(["SwordTest", "MissingDependency"]), "enabled.json compatible unique internal-name selection");
+    LocalModLibrary.DisableAll(libraryRoot);
+    Check(LocalModLibrary.Enabled(libraryRoot).Count == 0 && File.Exists(Path.Combine(libraryRoot, entries[0].FileName)), "clean launch disables selection without deleting packages");
+    LocalModLibrary.DisableAll(libraryRoot);
+    LocalModLibrary.Restore(libraryRoot);
+    Check(LocalModLibrary.Enabled(libraryRoot).SetEquals(["SwordTest", "MissingDependency"]), "repeated disable preserves recoverable previous selection");
+    File.WriteAllText(Path.Combine(libraryRoot, "bad.tmod"), "not a package");
+    Check(LocalModLibrary.Scan(libraryRoot).Single(m => m.FileName == "bad.tmod").Error != null, "invalid package isolated as a library error");
+    File.WriteAllBytes(Path.Combine(libraryRoot, "huge-string.tmod"), [84, 77, 79, 68, 255, 255, 255, 127]);
+    Check(LocalModLibrary.Read(Path.Combine(libraryRoot, "huge-string.tmod")).Error != null, "untrusted package strings are bounded");
+    string selected = Path.Combine(libraryRoot, "enabled.json"); File.WriteAllText(selected, "broken-json");
+    bool refused = false;
+    try { LocalModLibrary.DisableAll(libraryRoot); } catch (System.Text.Json.JsonException) { refused = true; }
+    Check(refused && File.ReadAllText(selected) == "broken-json", "corrupt selection not silently overwritten");
+    if (args.Length > 1) Check(LocalModLibrary.Read(args[1]) is { Name: "AndroidSwordTest", Version: "0.1.1", Error: null }, "real supplied sword package identity");
+}
+finally { Directory.Delete(libraryRoot, true); }
+var diagnostic = DiagnosticReport.Parse("--- Sessão ---\nSession 2026-11-07\nSTARTUP_EXCEPTION (may be handled) Test\nMANAGED_SDL_EXIT\n--- Desempenho ---\n--- tModLoader ---\n[Main/ERROR] mod load failed\nAndroid: older\nGot a SIGSEGV\nreason=CrashNative status=11");
+Check(diagnostic.NormalExit && diagnostic.Errors.Length == 1 && diagnostic.Errors[0].Code == "game", "diagnostic keeps historical crash out of current-session errors");
+Check(diagnostic.Warnings is [{ Code: "handled" }] && diagnostic.History.Contains("SIGSEGV"), "handled exceptions remain warnings and history is preserved");
+Check(DiagnosticReport.Parse("Session now\nGot a SIGSEGV").Errors is [{ Code: "native" }], "current native failure identified");
+Check(!DiagnosticReport.Parse("Session now\nAndroid: old\nstatus=9").NormalExit, "signal 9 history is not interpreted as a normal exit or a known cause");
 void Check(bool condition, string name)
 {
     if (!condition) throw new Exception("FAIL: " + name);
