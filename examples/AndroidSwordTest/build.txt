@@ -1,0 +1,4 @@
+displayName = Example Sword - Teste Android
+author = tModLoader Team; adaptacao de teste por Mantovani
+version = 0.1.0
+homepage = https://github.com/tModLoader/tModLoader/tree/1.4.5/ExampleMod

@@ -1,0 +1,10 @@
+Mods: {
+ AndroidSwordTest: {
+  Items: {
+   ExampleSword: {
+    DisplayName: Example Sword
+    Tooltip: "ExampleMod test on Android\nInflicts On Fire for 1 second"
+   }
+  }
+ }
+}
