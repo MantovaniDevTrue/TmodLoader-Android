@@ -70,6 +70,7 @@ public sealed class GameEntry : Java.Lang.Object
                 resolverInstalled = true;
             }
             MobileInputEXT.Source = overlay!.Router;
+            AndroidDetours.Initialize();
             if (owner.Intent?.GetStringExtra("mode") == "game") RunTerraria(owner.FilesDir!.AbsolutePath);
             else { NativeFileProbe.Run(owner); using var game = new RenderProbe(); game.Run(); }
             Log("MANAGED_SDL_EXIT");

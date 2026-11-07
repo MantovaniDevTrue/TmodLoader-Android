@@ -6,6 +6,11 @@
 #include <stdio.h>
 #include <unistd.h>
 
+__attribute__((visibility("default"))) void tml_host_flush_instructions(void *start, size_t length)
+{
+    __builtin___clear_cache((char *)start, (char *)start + length);
+}
+
 /* Capture libc/Mono stderr without replacing the runtime's signal handlers. */
 __attribute__((visibility("default"))) int tml_host_capture_output(const char *path)
 {

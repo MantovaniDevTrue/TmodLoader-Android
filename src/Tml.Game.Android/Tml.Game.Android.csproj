@@ -5,8 +5,9 @@
     <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
     <ApplicationId>com.mantovani.tmlmobile</ApplicationId>
     <ApplicationTitle>tML Android</ApplicationTitle>
-    <ApplicationVersion>7</ApplicationVersion>
-    <ApplicationDisplayVersion>0.2.4</ApplicationDisplayVersion>
+    <ApplicationVersion>8</ApplicationVersion>
+    <ApplicationDisplayVersion>0.2.5</ApplicationDisplayVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">android-arm64</RuntimeIdentifier>
     <UseMonoRuntime>true</UseMonoRuntime>
     <AndroidEnableMarshalMethods>false</AndroidEnableMarshalMethods>
@@ -20,6 +21,9 @@
     <AndroidManifest>AndroidManifest.xml</AndroidManifest>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="MonoMod.RuntimeDetour" Version="25.3.4" />
+    <PackageReference Include="MonoMod.Core" Version="1.3.4" />
+    <PackageReference Include="MonoMod.Utils" Version="25.0.12" />
     <AndroidJavaSource Remove="Java/**/*.java" />
     <ProjectReference Include="../Tml.Mobile.Core/Tml.Mobile.Core.csproj" />
     <ProjectReference Include="$(TmlMobileFnaProject)" />
