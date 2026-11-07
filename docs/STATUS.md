@@ -14,10 +14,14 @@ confirmed that ARM64 packaging, APK checks, x64 emulator build and the OpenGL
 probe passed. OpenGL presented 5,496/8,192 expected center pixels. The Vulkan
 probe also reached its FNA first frame and GPU stress pass but failed because
 the test demanded an unavailable FNA3D driver banner in Android logcat.
-The new source instruments the actual SDL GPU device driver and requires
-`TML_SDL_GPU_ACTIVE_DRIVER=vulkan` instead. The next CI result, the private
-ARM64 package, in-world performance and phone Vulkan stability are pending.
-The public source-host APK is not the private playable game package.
+The revised code instruments the actual SDL GPU device driver and requires
+`TML_SDL_GPU_ACTIVE_DRIVER=vulkan`. [Android SDL run 42396149435](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/runs/42396149435)
+passed all `surface` steps for commit `d22f7f8`: local regression tests,
+ARM64 package verification, emulator x64 build, and both OpenGL and SDLGPU
+graphics probes. Both backends presented 5,496/8,192 expected center pixels.
+The `android-source-host` and `sdl-host-checks` artifacts were uploaded.
+The private playable ARM64 APK, in-world performance and phone Vulkan stability
+remain unverified. The public source-host APK is not the private playable game package.
 
 ## Active direction — dedicated Android port
 
