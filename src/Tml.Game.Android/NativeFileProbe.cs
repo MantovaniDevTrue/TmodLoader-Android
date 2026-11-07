@@ -62,7 +62,19 @@ internal static class NativeFileProbe
             catch (IOException) { }
             try { open("missing-bank.xwb"); throw new InvalidOperationException("Missing stream did not throw"); }
             catch (FileNotFoundException) { }
-            GameEntry.Log("NATIVE_FILE_IO_OK relative+absolute+spaces+utf8+streaming+missing");
+            // File.Exists still succeeds when the native reader lacks read access.
+            // Exercise the allocated FAudio wrapper with a null SDL stream too.
+            using var denied = new Java.IO.File(Path.GetFullPath(relative));
+            if (!denied.SetReadable(false, false)) throw new IOException("Could not prepare unreadable fixture");
+            try
+            {
+                try { read(relative, out _); throw new InvalidOperationException("Denied SDL file did not throw"); }
+                catch (IOException) { }
+                try { open(relative); throw new InvalidOperationException("Denied FAudio file did not throw"); }
+                catch (IOException) { }
+            }
+            finally { denied.SetReadable(true, true); }
+            GameEntry.Log("NATIVE_FILE_IO_OK relative+absolute+spaces+utf8+streaming+missing+denied");
         }
         finally
         {

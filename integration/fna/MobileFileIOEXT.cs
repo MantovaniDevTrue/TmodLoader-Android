@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.Xna.Framework
 {
@@ -27,6 +28,12 @@ namespace Microsoft.Xna.Framework
             if (!File.Exists(path)) throw new FileNotFoundException("Audio wave bank not found", path);
             IntPtr stream = FAudio.FAudio_fopen(path);
             if (stream == IntPtr.Zero) throw new IOException("FAudio could not open '" + path + "'");
+            if (Marshal.PtrToStructure<FAudio.FAudioIOStream>(stream).data == IntPtr.Zero)
+            {
+                string error = SDL3.SDL.SDL_GetError();
+                FAudio.FAudio_close(stream);
+                throw new IOException("FAudio could not read '" + path + "': " + error);
+            }
             return stream;
         }
     }
