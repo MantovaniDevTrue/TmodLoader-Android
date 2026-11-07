@@ -1,4 +1,5 @@
 using System.Text;
+using System.Reflection;
 using Tml.Mobile.Android;
 
 byte[] Integer(int field, ulong value) => [..Var((ulong)(field << 3)), ..Var(value)];
@@ -35,3 +36,34 @@ Reject([0], "invalid field number");
 Reject([0x0b], "unsupported wire type");
 Reject([0x08, ..Enumerable.Repeat((byte)0xff, 10)], "overflow integer");
 Require(Decode([0x09, 1,2,3,4,5,6,7,8, 0x15, 1,2,3,4]) == "", "skip fixed fields");
+
+Assembly? original = Assembly.GetEntryAssembly();
+try
+{
+    Assembly.SetEntryAssembly(null);
+    Require(Assembly.GetEntryAssembly() == null, "reproduce embedded runtime without entry assembly");
+    try
+    {
+        _ = Assembly.GetEntryAssembly()!.Location;
+        throw new Exception("Expected the reported startup failure");
+    }
+    catch (NullReferenceException) { Console.WriteLine("PASS reproduce original logger null dereference"); }
+    Assembly game = typeof(EntryAssemblyScope).Assembly;
+    using (var scope = new EntryAssemblyScope(game))
+    {
+        Require(Assembly.GetEntryAssembly()!.Location == game.Location, "logger reads game assembly location");
+        using (new EntryAssemblyScope(typeof(Enumerable).Assembly))
+            Require(Assembly.GetEntryAssembly() == typeof(Enumerable).Assembly, "nested invocation uses its own assembly");
+        Require(Assembly.GetEntryAssembly() == game, "nested invocation restores game assembly");
+    }
+    Require(Assembly.GetEntryAssembly() == null, "restore native entry state");
+    Assembly.SetEntryAssembly(game);
+    try
+    {
+        using var scope = new EntryAssemblyScope(typeof(Enumerable).Assembly);
+        throw new InvalidOperationException("test unwinding");
+    }
+    catch (InvalidOperationException) { }
+    Require(Assembly.GetEntryAssembly() == game, "restore existing entry assembly after failure");
+}
+finally { Assembly.SetEntryAssembly(original); }

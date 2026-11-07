@@ -43,7 +43,10 @@ def prepare(upstream):
             "\tinternal static void Init()\n\t{\n",
             "\tinternal static void Init()\n\t{\n\t\tif (OperatingSystem.IsAndroid())\n\t\t\treturn;\n"),
         "Terraria/Program.cs": (
-            'MainThread.Name = "Main Thread";', 'MainThread.Name ??= "Main Thread";')
+            'MainThread.Name = "Main Thread";', 'MainThread.Name ??= "Main Thread";'),
+        "Terraria/ModLoader/Logging.cs": (
+            'Assembly.GetEntryAssembly().Location',
+            '(Assembly.GetEntryAssembly() ?? typeof(Logging).Assembly).Location')
     }
     changes = []
     for name, (before, after) in edits.items():

@@ -1,6 +1,6 @@
 # SDK-managed SDL3 Android host
 
-The new `src/Tml.Game.Android` project builds an experimental .NET 10 Android host. It is separate from the original input diagnostic and uses the same application ID with version 0.2.2. The Java SDL activity, native entry stub, C# game host, mobile core, FNA and private game payload share one process and one SDK-managed Mono runtime.
+The new `src/Tml.Game.Android` project builds an experimental .NET 10 Android host. It is separate from the original input diagnostic and uses the same application ID with version 0.2.3. The Java SDL activity, native entry stub, C# game host, mobile core, FNA and private game payload share one process and one SDK-managed Mono runtime.
 
 ## Implemented
 
@@ -66,3 +66,11 @@ The launcher report includes bounded tails of host/native/game logs and Android 
 After updating, first open the report before launching another session: Android may retain a useful native trace from the previous failure. If no useful trace is available, reproduce once and reopen the report. This update improves diagnosis; it does not claim the reported game startup crash is fixed.
 
 The source-only 0.2.2 workflow [42313215054](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/runs/42313215054) passed: all 11 decoder checks, ARM64 packaging/JNI validation and x86_64 emulator graphics presentation. Its runtime log confirms `NATIVE_CONSOLE_CAPTURE status=0` before `MANAGED_SDL_ENTRY` and `SDL_FNA_FIRST_FRAME`; the screenshot passed with 6240/8192 green center pixels. The private ARM64 APK builds with zero warnings/errors, retains the 0.2.1 certificate and passes 16 KiB ABI/alignment and signing checks. The original phone game-startup failure still needs its recovered trace.
+
+## Embedded entry assembly — 0.2.3
+
+The phone trace identified a managed `NullReferenceException` in `Logging.LogStartup`, immediately after logging FrameworkDescription. The next statement dereferenced `Assembly.GetEntryAssembly().Location`; JNI-hosted Mono can have no entry assembly. The process then called `ErrorReporting.FatalExit` and `Environment.Exit(1)`. The subsequent shutdown mutex messages are not evidence of the initial cause.
+
+The host now scopes the .NET 10 `Assembly.SetEntryAssembly` override to its managed entry and to the actual loaded tModLoader assembly during the game invocation, restoring the previous value on return/unwind. No binary modification or replacement of the private game payload is required. `TML_ENTRY_ASSEMBLY_READY tModLoader` marks the game identity before launch. The source preparation script also adds a null-safe assembly fallback for future managed game rebuilds.
+
+Seven additional checks reproduce a null entry assembly and the original null dereference, verify the logger location expression after the fix, and exercise nested scopes and exception cleanup. The emulator smoke test requires the host identity marker as well as the presented FNA sprite. Full Terraria initialization after this point still requires the next phone test.

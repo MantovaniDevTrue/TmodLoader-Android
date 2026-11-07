@@ -7,5 +7,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../src/Tml.Game.Android/NativeCrashTrace.cs" Link="NativeCrashTrace.cs" />
+    <Compile Include="../../src/Tml.Game.Android/EntryAssemblyScope.cs" Link="EntryAssemblyScope.cs" />
   </ItemGroup>
 </Project>

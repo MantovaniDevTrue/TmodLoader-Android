@@ -52,6 +52,8 @@ public sealed class GameEntry : Java.Lang.Object
         try
         {
             Activity owner = activity ?? throw new InvalidOperationException("Activity unavailable");
+            using var hostEntry = new EntryAssemblyScope(typeof(GameEntry).Assembly);
+            Log("HOST_ENTRY_ASSEMBLY_READY " + Assembly.GetEntryAssembly()!.GetName().Name);
             Log($"MANAGED_SDL_ENTRY {RuntimeInformation.FrameworkDescription} {RuntimeInformation.ProcessArchitecture}");
             Environment.SetEnvironmentVariable("FNA_PLATFORM_BACKEND", "SDL3");
             Environment.SetEnvironmentVariable("FNA3D_FORCE_DRIVER", "OpenGL");
@@ -111,6 +113,8 @@ public sealed class GameEntry : Java.Lang.Object
             Log("TML_ASSEMBLY_LOAD_BEGIN");
             Assembly game = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.Combine(payload, "tModLoader.dll"));
             Log("TML_ASSEMBLY_LOADED");
+            using var gameEntry = new EntryAssemblyScope(game);
+            Log("TML_ENTRY_ASSEMBLY_READY " + Assembly.GetEntryAssembly()!.GetName().Name);
             Type program = game.GetType("Terraria.Program", true)!;
             Log("TML_PROGRAM_TYPE_READY");
             MethodInfo entry = program.GetMethod("LaunchGame", [typeof(string[]), typeof(bool)])

@@ -41,6 +41,7 @@ fi
 for attempt in $(seq 1 45); do
   adb logcat -d > artifacts/sdl-smoke/logcat.txt
   if grep -q 'SDL_FNA_FIRST_FRAME' artifacts/sdl-smoke/logcat.txt; then
+    grep -q 'HOST_ENTRY_ASSEMBLY_READY Tml.Game.Android' artifacts/sdl-smoke/logcat.txt
     sleep 2
     adb exec-out screencap -p > artifacts/sdl-smoke/frame.png
     python3 tools/verify_probe_frame.py artifacts/sdl-smoke/frame.png
