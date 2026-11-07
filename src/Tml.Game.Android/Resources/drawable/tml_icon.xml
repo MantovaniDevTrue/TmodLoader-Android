@@ -1,4 +1,4 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-  <item android:drawable="@drawable/tmod_original" />
-  <item android:drawable="@drawable/android_badge" android:width="28dp" android:height="28dp" android:gravity="bottom|right" />
+  <item android:drawable="@drawable/tmod_original" android:width="108dp" android:height="108dp" />
+  <item android:drawable="@drawable/android_badge" android:width="36dp" android:height="36dp" android:gravity="bottom|right" />
 </layer-list>

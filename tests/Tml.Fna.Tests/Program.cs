@@ -157,3 +157,18 @@ MobileInputEXT.NativeTouch(42, .7f, .8f, TouchPhase.Up);
 MobileInputEXT.BeginUpdate();
 Check(MobileInputEXT.Frame.PointerPressed && MobileInputEXT.Frame.Pointer.X == .7f, "native SDL short tap survives same-pump release");
 MobileInputEXT.NativeTouchEnabled = false; MobileInputEXT.Source = null;
+
+var scenes = Enumerable.Range(0,6).Select(_=>new FrameTimingWindow(10)).ToArray();
+MobilePerformanceEXT.SceneDestinations = scenes;
+MobilePerformanceEXT.Destination = scenes[0];
+MobilePerformanceEXT.Scene = CaptureScene.Menu;
+MobilePerformanceEXT.BeginFrame(); MobilePerformanceEXT.EndFrame();
+Check(scenes[(int)CaptureScene.Menu].Snapshot().TotalRecorded == 1 && scenes[(int)CaptureScene.World].Snapshot().TotalRecorded == 0,
+    "menu frames cannot become gameplay measurements");
+MobilePerformanceEXT.Scene = CaptureScene.World;
+MobilePerformanceEXT.BeginFrame(); MobilePerformanceEXT.EndFrame();
+MobilePerformanceEXT.Scene = CaptureScene.Menu;
+Check(scenes[(int)CaptureScene.Menu].Snapshot().TotalRecorded == 0 && scenes[(int)CaptureScene.World].Snapshot().TotalRecorded == 1,
+    "context changes reset pacing history without deleting other scene samples");
+MobilePerformanceEXT.Destination = null;
+MobilePerformanceEXT.SceneDestinations = null;

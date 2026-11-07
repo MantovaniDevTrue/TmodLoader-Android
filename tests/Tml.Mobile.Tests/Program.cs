@@ -201,3 +201,11 @@ try
     catch(InvalidDataException) { Check(true,"invalid custom palette rejected"); }
 }
 finally { Directory.Delete(modRoot,true); }
+
+aimRouter.SetContext(InputContext.Gameplay);
+aimRouter.Handle(new(8,new(800,350),TouchPhase.Down));
+aimRouter.Handle(new(8,new(880,350),TouchPhase.Move)); SampleAim();
+aimRouter.Handle(new(8,new(880,350),TouchPhase.Up)); SampleAim();
+aimState.ReleaseToMouse();
+aimState.Update(aimRouter.ConsumeFrame(),new(.5f,.5f),.22f,1600,720);
+Check(!aimState.HasPosition, "hardware mouse takeover does not restore old stick aim on the next update");

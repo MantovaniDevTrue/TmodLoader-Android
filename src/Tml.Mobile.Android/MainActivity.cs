@@ -24,9 +24,9 @@ public sealed class MainActivity : Activity
 
     private async Task ProbeAsync()
     {
+        string path = Path.Combine(FilesDir!.AbsolutePath, "Tml.RuntimeProbe-" + Guid.NewGuid().ToString("N") + ".dll");
         try
         {
-            string path = Path.Combine(FilesDir!.AbsolutePath, "Tml.RuntimeProbe.dll");
             using (var input = Assets!.Open("Tml.RuntimeProbe.dll"))
             using (var output = File.Create(path)) await input.CopyToAsync(output);
             var report = await Task.Run(() => RuntimeProbe.Run(path));
@@ -39,8 +39,10 @@ public sealed class MainActivity : Activity
         }
         catch (Exception error)
         {
+            global::Android.Util.Log.Error("TmlMobile", "MOBILE_RUNTIME_PROBE_ERROR " + error);
             if (!IsDestroyed) controls!.Report = $"Falha no teste do runtime: {error.GetType().Name}: {error.Message}";
         }
+        finally { if (File.Exists(path)) File.Delete(path); }
     }
 
     protected override void OnPause()

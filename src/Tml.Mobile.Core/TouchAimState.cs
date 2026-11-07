@@ -11,7 +11,7 @@ public sealed class TouchAimState
     public Vector2 Position { get; private set; }
 
     public void Reset() { epoch = -1; pointerRevision = aimRevision = 0; stickOwns = false; stick = default; HasPosition = false; }
-    public void ReleaseToMouse() => HasPosition = false;
+    public void ReleaseToMouse() { HasPosition = false; stickOwns = false; }
 
     public void Update(in InputFrame frame, Vector2 origin, float radius, int width, int height)
     {
