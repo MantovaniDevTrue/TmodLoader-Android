@@ -8,6 +8,16 @@ void Check(bool condition, string name)
     Console.WriteLine("PASS: " + name);
     passed++;
 }
+foreach (var (width, height) in new[] { (2400,1080), (1920,1080), (1080,2400), (800,600), (3200,600), (1,1) })
+{
+    var size = MobileRenderPolicy.Select(width, height);
+    Check(size == MobileRenderPolicy.Select(height, width), "render size ignores portrait rotation");
+    Check(size.Width >= 800 && size.Height >= 600 && size.Width >= size.Height &&
+        size.Width * size.Height <= MobileRenderPolicy.PixelBudget && size.Width % 8 == 0 && size.Height % 8 == 0,
+        "render size respects PC minimum, landscape, alignment and pixel budget");
+}
+try { MobileRenderPolicy.Select(0, 1080); throw new Exception("accepted invalid display"); }
+catch (ArgumentOutOfRangeException) { Check(true, "reject invalid display dimensions"); }
 var area = new Viewport(0, 0, 1800, 900);
 var layout = ControlLayout.CreateDefault(area);
 var router = new TouchRouter();

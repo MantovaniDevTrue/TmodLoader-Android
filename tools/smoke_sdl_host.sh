@@ -42,6 +42,7 @@ for attempt in $(seq 1 45); do
   adb logcat -d > artifacts/sdl-smoke/logcat.txt
   if grep -q 'SDL_FNA_FIRST_FRAME' artifacts/sdl-smoke/logcat.txt; then
     grep -q 'HOST_ENTRY_ASSEMBLY_READY Tml.Game.Android' artifacts/sdl-smoke/logcat.txt
+    grep -q 'ANDROID_DISPLAY_STABLE' artifacts/sdl-smoke/logcat.txt
     grep -q 'ANDROID_DETOUR_PROBE_OK' artifacts/sdl-smoke/logcat.txt
     grep -q 'NATIVE_RELATIVE_PATH_MISMATCH_REPRODUCED' artifacts/sdl-smoke/logcat.txt
     grep -q 'NATIVE_FILE_IO_OK' artifacts/sdl-smoke/logcat.txt

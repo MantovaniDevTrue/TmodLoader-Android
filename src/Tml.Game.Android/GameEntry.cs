@@ -31,6 +31,13 @@ public sealed class GameEntry : Java.Lang.Object
         logPath = Path.Combine(owner.FilesDir!.AbsolutePath, "host-session.log");
         File.WriteAllText(logPath, $"Session {DateTimeOffset.UtcNow:O}\n");
         HostDiagnostics.Start(owner);
+        var metrics = new global::Android.Util.DisplayMetrics();
+#pragma warning disable CS0618
+        owner.WindowManager!.DefaultDisplay!.GetRealMetrics(metrics);
+#pragma warning restore CS0618
+        MobileGraphicsEXT.Enable(metrics.WidthPixels, metrics.HeightPixels);
+        MobileGraphicsEXT.Suspend(false);
+        Log($"ANDROID_RENDER_POLICY {MobileGraphicsEXT.Size.Width}x{MobileGraphicsEXT.Size.Height} landscape+fullscreen");
         overlay = new TouchControlsView(owner) { ConsumeFrames = false, ShowDiagnostics = false };
         overlay.SetBackgroundColor(global::Android.Graphics.Color.Transparent);
         owner.AddContentView(overlay, new ViewGroup.LayoutParams(-1, -1));
@@ -38,10 +45,10 @@ public sealed class GameEntry : Java.Lang.Object
     }
 
     [Export("suspendInput")]
-    public static void SuspendInput() { overlay?.Suspend(); Log("SDL_INPUT_SUSPENDED"); }
+    public static void SuspendInput() { MobileGraphicsEXT.Suspend(true); overlay?.Suspend(); Log("SDL_INPUT_SUSPENDED"); }
 
     [Export("resumeInput")]
-    public static void ResumeInput() { overlay?.Resume(); Log("SDL_INPUT_RESUMED"); }
+    public static void ResumeInput() { MobileGraphicsEXT.Suspend(false); overlay?.Resume(); Log("SDL_INPUT_RESUMED"); }
 
     [Export("detach")]
     public static void Detach() { overlay = null; activity = null; }
@@ -72,6 +79,7 @@ public sealed class GameEntry : Java.Lang.Object
             }
             MobileInputEXT.Source = overlay!.Router;
             AndroidDetours.Initialize();
+            using var performance = new SessionPerformance(owner.FilesDir!.AbsolutePath);
             if (owner.Intent?.GetStringExtra("mode") == "game") RunTerraria(owner.FilesDir!.AbsolutePath);
             else { NativeFileProbe.Run(owner); using var game = new RenderProbe(); game.Run(); }
             Log("MANAGED_SDL_EXIT");
@@ -121,6 +129,7 @@ public sealed class GameEntry : Java.Lang.Object
             Type redirects = game.GetType("Terraria.ModLoader.Core.AssemblyManager+AssemblyRedirects", true)!;
             RuntimeHelpers.RunClassConstructor(redirects.TypeHandle);
             Log("TML_ASSEMBLY_REDIRECTS_READY");
+            using var androidHooks = new AndroidGameHooks(game, activity!);
             Type program = game.GetType("Terraria.Program", true)!;
             Log("TML_PROGRAM_TYPE_READY");
             MethodInfo entry = program.GetMethod("LaunchGame", [typeof(string[]), typeof(bool)])
@@ -167,6 +176,19 @@ public sealed class GameEntry : Java.Lang.Object
         }
         protected override void LoadContent()
         {
+            int resets = 0;
+            graphics.DeviceReset += (_, _) => resets++;
+            foreach (var request in new[] { (800, 1200, false), (1920, 864, true), (2400, 1080, false) })
+            {
+                graphics.PreferredBackBufferWidth = request.Item1;
+                graphics.PreferredBackBufferHeight = request.Item2;
+                graphics.IsFullScreen = request.Item3;
+                graphics.ApplyChanges();
+            }
+            var p = GraphicsDevice.PresentationParameters;
+            if (resets != 0 || p.BackBufferWidth != MobileGraphicsEXT.Size.Width || p.BackBufferHeight != MobileGraphicsEXT.Size.Height || !p.IsFullScreen)
+                throw new InvalidOperationException("Android graphics resize/fullscreen policy was not stable");
+            Log("ANDROID_DISPLAY_STABLE portrait+resize+fullscreen no-device-reset");
             batch = new SpriteBatch(GraphicsDevice);
             pixel = new Texture2D(GraphicsDevice, 1, 1);
             pixel.SetData(new[] { Color.White });

@@ -14,7 +14,8 @@
       "src/Input/KeyboardState.cs": "d513fad7a1cff39835aadc6a770296e6c774218728b26e8be8305619c680ee63",
       "src/FNAPlatform/SDL3_FNAPlatform.cs": "778b15a6859ae34ddbb08daffa0497445e76751cf2f0b67760b201f29373f181",
       "src/Audio/WaveBank.cs": "6d83c0a505378e9f28f421167a4aa24b90db41beb7606a9c1242124984a56fda",
-      "src/Audio/SoundBank.cs": "905fa1c09572224890a9c20872e4ab835de12c7587de6e0768630588fd8a5b4d"
+      "src/Audio/SoundBank.cs": "905fa1c09572224890a9c20872e4ab835de12c7587de6e0768630588fd8a5b4d",
+      "src/GraphicsDeviceManager.cs": "4d3cf5931d1c61797f131953cffc893110370ceebbc87fe4ef96945c686dc3b6"
     }
   },
   "runtime": {

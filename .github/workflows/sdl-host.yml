@@ -1,7 +1,7 @@
 name: Android SDL game host
 on:
   push:
-    paths: ['src/Tml.Game.Android/**', 'tests/Tml.Host.Tests/**', 'integration/native/**', 'integration/fna/**', 'upstream.lock.json', 'tools/prepare_fna.py', 'tools/build_native.py', 'tools/smoke_sdl_host.sh', 'tools/verify_probe_frame.py', '.github/workflows/sdl-host.yml']
+    paths: ['src/Tml.Game.Android/**', 'src/Tml.Mobile.Core/**', 'tests/Tml.Host.Tests/**', 'integration/native/**', 'integration/fna/**', 'upstream.lock.json', 'tools/prepare_fna.py', 'tools/build_native.py', 'tools/smoke_sdl_host.sh', 'tools/verify_probe_frame.py', '.github/workflows/sdl-host.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -44,6 +44,15 @@ jobs:
           dotnet build src/Tml.Game.Android -c Release -m:1 -nr:false -t:SignAndroidPackage -p:AndroidSdkDirectory="$ANDROID_HOME" -p:JavaSdkDirectory="$JAVA_HOME" -p:TmlMobileFnaProject="$PWD/artifacts/fna-mobile/FNA.Core.csproj" -p:TmlNativeDirectory="$PWD/artifacts/android-native"
           python3 tools/verify_mobile_apk.py src/Tml.Game.Android/bin/Release/net10.0-android/android-arm64/*-Signed.apk --game-host
           python3 tools/verify_jni_startup.py src/Tml.Game.Android/obj/Release/net10.0-android/android-arm64/android/src src/Tml.Game.Android/bin/Release/net10.0-android/android-arm64/*-Signed.apk --game-host
+      - name: Stage source host and local signing tool
+        run: |
+          mkdir -p artifacts/source-host
+          cp src/Tml.Game.Android/bin/Release/net10.0-android/android-arm64/*-Signed.apk artifacts/source-host/
+          cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" artifacts/source-host/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-source-host
+          path: artifacts/source-host
       - name: Build emulator host
         run: dotnet build src/Tml.Game.Android -c Release -m:1 -nr:false -t:SignAndroidPackage -p:RuntimeIdentifier=android-x64 -p:AndroidSdkDirectory="$ANDROID_HOME" -p:JavaSdkDirectory="$JAVA_HOME" -p:TmlMobileFnaProject="$PWD/artifacts/fna-mobile/FNA.Core.csproj" -p:TmlNativeDirectory="$PWD/artifacts/android-native"
       - name: Enable KVM

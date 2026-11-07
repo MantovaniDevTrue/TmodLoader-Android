@@ -18,6 +18,13 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
     if destination.exists():
         raise SystemExit("Destination already exists; choose an empty path.")
     replacements = {
+        "src/GraphicsDeviceManager.cs": [
+            ("\t\tbool IGraphicsDeviceManager.BeginDraw()\n\t\t{", "\t\tbool IGraphicsDeviceManager.BeginDraw()\n\t\t{\n\t\t\tif (MobileGraphicsEXT.Enabled && !MobileGraphicsEXT.CanDraw) return false;", 1),
+            ("\t\t\t\tdrawBegun = false;\n\t\t\t\tgraphicsDevice.Present();", "\t\t\t\tdrawBegun = false;\n\t\t\t\tif (MobileGraphicsEXT.Enabled && !MobileGraphicsEXT.CanDraw) return;\n\t\t\t\tgraphicsDevice.Present();", 1),
+            ("\t\t\tINTERNAL_CreateGraphicsDeviceInformation(gdi);\n\n\t\t\t// Prepare the window...",
+             "\t\t\tINTERNAL_CreateGraphicsDeviceInformation(gdi);\n\t\t\tif (graphicsDevice != null && MobileGraphicsEXT.SkipUnchanged(graphicsDevice, gdi)) { prefsChanged = false; return; }\n\n\t\t\t// Prepare the window...", 2),
+            ("\t\t\t\tnew PreparingDeviceSettingsEventArgs(gdi)\n\t\t\t);",
+             "\t\t\t\tnew PreparingDeviceSettingsEventArgs(gdi)\n\t\t\t);\n\t\t\tMobileGraphicsEXT.Configure(gdi);\n\t\t\tif (MobileGraphicsEXT.Enabled) { INTERNAL_preferredBackBufferWidth = gdi.PresentationParameters.BackBufferWidth; INTERNAL_preferredBackBufferHeight = gdi.PresentationParameters.BackBufferHeight; INTERNAL_isFullScreen = true; }", 1)],
         "src/FNAPlatform/SDL3_FNAPlatform.cs": [
             ("\t\t\tUIntPtr resultSize;\n\t\t\tIntPtr result = SDL.SDL_LoadFile(path, out resultSize);\n\t\t\tsize = (IntPtr) resultSize.ToPointer();\n\t\t\treturn result;",
              "\t\t\treturn MobileFileIOEXT.ReadFile(path, out size);", 1)],
@@ -56,6 +63,7 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
     shutil.copyfile(ROOT / "integration/fna/MobileInputEXT.cs", destination / "src/Input/MobileInputEXT.cs")
     shutil.copyfile(ROOT / "integration/fna/MobilePerformanceEXT.cs", destination / "src/MobilePerformanceEXT.cs")
     shutil.copyfile(ROOT / "integration/fna/MobileFileIOEXT.cs", destination / "src/MobileFileIOEXT.cs")
+    shutil.copyfile(ROOT / "integration/fna/MobileGraphicsEXT.cs", destination / "src/MobileGraphicsEXT.cs")
     project = destination / "FNA.Core.csproj"
     text = project.read_text()
     reference = ROOT / "src/Tml.Mobile.Core/Tml.Mobile.Core.csproj"
@@ -65,6 +73,7 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
     <Compile Include="src/Input/MobileInputEXT.cs" />
     <Compile Include="src/MobilePerformanceEXT.cs" />
     <Compile Include="src/MobileFileIOEXT.cs" />
+    <Compile Include="src/MobileGraphicsEXT.cs" />
     <ProjectReference Include="{escape(str(reference))}" />
   </ItemGroup>
 </Project>''')
