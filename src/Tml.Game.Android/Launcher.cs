@@ -6,6 +6,7 @@ using Android.Provider;
 using Android.Views;
 using Android.Widget;
 using Tml.Mobile;
+using Path = System.IO.Path;
 using AColor = Android.Graphics.Color;
 
 namespace Tml.Mobile.Android;
@@ -29,7 +30,8 @@ public sealed partial class MainActivity
     }
     private Button Action(string label, Action action, bool primary = false)
     {
-        var button = new Button(this) { Text = label, TextSize = 14, AllCaps = false };
+        var button = new Button(this) { Text = label, TextSize = 14 };
+        button.SetAllCaps(false);
         button.SetTextColor(Color(primary ? theme.Background : theme.Text));
         button.Background = Background(primary ? theme.Accent : theme.Background, 12);
         button.SetPadding(Dp(14), Dp(8), Dp(14), Dp(8));
@@ -71,8 +73,9 @@ public sealed partial class MainActivity
         theme = themes.FirstOrDefault(t => t.Name == selected) ?? themes[0];
         var scroll = new ScrollView(this) { FillViewport = true }; scroll.SetBackgroundColor(Color(theme.Background));
         var page = new LinearLayout(this) { Orientation = Orientation.Vertical }; page.SetPadding(Dp(22), Dp(14), Dp(22), Dp(18)); scroll.AddView(page);
-        var header = new LinearLayout(this) { Orientation = Orientation.Horizontal, Gravity = GravityFlags.CenterVertical };
-        var icon = new ImageView(this); icon.SetImageResource(Resource.Drawable.tml_icon); header.AddView(icon, new LinearLayout.LayoutParams(Dp(64), Dp(64)));
+        var header = new LinearLayout(this) { Orientation = Orientation.Horizontal };
+        header.SetGravity(GravityFlags.CenterVertical);
+        var icon = new ImageView(this); icon.SetImageResource(global::Tml.Game.Android.Resource.Drawable.tml_icon); header.AddView(icon, new LinearLayout.LayoutParams(Dp(64), Dp(64)));
         var name = new LinearLayout(this) { Orientation = Orientation.Vertical }; name.SetPadding(Dp(14), 0, 0, 0);
         var title = Text("tModLoader", 28); title.SetTypeface(Typeface.Default, TypefaceStyle.Bold); name.AddView(title); name.AddView(Text("ANDROID  /  0.2.13  ·  Experimental", 11, true)); header.AddView(name, new LinearLayout.LayoutParams(0, -2, 1));
         var palette = new Spinner(this); var adapter = new ArrayAdapter<string>(this, global::Android.Resource.Layout.SimpleSpinnerDropDownItem, themes.Select(t => t.Name).ToArray()); palette.Adapter = adapter;
@@ -93,8 +96,8 @@ public sealed partial class MainActivity
         foreach (var button in new[] { Action("Testar gráficos e controles", () => Launch("probe")), Action("Relatório", ShowReport), Action("Importar tema", () => Pick(12)) })
         { var lp = new LinearLayout.LayoutParams(0, Dp(48), 1); lp.SetMargins(0, 0, Dp(8), 0); tools.AddView(button, lp); }
         page.AddView(tools);
-        var rendererRow = new LinearLayout(this) { Orientation = Orientation.Horizontal, Gravity = GravityFlags.CenterVertical }; rendererRow.SetPadding(Dp(5), Dp(8), Dp(5), 0); rendererRow.AddView(Text("Renderizador", 13, true));
-        var renderer = new Spinner(this); renderer.Adapter = new ArrayAdapter<string>(this, global::Android.Resource.Layout.SimpleSpinnerDropDownItem, new[] { "OpenGL ES · padrão", "Vulkan · experimental" });
+        var rendererRow = new LinearLayout(this) { Orientation = Orientation.Horizontal }; rendererRow.SetGravity(GravityFlags.CenterVertical); rendererRow.SetPadding(Dp(5), Dp(8), Dp(5), 0); rendererRow.AddView(Text("Renderizador", 13, true));
+        var renderer = new Spinner(this) { ContentDescription = "Renderizador" }; renderer.Adapter = new ArrayAdapter<string>(this, global::Android.Resource.Layout.SimpleSpinnerDropDownItem, new[] { "OpenGL ES · padrão", "Vulkan · experimental" });
         renderer.SetSelection(Preferences.GetString("renderer", "OpenGL") == "SDLGPU" ? 1 : 0); renderer.ItemSelected += (_, e) => Preferences.Edit()!.PutString("renderer", e.Position == 0 ? "OpenGL" : "SDLGPU")!.Apply(); rendererRow.AddView(renderer, new LinearLayout.LayoutParams(Dp(255), Dp(48))); actions.Add(renderer); page.AddView(rendererRow);
         status = Text("Temas Calamity e Thorium alteram a aparência do launcher. Mods precisam ser compatíveis com esta versão do tML.", 12, true); page.AddView(status);
         SetContentView(scroll);

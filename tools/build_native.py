@@ -48,7 +48,14 @@ def prepare_sdlgpu(fna):
     if replacement not in text:
         if text.count("resourceSetLayoutInfos") != 1 or text.count(stale) != 1:
             raise SystemExit("FNA3D SDL GPU pipeline cleanup context changed")
-        source.write_text(text.replace(stale, replacement))
+        text = text.replace(stale, replacement)
+    old = 'SDL_SetBooleanProperty(props, "SDL.gpu.device.create.vulkan.requirehardwareacceleration", true);'
+    new = 'SDL_SetBooleanProperty(props, "SDL.gpu.device.create.vulkan.requirehardwareacceleration", !SDL_GetHintBoolean("TML_PROBE_SOFTWARE_GPU", false));'
+    if new not in text:
+        if text.count(old) != 1:
+            raise SystemExit("FNA3D Vulkan hardware property context changed")
+        text = text.replace(old, new)
+    source.write_text(text)
 
 
 def revision(path, expected):

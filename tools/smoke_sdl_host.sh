@@ -1,13 +1,32 @@
 #!/usr/bin/env bash
 set -euo pipefail
 apk="$1"
+backend="${2:-OpenGL}"
 mkdir -p artifacts/sdl-smoke
+adb shell am force-stop com.mantovani.tmlmobile || true
 trap 'adb logcat -d > artifacts/sdl-smoke/logcat.txt || true; adb exec-out screencap -p > artifacts/sdl-smoke/frame.png || true' EXIT
 adb install -r "$apk"
 adb logcat -c
 adb shell input keyevent 224
 adb shell wm dismiss-keyguard || true
 adb shell monkey -p com.mantovani.tmlmobile -c android.intent.category.LAUNCHER 1
+if [ "$backend" == SDLGPU ]; then
+  for label in Renderizador 'Vulkan · experimental'; do
+    found=0
+    for attempt in $(seq 1 15); do
+      timeout 20 adb shell uiautomator dump /sdcard/tml-window.xml >/dev/null 2>&1 || true
+      adb shell cat /sdcard/tml-window.xml > artifacts/sdl-smoke/window.xml
+      if python3 tools/find_android_control.py artifacts/sdl-smoke/window.xml "$label" > /tmp/tml-renderer-tap.txt; then
+        read -r tap_x tap_y < /tmp/tml-renderer-tap.txt
+        adb shell input tap "$tap_x" "$tap_y"
+        found=1
+        break
+      fi
+      sleep 1
+    done
+    if [ "$found" != 1 ]; then echo "Renderer control missing: $label"; exit 1; fi
+  done
+fi
 found_button=0
 for attempt in $(seq 1 12); do
   timeout 20 adb shell uiautomator dump /sdcard/tml-window.xml >/dev/null 2>&1 || true
@@ -46,7 +65,12 @@ for attempt in $(seq 1 45); do
     grep -q 'ANDROID_DEFERRED_BOOTSTRAP_OK' artifacts/sdl-smoke/logcat.txt
     grep -q 'ANDROID_PC_RESOLUTION_STABLE' artifacts/sdl-smoke/logcat.txt
     grep -q 'ANDROID_GPU_STRESS_OK' artifacts/sdl-smoke/logcat.txt
-    grep -q 'ANDROID_GLES_STREAMING subdata+attribute-offsets+float-depth+ring-reuse' artifacts/sdl-smoke/logcat.txt
+    if [ "$backend" == OpenGL ]; then
+      grep -q 'ANDROID_GLES_STREAMING subdata+attribute-offsets+float-depth+ring-reuse' artifacts/sdl-smoke/logcat.txt
+    else
+      grep -q 'FNA3D Driver: SDLGPU' artifacts/sdl-smoke/logcat.txt
+      grep -qi 'vulkan' artifacts/sdl-smoke/logcat.txt
+    fi
     grep -q 'ANDROID_DISPLAY_STABLE' artifacts/sdl-smoke/logcat.txt
     grep -q 'ANDROID_DMD_BACKEND DynamicMethod' artifacts/sdl-smoke/logcat.txt
     grep -q 'ANDROID_PRIVATE_ACCESS_OK' artifacts/sdl-smoke/logcat.txt

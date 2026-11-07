@@ -68,9 +68,12 @@ jobs:
           arch: x86_64
           target: google_apis
           disable-animations: true
-          script: bash tools/smoke_sdl_host.sh src/Tml.Game.Android/bin/Release/net10.0-android/android-x64/com.mantovani.tmlmobile-Signed.apk
+          script: |
+            bash tools/smoke_sdl_host.sh src/Tml.Game.Android/bin/Release/net10.0-android/android-x64/com.mantovani.tmlmobile-Signed.apk
+            cp -r artifacts/sdl-smoke artifacts/sdl-smoke-opengl
+            bash tools/smoke_sdl_host.sh src/Tml.Game.Android/bin/Release/net10.0-android/android-x64/com.mantovani.tmlmobile-Signed.apk SDLGPU
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: sdl-host-checks
-          path: artifacts/sdl-smoke
+          path: artifacts/sdl-smoke*
