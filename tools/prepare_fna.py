@@ -20,7 +20,7 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
     replacements = {
         "src/GraphicsDeviceManager.cs": [
             ("\t\tbool IGraphicsDeviceManager.BeginDraw()\n\t\t{", "\t\tbool IGraphicsDeviceManager.BeginDraw()\n\t\t{\n\t\t\tif (MobileGraphicsEXT.Enabled && !MobileGraphicsEXT.CanDraw) return false;", 1),
-            ("\t\t\t\tdrawBegun = false;\n\t\t\t\tgraphicsDevice.Present();", "\t\t\t\tdrawBegun = false;\n\t\t\t\tif (MobileGraphicsEXT.Enabled && !MobileGraphicsEXT.CanDraw) return;\n\t\t\t\tgraphicsDevice.Present();", 1),
+            ("\t\t\t\tdrawBegun = false;\n\t\t\t\tgraphicsDevice.Present();", "\t\t\t\tdrawBegun = false;\n\t\t\t\tif (MobileGraphicsEXT.Enabled && !MobileGraphicsEXT.CanDraw) return;\n\t\t\t\tgraphicsDevice.Present();\n\t\t\t\tMobileGraphicsEXT.OnFramePresented();", 1),
             ("\t\t\tINTERNAL_CreateGraphicsDeviceInformation(gdi);\n\n\t\t\t// Prepare the window...",
              "\t\t\tINTERNAL_CreateGraphicsDeviceInformation(gdi);\n\t\t\tif (graphicsDevice != null && MobileGraphicsEXT.SkipUnchanged(graphicsDevice, gdi)) { prefsChanged = false; return; }\n\n\t\t\t// Prepare the window...", 2),
             ("\t\t\t\tnew PreparingDeviceSettingsEventArgs(gdi)\n\t\t\t);",

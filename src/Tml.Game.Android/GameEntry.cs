@@ -80,6 +80,7 @@ public sealed class GameEntry : Java.Lang.Object
             MobileInputEXT.Source = overlay!.Router;
             AndroidDetours.Initialize();
             using var performance = new SessionPerformance(owner.FilesDir!.AbsolutePath);
+            using var glMonitor = new AndroidGraphicsProbe.FrameMonitor();
             if (owner.Intent?.GetStringExtra("mode") == "game") RunTerraria(owner.FilesDir!.AbsolutePath);
             else
             {
@@ -222,6 +223,7 @@ public sealed class GameEntry : Java.Lang.Object
                     throw new InvalidOperationException("PC minimum-size clamp conflicts with the FNA render policy");
             }
             Log("ANDROID_PC_RESOLUTION_STABLE iterations=120 no-device-reset");
+            AndroidGraphicsProbe.Run(GraphicsDevice);
             batch = new SpriteBatch(GraphicsDevice);
             pixel = new Texture2D(GraphicsDevice, 1, 1);
             pixel.SetData(new[] { Color.White });

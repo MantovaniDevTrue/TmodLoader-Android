@@ -6,6 +6,8 @@ namespace Microsoft.Xna.Framework
 {
     public static class MobileGraphicsEXT
     {
+        public static event System.Action FramePresented;
+        internal static void OnFramePresented() => FramePresented?.Invoke();
         public static bool Enabled { get; private set; }
         public static RenderSize Size { get; private set; }
         private static int resetsAvoided;

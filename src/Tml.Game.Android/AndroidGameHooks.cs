@@ -9,6 +9,8 @@ namespace Tml.Mobile.Android;
 internal sealed class AndroidGameHooks : IDisposable
 {
     private readonly List<Hook> hooks = [];
+    private GraphicsDeviceManager? graphics;
+    private EventHandler<EventArgs>? deviceReady;
 
     internal AndroidGameHooks(Assembly game, Activity owner)
     {
@@ -27,6 +29,14 @@ internal sealed class AndroidGameHooks : IDisposable
             if (size.Width < minWidth || size.Height < minHeight || size.Width > maxWidth || size.Height > maxHeight)
                 throw new InvalidOperationException($"Render size {size.Width}x{size.Height} violates Terraria limits {minWidth}x{minHeight}..{maxWidth}x{maxHeight}");
             GameEntry.Log($"ANDROID_GAME_DISPLAY_LIMITS min={minWidth}x{minHeight} render={size.Width}x{size.Height}");
+            graphics = (GraphicsDeviceManager)main.GetField("graphics", fields)!.GetValue(null)!;
+            deviceReady = (_, _) =>
+            {
+                graphics.DeviceCreated -= deviceReady;
+                AndroidGraphicsProbe.Run(graphics.GraphicsDevice);
+            };
+            if (graphics.GraphicsDevice is not null) AndroidGraphicsProbe.Run(graphics.GraphicsDevice);
+            else graphics.DeviceCreated += deviceReady;
             MethodInfo display = main.GetMethod("SetDisplayMode", [typeof(int), typeof(int), typeof(bool)])
                 ?? throw new MissingMethodException("Terraria.Main.SetDisplayMode(int,int,bool)");
             hooks.Add(new Hook(display, (Action<Action<int, int, bool>, int, int, bool>)((original, w, h, full) =>
@@ -49,5 +59,5 @@ internal sealed class AndroidGameHooks : IDisposable
         });
     }
 
-    public void Dispose() { for (int i = hooks.Count - 1; i >= 0; i--) hooks[i].Dispose(); hooks.Clear(); }
+    public void Dispose() { if (graphics != null && deviceReady != null) graphics.DeviceCreated -= deviceReady; for (int i = hooks.Count - 1; i >= 0; i--) hooks[i].Dispose(); hooks.Clear(); }
 }
