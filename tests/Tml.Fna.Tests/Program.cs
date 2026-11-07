@@ -133,4 +133,5 @@ GC.Collect();
 GC.WaitForPendingFinalizers();
 Check(rejectedSound && rejectedWave, "failed audio bank constructors finalize without accessing native null handles");
 
+BootstrapOrderChecks.Run(Check);
 Console.WriteLine($"{passed} FNA integration checks passed.");
