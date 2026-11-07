@@ -1,5 +1,17 @@
 # Current status
 
+## Android 0.2.14 — 2026-11-07
+
+The first sword mod attempt exposed an Android bundled-assembly metadata resolver
+failure. A scoped resolver hook now supplies framework/host metadata PE images
+while preserving normal mod dependency resolution. The actual original resolver's
+locationless assembly cast failure was reproduced locally; the patched real
+ModLoadContext.LoadAssemblies/GetLoadableTypes discovers all five sword-mod types.
+Private API/touch checks passed. Android SDL workflow 42410952417 and foundation
+workflow 42410952516 passed. The signed private playable APK was assembled and
+verified; phone mod gameplay remains to be tested. See
+[0.2.14 fix and package evidence](ANDROID_0_2_14.md).
+
 ## Android 0.2.13 — 2026-11-07
 
 The source includes Android's system document picker for importing local `.tmod`
