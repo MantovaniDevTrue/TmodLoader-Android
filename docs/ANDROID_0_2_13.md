@@ -71,3 +71,21 @@ This instrumentation does not skip assets, effects or save validation.
 Local foundation/FNA/private hook checks and public Android CI are recorded with
 the release. ARM64 phone validation is still required for touch behavior, world
 FPS and the experimental Vulkan backend. No promise of sustained 60 FPS is made.
+
+
+## SDL launcher CI regression — 2026-11-07
+
+The Android emulator smoke test resolves **Renderizador** to the actual
+`android.widget.Spinner`, not the neighboring text label. Dropdown items are
+selected from visible, enabled UI nodes; the launcher is scrolled only while
+discovering controls. Five standalone selector regression cases pass locally.
+
+After the OpenGL/SDLGPU probe has reached its first rendered frame, the test
+preserves the startup log, clears logcat, and injects a fresh tap on the captured
+landscape surface. It then requires a new native SDL game-thread touch event
+without generating extra launcher scroll gestures. This prevents old or unrelated
+input events from satisfying the assertion.
+
+Local Python selector tests pass. The modified GitHub Actions emulator run,
+real ARM64 gameplay, Vulkan graphics and private APK contents/signature need
+separate verification; a source commit or prior APK does not prove them.
