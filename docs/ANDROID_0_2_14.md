@@ -88,3 +88,35 @@ samples or isolate the sword's performance cost. Vulkan was not tested on-device
 Split 1.0.11 was discovered, but has a different Terraria/LTS build stream
 (tML 2026.4.3.0). It was not loaded in the recorded mod-content sequence. This
 report does not validate Split compatibility; do not bypass that version boundary.
+
+## Physical Adreno Vulkan test failed — 2026-11-07, 18:23–18:24 BRT
+
+The user selected Vulkan/SDLGPU on 0.2.14. Native logging confirms the actual
+Vulkan device was Adreno 642L (Qualcomm driver build 4bbe300fc3, conformance 1.2.0.1).
+The small GPU fixture passed, content initialization completed in 1,046 ms and
+music initialization in 77 ms. After the ReLogic splash the user observed a black
+screen and eventual process termination. No mod discovery/content load or world
+entry is present in this session's console trace.
+
+SDL reports unsupported opaque presentation repeatedly. In the pinned SDL
+release-3.4.20 gpu/vulkan backend, this warning means the surface capability mask
+lacks VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR; swapchain creation then chooses another
+supported composite-alpha mode (prefer inherit when available). It identifies a
+presentation/compositor compatibility lead, not a demonstrated cause of either
+the black screen or process termination. Missing VK_EXT_debug_utils is also a
+warning, not an established fatal error.
+
+Android records Signaled(2), status=9 at 21:24:45 UTC: SIGKILL. There is no SIGSEGV,
+managed fatal exception or device-lost error in the supplied record. The actor and
+reason for the kill cannot be determined here; historical LowMemory/MIUI events
+must not be substituted for the cause of this run.
+
+The 1.72 GB allocation value is cumulative transient allocation within the startup
+window, not resident RAM. Sampled managed live memory was 251–290 MiB and process
+PSS about 1.57 GiB during the later recorded startup samples. Menu is a game-state
+label that also covers startup, so the later 55 presentation calls/s does not prove
+a visible/working menu. No Vulkan gameplay or performance improvement is validated.
+
+Use OpenGL for the current phone baseline. Keep Vulkan experimental and investigate
+swapchain alpha/composition plus full-game rendering beyond the small pixel fixture
+before recommending another on-device comparison.
