@@ -90,11 +90,7 @@ for attempt in $(seq 1 45); do
     if [ "$backend" == OpenGL ]; then
       require_marker 'ANDROID_GLES_STREAMING subdata+attribute-offsets+float-depth+ring-reuse'
     else
-      require_marker 'FNA3D Driver: SDLGPU'
-      if ! grep -qi 'vulkan' artifacts/sdl-smoke/logcat.txt; then
-        echo 'SDL_SMOKE_MISSING_MARKER backend=SDLGPU marker=Vulkan'
-        exit 1
-      fi
+      require_marker 'TML_SDL_GPU_ACTIVE_DRIVER=vulkan'
     fi
     require_marker 'ANDROID_DISPLAY_STABLE'
     require_marker 'ANDROID_DMD_BACKEND DynamicMethod'
