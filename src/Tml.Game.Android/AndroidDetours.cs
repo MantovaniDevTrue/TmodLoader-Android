@@ -18,7 +18,7 @@ internal static class AndroidDetours
         MonoMod.Switches.SetSwitchValue(MonoMod.Switches.DMDType, "dynamicmethod");
         var system = new AndroidDetourSystem();
         var arch = PlatformTriple.CreateCurrentArchitecture(system);
-        var runtime = PlatformTriple.CreateCurrentRuntime(system, arch);
+        var runtime = new AndroidMonoRuntime(PlatformTriple.CreateCurrentRuntime(system, arch));
         PlatformTriple.SetPlatformTriple(new PlatformTriple(arch, system, runtime));
         GameEntry.Log($"ANDROID_DETOUR_PLATFORM_READY {arch.Target} {runtime.Target}");
         // Fail here on the SDL thread, with a report, before background game
@@ -33,7 +33,11 @@ internal static class AndroidDetours
         }
         if (Probe(3) != 4) throw new InvalidOperationException("Detour baseline failed");
         using (var hook = new Hook(source, (Func<Func<int, int>, int, int>)((orig, value) => orig(value) * 7)))
-            if (Probe(3) != 28) throw new InvalidOperationException("Android managed hook/original call failed");
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            if (Probe(3) != 28) throw new InvalidOperationException("Android managed hook/original call failed after GC");
+        }
         if (Probe(3) != 4) throw new InvalidOperationException("Android hook removal failed");
         using (var first = new Hook(source, (Func<Func<int, int>, int, int>)((orig, value) => orig(value) + 7)))
         {
@@ -48,7 +52,7 @@ internal static class AndroidDetours
                 if (Probe(index) != index + 1 + add) throw new InvalidOperationException("Android repeated hook apply failed");
             if (Probe(index) != index + 1) throw new InvalidOperationException("Android repeated hook removal failed");
         }
-        GameEntry.Log("ANDROID_PRIVATE_ACCESS_OK private-call+field+generic+original+remove");
+        GameEntry.Log("ANDROID_PRIVATE_ACCESS_OK private-call+field+generic+original+gc+remove");
         initialized = true;
         GameEntry.Log("ANDROID_DETOUR_PROBE_OK apply+original+chain+repeat+remove");
     }
