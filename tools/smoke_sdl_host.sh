@@ -3,6 +3,15 @@ set -euo pipefail
 apk="$1"
 backend="${2:-OpenGL}"
 mkdir -p artifacts/sdl-smoke
+echo "SDL_SMOKE_BACKEND=$backend"
+require_marker() {
+  local marker="$1"
+  if ! grep -Fq -- "$marker" artifacts/sdl-smoke/logcat.txt; then
+    echo "SDL_SMOKE_MISSING_MARKER backend=$backend marker=$marker"
+    grep -E 'HOST_|ANDROID_|SDL_FNA|FNA3D|FATAL EXCEPTION' artifacts/sdl-smoke/logcat.txt | tail -n 80 || true
+    exit 1
+  fi
+}
 adb shell am force-stop com.mantovani.tmlmobile || true
 trap 'adb logcat -d > artifacts/sdl-smoke/logcat.txt || true; adb exec-out screencap -p > artifacts/sdl-smoke/frame.png || true' EXIT
 adb install -r "$apk"
@@ -74,22 +83,25 @@ fi
 for attempt in $(seq 1 45); do
   adb logcat -d > artifacts/sdl-smoke/logcat.txt
   if grep -q 'SDL_FNA_FIRST_FRAME' artifacts/sdl-smoke/logcat.txt; then
-    grep -q 'HOST_ENTRY_ASSEMBLY_READY Tml.Game.Android' artifacts/sdl-smoke/logcat.txt
-    grep -q 'ANDROID_DEFERRED_BOOTSTRAP_OK' artifacts/sdl-smoke/logcat.txt
-    grep -q 'ANDROID_PC_RESOLUTION_STABLE' artifacts/sdl-smoke/logcat.txt
-    grep -q 'ANDROID_GPU_STRESS_OK' artifacts/sdl-smoke/logcat.txt
+    require_marker 'HOST_ENTRY_ASSEMBLY_READY Tml.Game.Android'
+    require_marker 'ANDROID_DEFERRED_BOOTSTRAP_OK'
+    require_marker 'ANDROID_PC_RESOLUTION_STABLE'
+    require_marker 'ANDROID_GPU_STRESS_OK'
     if [ "$backend" == OpenGL ]; then
-      grep -q 'ANDROID_GLES_STREAMING subdata+attribute-offsets+float-depth+ring-reuse' artifacts/sdl-smoke/logcat.txt
+      require_marker 'ANDROID_GLES_STREAMING subdata+attribute-offsets+float-depth+ring-reuse'
     else
-      grep -q 'FNA3D Driver: SDLGPU' artifacts/sdl-smoke/logcat.txt
-      grep -qi 'vulkan' artifacts/sdl-smoke/logcat.txt
+      require_marker 'FNA3D Driver: SDLGPU'
+      if ! grep -qi 'vulkan' artifacts/sdl-smoke/logcat.txt; then
+        echo 'SDL_SMOKE_MISSING_MARKER backend=SDLGPU marker=Vulkan'
+        exit 1
+      fi
     fi
-    grep -q 'ANDROID_DISPLAY_STABLE' artifacts/sdl-smoke/logcat.txt
-    grep -q 'ANDROID_DMD_BACKEND DynamicMethod' artifacts/sdl-smoke/logcat.txt
-    grep -q 'ANDROID_PRIVATE_ACCESS_OK' artifacts/sdl-smoke/logcat.txt
-    grep -q 'ANDROID_DETOUR_PROBE_OK' artifacts/sdl-smoke/logcat.txt
-    grep -q 'NATIVE_RELATIVE_PATH_MISMATCH_REPRODUCED' artifacts/sdl-smoke/logcat.txt
-    grep -q 'NATIVE_FILE_IO_OK' artifacts/sdl-smoke/logcat.txt
+    require_marker 'ANDROID_DISPLAY_STABLE'
+    require_marker 'ANDROID_DMD_BACKEND DynamicMethod'
+    require_marker 'ANDROID_PRIVATE_ACCESS_OK'
+    require_marker 'ANDROID_DETOUR_PROBE_OK'
+    require_marker 'NATIVE_RELATIVE_PATH_MISMATCH_REPRODUCED'
+    require_marker 'NATIVE_FILE_IO_OK'
     adb exec-out screencap -p > artifacts/sdl-smoke/input-surface.png
     read -r screen_w screen_h < <(python3 - <<'PYSCREEN'
 from PIL import Image
@@ -106,7 +118,11 @@ PYSCREEN
       if grep -q 'ANDROID_NATIVE_TOUCH_EVENT sdl-to-game-thread' artifacts/sdl-smoke/logcat.txt; then native_touch=1; break; fi
       sleep 1
     done
-    if [ "$native_touch" != 1 ]; then echo 'Native SDL touch did not reach the game thread'; exit 1; fi
+    if [ "$native_touch" != 1 ]; then
+      echo "SDL_SMOKE_NATIVE_TOUCH_MISSING backend=$backend"
+      grep -E 'SDL|TOUCH|INPUT|FATAL EXCEPTION' artifacts/sdl-smoke/logcat.txt | tail -n 80 || true
+      exit 1
+    fi
     adb exec-out screencap -p > artifacts/sdl-smoke/frame.png
     python3 tools/verify_probe_frame.py artifacts/sdl-smoke/frame.png
     echo 'PASS: SDK-managed .NET entry, SDL3 Android surface, FNA3D texture/SpriteBatch frame'
@@ -118,6 +134,6 @@ PYSCREEN
   fi
   sleep 2
 done
-echo 'No FNA frame observed'
+echo "SDL_SMOKE_FRAME_TIMEOUT backend=$backend"
 tail -n 100 artifacts/sdl-smoke/logcat.txt
 exit 1
