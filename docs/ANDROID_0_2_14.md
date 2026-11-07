@@ -42,3 +42,23 @@ Reproduce privately after staging the matching game/FNA/core and integration:
 python3 tools/stage_metadata.py /private/game
 dotnet run --project tools/Tml.ModLoadProbe -c Release -- /private/game /private/AndroidSwordTest_0.1.0.tmod
 ```
+
+## Packaged candidate verification
+
+[Android SDL workflow 42410952417](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/runs/42410952417)
+passed all steps for source commit `64889267380de00f668a360e728930d6c9d1d3e3`,
+including ARM64 packaging and both OpenGL/Vulkan emulator pixel/touch fixtures.
+Foundation workflow 42410952516 also passed all three jobs.
+
+The private playable APK includes the new integration and both required host
+metadata PE images. Its ZIP contents/CRCs, v2/v3 signatures, prior-certificate
+continuity and AArch64/16 KiB compatibility checks passed.
+
+- File: `tML_Android_0.2.14_SDL3_NET10_ARM64.apk`
+- Size: 51,738,221 bytes
+- APK SHA-256: `2afa6f205613883ab5bb3933ddd60359ebb10d3ca03eb54680d85bb556f7ea1d`
+- Payload SHA-256: `50c8e191700b92e6c8d7aa70ab29984e4ddc2a139288e72874f2897ee401f7c6`
+- Source-host artifact: 13589353023
+
+Install over 0.2.13 and re-enable AndroidSwordTest 0.1.0 if the earlier failure
+disabled it. Full mod content/gameplay on the physical phone remains pending.
