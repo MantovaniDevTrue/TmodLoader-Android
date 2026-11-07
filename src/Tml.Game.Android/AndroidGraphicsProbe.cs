@@ -40,7 +40,11 @@ internal static class AndroidGraphicsProbe
         try
         {
             device.SetRenderTarget(a);
-            device.Clear(Color.Black);
+            var depthViewport = device.Viewport;
+            depthViewport.MinDepth = 0.25f; depthViewport.MaxDepth = 0.75f;
+            device.Viewport = depthViewport;
+            device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.Black, 0.5f, 0);
+            CheckErrors("GLES depth range/clear");
             // 3072 sprites span the 2048-sprite dynamic buffer and 64 Begin/End
             // cycles. Texture changes force nonzero vertex offsets within batches.
             for (int pass = 0; pass < 64; pass++)
