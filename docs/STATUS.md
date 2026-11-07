@@ -1,5 +1,16 @@
 # Current status
 
+## First local mod validated on ARM64 — 2026-11-07
+
+The user confirmed AndroidSwordTest 0.1.1 loaded in 0.2.14/OpenGL, its sword and
+recipe appeared, and the session entered/saved a world and exited normally. The
+log confirms JIT, Load, content setup and finalization. This establishes the first
+simple precompiled local .tmod test on the physical phone, not general PC mod
+compatibility or full hook/effect coverage. Supplied gameplay timings cover
+WorldUi only (roughly 46–51 presentation calls/s); Vulkan remains untested on the
+phone. Split was discovered but not loaded and is from an incompatible build stream.
+See [phone evidence and limits](ANDROID_0_2_14.md).
+
 ## Android 0.2.14 — 2026-11-07
 
 The first sword mod attempt exposed an Android bundled-assembly metadata resolver
