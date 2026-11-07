@@ -208,6 +208,20 @@ public sealed class GameEntry : Java.Lang.Object
             if (resets != 0 || p.BackBufferWidth != MobileGraphicsEXT.Size.Width || p.BackBufferHeight != MobileGraphicsEXT.Size.Height || !p.IsFullScreen)
                 throw new InvalidOperationException("Android graphics resize/fullscreen policy was not stable");
             Log("ANDROID_DISPLAY_STABLE portrait+resize+fullscreen no-device-reset");
+            for (int index = 0; index < 120; index++)
+            {
+                // Match the pinned game's minimum-size clamp, then require it
+                // to agree with the real FNA backbuffer and manager settings.
+                int pcWidth = Math.Max(800, MobileGraphicsEXT.Size.Width);
+                int pcHeight = Math.Max(720, MobileGraphicsEXT.Size.Height);
+                graphics.PreferredBackBufferWidth = pcWidth;
+                graphics.PreferredBackBufferHeight = pcHeight;
+                graphics.ApplyChanges();
+                if (p.BackBufferWidth != pcWidth || p.BackBufferHeight != pcHeight ||
+                    graphics.PreferredBackBufferWidth != pcWidth || graphics.PreferredBackBufferHeight != pcHeight || resets != 0)
+                    throw new InvalidOperationException("PC minimum-size clamp conflicts with the FNA render policy");
+            }
+            Log("ANDROID_PC_RESOLUTION_STABLE iterations=120 no-device-reset");
             batch = new SpriteBatch(GraphicsDevice);
             pixel = new Texture2D(GraphicsDevice, 1, 1);
             pixel.SetData(new[] { Color.White });

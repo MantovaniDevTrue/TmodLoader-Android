@@ -12,9 +12,18 @@ foreach (var (width, height) in new[] { (2400,1080), (1920,1080), (1080,2400), (
 {
     var size = MobileRenderPolicy.Select(width, height);
     Check(size == MobileRenderPolicy.Select(height, width), "render size ignores portrait rotation");
-    Check(size.Width >= 800 && size.Height >= 600 && size.Width >= size.Height &&
+    Check(size.Width >= 800 && size.Height >= 720 && size.Width >= size.Height &&
         size.Width * size.Height <= MobileRenderPolicy.PixelBudget && size.Width % 8 == 0 && size.Height % 8 == 0,
         "render size respects PC minimum, landscape, alignment and pixel budget");
+}
+Check(MobileRenderPolicy.Select(2400, 1080) == new RenderSize(1600, 720), "phone render size preserves landscape aspect above the PC minimum");
+Check(new RenderSize(1416, 640) != new RenderSize(Math.Max(800, 1416), Math.Max(720, 640)),
+    "reproduce old render size diverging from Terraria's 800x720 clamp");
+foreach (var display in new[] { (2400,1080), (1080,2400), (1920,1080), (3200,1440), (800,600) })
+{
+    var selected = MobileRenderPolicy.Select(display.Item1, display.Item2);
+    var pc = new RenderSize(Math.Max(800, selected.Width), Math.Max(720, selected.Height));
+    Check(pc == selected, "render policy is unchanged by Terraria's minimum-size clamp");
 }
 try { MobileRenderPolicy.Select(0, 1080); throw new Exception("accepted invalid display"); }
 catch (ArgumentOutOfRangeException) { Check(true, "reject invalid display dimensions"); }

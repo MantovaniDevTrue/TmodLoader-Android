@@ -43,6 +43,7 @@ for attempt in $(seq 1 45); do
   if grep -q 'SDL_FNA_FIRST_FRAME' artifacts/sdl-smoke/logcat.txt; then
     grep -q 'HOST_ENTRY_ASSEMBLY_READY Tml.Game.Android' artifacts/sdl-smoke/logcat.txt
     grep -q 'ANDROID_DEFERRED_BOOTSTRAP_OK' artifacts/sdl-smoke/logcat.txt
+    grep -q 'ANDROID_PC_RESOLUTION_STABLE' artifacts/sdl-smoke/logcat.txt
     grep -q 'ANDROID_DISPLAY_STABLE' artifacts/sdl-smoke/logcat.txt
     grep -q 'ANDROID_DMD_BACKEND DynamicMethod' artifacts/sdl-smoke/logcat.txt
     grep -q 'ANDROID_PRIVATE_ACCESS_OK' artifacts/sdl-smoke/logcat.txt

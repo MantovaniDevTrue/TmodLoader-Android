@@ -17,7 +17,17 @@ internal sealed class AndroidGameHooks : IDisposable
             MethodInfo url = game.GetType("Terraria.Utils", true)!.GetMethod("OpenToURL", [typeof(string)])
                 ?? throw new MissingMethodException("Terraria.Utils.OpenToURL(string)");
             hooks.Add(new Hook(url, (Action<Action<string>, string>)((original, address) => Open(owner, address))));
-            MethodInfo display = game.GetType("Terraria.Main", true)!.GetMethod("SetDisplayMode", [typeof(int), typeof(int), typeof(bool)])
+            Type main = game.GetType("Terraria.Main", true)!;
+            const BindingFlags fields = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+            int minWidth = (int)main.GetField("minScreenW", fields)!.GetValue(null)!;
+            int minHeight = (int)main.GetField("minScreenH", fields)!.GetValue(null)!;
+            int maxWidth = (int)main.GetField("maxScreenW", fields)!.GetValue(null)!;
+            int maxHeight = (int)main.GetField("maxScreenH", fields)!.GetValue(null)!;
+            var size = MobileGraphicsEXT.Size;
+            if (size.Width < minWidth || size.Height < minHeight || size.Width > maxWidth || size.Height > maxHeight)
+                throw new InvalidOperationException($"Render size {size.Width}x{size.Height} violates Terraria limits {minWidth}x{minHeight}..{maxWidth}x{maxHeight}");
+            GameEntry.Log($"ANDROID_GAME_DISPLAY_LIMITS min={minWidth}x{minHeight} render={size.Width}x{size.Height}");
+            MethodInfo display = main.GetMethod("SetDisplayMode", [typeof(int), typeof(int), typeof(bool)])
                 ?? throw new MissingMethodException("Terraria.Main.SetDisplayMode(int,int,bool)");
             hooks.Add(new Hook(display, (Action<Action<int, int, bool>, int, int, bool>)((original, w, h, full) =>
                 original(MobileGraphicsEXT.Size.Width, MobileGraphicsEXT.Size.Height, true))));
