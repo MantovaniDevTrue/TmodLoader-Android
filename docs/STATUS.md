@@ -9,11 +9,15 @@ and revised touch aim/input ownership. See [ANDROID_0_2_13.md](ANDROID_0_2_13.md
 
 The launcher regression update selects the real render Spinner instead of its
 text label and isolates the SDL native tap event from earlier launcher gestures.
-Five local Python selector checks passed. The SDL GitHub Actions workflow runs
-these checks before native builds. A newly built APK, the modified emulator
-workflow's outcome and private ARM64 phone gameplay have not been independently
-verified in this continuation. Do not treat source/fixture tests as a passed
-release gate. Existing phone evidence is from 0.2.12 and earlier.
+The [Android SDL workflow 42394775887](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/runs/42394775887)
+confirmed that ARM64 packaging, APK checks, x64 emulator build and the OpenGL
+probe passed. OpenGL presented 5,496/8,192 expected center pixels. The Vulkan
+probe also reached its FNA first frame and GPU stress pass but failed because
+the test demanded an unavailable FNA3D driver banner in Android logcat.
+The new source instruments the actual SDL GPU device driver and requires
+`TML_SDL_GPU_ACTIVE_DRIVER=vulkan` instead. The next CI result, the private
+ARM64 package, in-world performance and phone Vulkan stability are pending.
+The public source-host APK is not the private playable game package.
 
 ## Active direction — dedicated Android port
 
