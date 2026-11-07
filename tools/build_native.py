@@ -40,6 +40,17 @@ def prepare_audio(fna):
         source.write_text(text.replace(anchor, patch + "\n" + anchor))
 
 
+def prepare_sdlgpu(fna):
+    source = fna / "lib/FNA3D/src/FNA3D_Driver_SDL.c"
+    text = source.read_text()
+    stale = "\tSDL_stack_free(resourceSetLayoutInfos);"
+    replacement = "\t/* The pinned pipeline has no resourceSetLayoutInfos allocation. */"
+    if replacement not in text:
+        if text.count("resourceSetLayoutInfos") != 1 or text.count(stale) != 1:
+            raise SystemExit("FNA3D SDL GPU pipeline cleanup context changed")
+        source.write_text(text.replace(stale, replacement))
+
+
 def revision(path, expected):
     actual = subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD"], text=True).strip()
     if actual != expected:
@@ -52,6 +63,7 @@ def main(args):
     revision(args.sdl, lock["sdl"]["commit"])
     prepare_gles(args.fna)
     prepare_audio(args.fna)
+    prepare_sdlgpu(args.fna)
     cmake = args.sdk / "cmake/3.22.1/bin/cmake"
     ninja = cmake.parent / "ninja"
     ndk = args.sdk / "ndk/28.2.13676358"

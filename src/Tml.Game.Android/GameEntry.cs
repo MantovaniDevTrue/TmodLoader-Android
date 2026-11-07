@@ -70,6 +70,8 @@ public sealed class GameEntry : Java.Lang.Object
             Environment.SetEnvironmentVariable("FNA3D_FORCE_DRIVER", renderer);
             SetHint("FNA3D_FORCE_DRIVER", renderer);
             SetHint("SDL_GPU_DRIVER", "vulkan");
+            SetHint("SDL_TOUCH_MOUSE_EVENTS", "0");
+            SetHint("SDL_MOUSE_TOUCH_EVENTS", "0");
             Log("ANDROID_RENDERER_REQUEST " + renderer);
             Environment.SetEnvironmentVariable("SDL_TOUCH_MOUSE_EVENTS", "0");
             if (!resolverInstalled)
