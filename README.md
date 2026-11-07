@@ -2,7 +2,7 @@
 
 Dedicated Android ARM64 adaptation of tModLoader: preserve the C# mod ecosystem while adapting the game host, interface, input and performance to mobile. See [architecture and delivery gates](docs/ANDROID_PORT.md).
 
-> **Active work:** Experimental SDL3 Android game host (0.2.0). Native ARM64 SDL3/FNA3D/FAudio, a real FNA graphics probe, transparent controls, PC content import and private game entry wiring now build. Reaching Terraria menu/world on-device remains unvalidated. [Host build and verification scope](docs/SDL_HOST.md).
+> **Active work:** Experimental tML Android **0.2.13** (.NET 10, SDL3, FNA). The 0.2.12 phone run entered and saved a world, but performance, memory use, and several touch/audio paths still require device validation. Version 0.2.13 adds local .tmod import without Workshop, a themed launcher with the original icon plus Android badge, an optional Vulkan backend, and touch-aim fixes. Android CI tests the graphics probe; that does not prove full game or mod compatibility. [Version scope](docs/ANDROID_0_2_13.md) and [host tests](docs/SDL_HOST.md).
 >
 > **Historical game baseline:** Phase 2.23.01 — FNA3D SpriteBatch Buffer Bridge. Its gameplay host still uses MonoVM 8. Matching vanilla PC input was received privately on 2026-11-06; the new .NET 10 host remains to be integrated.
 
