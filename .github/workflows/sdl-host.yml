@@ -13,6 +13,8 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.100'
+      - name: Test launcher UI control lookup
+        run: python3 tools/test_find_android_control.py
       - name: Check native crash report decoder
         run: dotnet run --project tests/Tml.Host.Tests -c Release
       - uses: actions/setup-java@v4
