@@ -56,3 +56,29 @@ allocation path. Verify saving and re-entry.
 
 The startup gap after music remains unresolved. Vulkan remains experimental and
 failed on the physical Adreno phone in 0.2.14; its SIGKILL has no proven cause.
+
+## Candidate package
+
+The signed private playable APK is `tML_Android_0.2.15_SDL3_NET10_ARM64.apk`,
+51,738,221 bytes, SHA-256
+`0dd4ba400c3cd3752f648a4154cffe5cd1b03d16d6d55c831fe3d818a2863a2c`.
+Its embedded payload SHA-256 is
+`ff24d7d2c9c6ff053cbd62d7031e6614f5c67767dd201443d2e1978b22891d6b`.
+The integration comes from compatibility-guard commit `3b4950f`; the unchanged
+host inputs come from `ed8abe3`, source-host artifact 13591846974 in workflow
+42416890447. The native host does not embed the private integration assembly;
+the verified private payload supplies it. Both commits use app version 0.2.15.
+
+Local checks passed: 30 tile scratch assertions, 59 input/core assertions,
+28 FNA adapter assertions, 16 performance recorder assertions, actual private
+API contracts, touch editor/profile persistence and five-type mod metadata loading.
+APK checks passed: version, exact payload/integration bytes, ZIP CRC/no duplicate
+entries, signature with the existing development certificate, ARM64 native
+libraries and 16 KiB alignment. Install over 0.2.14 without uninstalling.
+Physical OpenGL gameplay with this optimization remains pending.
+
+Host workflow 42416890447 passed its ARM64 build/package checks and emulator
+OpenGL/SDL_GPU rendering fixtures, and foundation workflow 42416890511 passed
+all three jobs. Emulator fixtures are not physical phone benchmarks and do not
+supersede the failed Adreno Vulkan result. The guard only changes the separate
+private integration; its full scoped-detour regression and private probes passed.
