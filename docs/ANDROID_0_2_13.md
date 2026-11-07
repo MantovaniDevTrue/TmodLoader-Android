@@ -128,6 +128,11 @@ unavailable banner or any unrelated mention of Vulkan. The source patch
 is strict and idempotent, and a synthetic regression fixture is included
 in the workflow.
 
-The change has been committed, but **the next emulator run and a private,
-playable ARM64 APK are not yet validated**. These checks cover the
-host graphics probe, not full Terraria gameplay or mod loading.
+The next [Android SDL workflow 42396149435](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/runs/42396149435)
+passed all steps on commit `d22f7f8`. The `surface` job passed the pinned
+driver-audit regression, ARM64 package/signature verification, x64 emulator
+build, and both OpenGL and Vulkan/SDLGPU FNA rendering probes. Each renderer
+presented 5,496/8,192 expected green pixels. Artifacts `android-source-host`
+and `sdl-host-checks` were uploaded. This validates the **public host APK
+and emulator graphics tests**, not a private playable Terraria build,
+physical ARM64 phone compatibility, gameplay FPS, or general .tmod loading.
