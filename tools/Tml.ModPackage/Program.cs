@@ -44,8 +44,17 @@ try
     byte[] compiled = (byte[])packageType.GetMethod("GetBytes",[typeof(string)])!.Invoke(reopened,[name+".dll"])!;
     var assembly = Assembly.Load(compiled);
     foreach (var type in assembly.GetTypes()) Console.WriteLine("TYPE " + type.FullName);
-    foreach (string asset in new[] { "Content/Items/Weapons/ExampleSword.png", "Content/Dusts/Sparkle.png", "Localization/pt-BR.hjson", "Localization/en-US.hjson", "LICENSE" })
+    foreach (string asset in new[] { "icon.png", "icon_small.png", "Content/Items/Weapons/ExampleSword.png", "Content/Dusts/Sparkle.png", "Localization/pt-BR.hjson", "Localization/en-US.hjson", "LICENSE" })
         if (!(bool)packageType.GetMethod("HasFile")!.Invoke(reopened,[asset])!)throw new InvalidDataException("Missing asset: " + asset);
+    foreach (var icon in new[] { (Name: "icon.png", Size: 80), (Name: "icon_small.png", Size: 30) })
+    {
+        byte[] png = (byte[])packageType.GetMethod("GetBytes",[typeof(string)])!.Invoke(reopened,[icon.Name])!;
+        if(png.Length < 24 || !png.AsSpan(0,8).SequenceEqual(new byte[]{137,80,78,71,13,10,26,10}) ||
+            System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(png.AsSpan(16,4)) != icon.Size ||
+            System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(png.AsSpan(20,4)) != icon.Size)
+            throw new InvalidDataException("Invalid client icon: " + icon.Name);
+        Console.WriteLine($"PASS required client icon {icon.Name} {icon.Size}x{icon.Size}");
+    }
     var item = assembly.GetType(name+".Content.Items.Weapons.ExampleSword",true)!;
     if(!game.GetType("Terraria.ModLoader.ModItem",true)!.IsAssignableFrom(item))throw new InvalidDataException("Item must inherit actual ModItem");
     if(assembly.GetReferencedAssemblies().Any(a=>a.Name=="ExampleMod"))throw new InvalidDataException("Unexpected full ExampleMod dependency");
