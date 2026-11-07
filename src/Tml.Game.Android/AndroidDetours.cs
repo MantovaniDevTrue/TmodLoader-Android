@@ -1,4 +1,6 @@
 using System.Reflection;
+using System.Reflection.Emit;
+using MonoMod.Utils;
 using System.Runtime.CompilerServices;
 using MonoMod.Core.Platforms;
 using MonoMod.RuntimeDetour;
@@ -11,6 +13,9 @@ internal static class AndroidDetours
     internal static void Initialize()
     {
         if (initialized) return;
+        // Modern Android Mono lacks the legacy fields used by automatic DMD
+        // detection. Cecil-generated assemblies fail private calls in originals.
+        MonoMod.Switches.SetSwitchValue(MonoMod.Switches.DMDType, "dynamicmethod");
         var system = new AndroidDetourSystem();
         var arch = PlatformTriple.CreateCurrentArchitecture(system);
         var runtime = PlatformTriple.CreateCurrentRuntime(system, arch);
@@ -19,6 +24,13 @@ internal static class AndroidDetours
         // Fail here on the SDL thread, with a report, before background game
         // static constructors can poison AssemblyRedirects and abort the process.
         MethodInfo source = typeof(AndroidDetours).GetMethod(nameof(Probe), BindingFlags.NonPublic | BindingFlags.Static)!;
+        using (var definition = new DynamicMethodDefinition(source))
+        {
+            var generated = definition.Generate();
+            if (generated is not DynamicMethod || generated.CreateDelegate<Func<int, int>>()(3) != 4)
+                throw new InvalidOperationException("Android DynamicMethod private-access copy failed");
+            GameEntry.Log("ANDROID_DMD_BACKEND DynamicMethod skip-visibility");
+        }
         if (Probe(3) != 4) throw new InvalidOperationException("Detour baseline failed");
         using (var hook = new Hook(source, (Func<Func<int, int>, int, int>)((orig, value) => orig(value) * 7)))
             if (Probe(3) != 28) throw new InvalidOperationException("Android managed hook/original call failed");
@@ -36,6 +48,7 @@ internal static class AndroidDetours
                 if (Probe(index) != index + 1 + add) throw new InvalidOperationException("Android repeated hook apply failed");
             if (Probe(index) != index + 1) throw new InvalidOperationException("Android repeated hook removal failed");
         }
+        GameEntry.Log("ANDROID_PRIVATE_ACCESS_OK private-call+field+generic+original+remove");
         initialized = true;
         GameEntry.Log("ANDROID_DETOUR_PROBE_OK apply+original+chain+repeat+remove");
     }
@@ -68,6 +81,15 @@ internal static class AndroidDetours
         public static int Target(int value) => value + 1;
     }
 
+    private static int probeOffset = 0;
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static int PrivateAdd(int value) => value + 1;
+    private static class PrivateGeneric<T>
+    {
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static T Echo(T value) => value;
+    }
+
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-    private static int Probe(int value) => value + 1;
+    private static int Probe(int value) => PrivateAdd(PrivateGeneric<int>.Echo(value)) + probeOffset;
 }

@@ -44,6 +44,8 @@ for attempt in $(seq 1 45); do
     grep -q 'HOST_ENTRY_ASSEMBLY_READY Tml.Game.Android' artifacts/sdl-smoke/logcat.txt
     grep -q 'ANDROID_DEFERRED_BOOTSTRAP_OK' artifacts/sdl-smoke/logcat.txt
     grep -q 'ANDROID_DISPLAY_STABLE' artifacts/sdl-smoke/logcat.txt
+    grep -q 'ANDROID_DMD_BACKEND DynamicMethod' artifacts/sdl-smoke/logcat.txt
+    grep -q 'ANDROID_PRIVATE_ACCESS_OK' artifacts/sdl-smoke/logcat.txt
     grep -q 'ANDROID_DETOUR_PROBE_OK' artifacts/sdl-smoke/logcat.txt
     grep -q 'NATIVE_RELATIVE_PATH_MISMATCH_REPRODUCED' artifacts/sdl-smoke/logcat.txt
     grep -q 'NATIVE_FILE_IO_OK' artifacts/sdl-smoke/logcat.txt
