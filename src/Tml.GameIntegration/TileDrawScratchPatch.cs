@@ -19,17 +19,17 @@ internal sealed class TileDrawScratchPatch : IDisposable
         allocation = new ILHook(method, Rewrite);
         try
         {
-            scope = InstallScope(method);
+            scope = InstallScope(method, static () => Terraria.ModLoader.ModLoader.Mods is { Length: <= 1 });
         }
         catch { allocation.Dispose(); throw; }
         log("ANDROID_TILE_SCRATCH_READY per-thread+reentrant+reset-colors");
     }
 
-    internal static Hook InstallScope(MethodBase method) =>
+    internal static Hook InstallScope(MethodBase method, Func<bool> reusable) =>
         new Hook(method, (Action<DrawTile, TileDrawing, Vector2, Vector2, int, int>)
                 ((original, self, position, offset, x, y) =>
                 {
-                    TileDrawScratch.Enter();
+                    TileDrawScratch.Enter(reusable());
                     try { original(self, position, offset, x, y); }
                     finally { TileDrawScratch.Exit(); }
                 }));
@@ -60,13 +60,18 @@ internal static class TileDrawScratch
     private const int Capacity = 8;
     [ThreadStatic] private static TileDrawInfo?[]? slots;
     [ThreadStatic] private static int depth;
+    [ThreadStatic] private static int blockedDepth;
 
-    internal static void Enter() => depth++;
+    internal static void Enter(bool reusable = true)
+    {
+        depth++;
+        if (!reusable && blockedDepth == 0) blockedDepth = depth;
+    }
 
     internal static TileDrawInfo Rent()
     {
         if (depth <= 0) throw new InvalidOperationException("Tile scratch used outside draw scope");
-        if (depth > Capacity) return new TileDrawInfo();
+        if (blockedDepth != 0 || depth > Capacity) return new TileDrawInfo();
         slots ??= new TileDrawInfo?[Capacity];
         var value = slots[depth - 1] ??= new TileDrawInfo();
         Reset(value);
@@ -81,6 +86,7 @@ internal static class TileDrawScratch
             value.drawTexture = null;
             value.glowTexture = null;
         }
+        if (blockedDepth == depth) blockedDepth = 0;
         depth--;
     }
 
@@ -98,5 +104,5 @@ internal static class TileDrawScratch
         Array.Clear(value.colorSlices);
     }
 
-    internal static void Clear() { slots = null; depth = 0; }
+    internal static void Clear() { slots = null; depth = blockedDepth = 0; }
 }

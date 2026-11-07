@@ -104,7 +104,8 @@ static class Probe
 
         var fixture = typeof(Probe).GetMethod(nameof(DrawFixture), BindingFlags.Static | BindingFlags.NonPublic)!;
         using var fixtureAllocation = new ILHook(fixture, TileDrawScratchPatch.Rewrite);
-        using var fixtureScope = TileDrawScratchPatch.InstallScope(fixture);
+        bool reusable = true;
+        using var fixtureScope = TileDrawScratchPatch.InstallScope(fixture, () => reusable);
         var renderer = (TileDrawing)RuntimeHelpers.GetUninitializedObject(typeof(TileDrawing));
         for (int i = 0; i < iterations; i++) DrawFixture(renderer, default, default, 1, 0);
         before = GC.GetAllocatedBytesForCurrentThread();
@@ -115,6 +116,14 @@ static class Probe
         CheckThrows();
         DrawFixture(renderer, default, default, 3, 0);
         Check(drawn!.typeCache == 3, "full draw detour recovers after exception");
+        reusable = false;
+        DrawFixture(renderer, default, default, 4, 0);
+        var escaped = drawn;
+        DrawFixture(renderer, default, default, 5, 0);
+        Check(!ReferenceEquals(escaped, drawn) && escaped!.typeCache == 4, "external mod policy preserves distinct retained objects");
+        reusable = true;
+        DrawFixture(renderer, default, default, 6, 0);
+        Check(!ReferenceEquals(escaped, drawn) && escaped!.typeCache == 4, "returning to reuse preserves external references");
         TileDrawScratch.Clear();
     }
 

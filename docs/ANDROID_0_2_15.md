@@ -16,6 +16,12 @@ drawing method, texture selection, lighting, shaders, effects and mod callbacks
 continue to run. The resolution remains 1600×720. This reduces managed work on the
 OpenGL rendering path; it does not replace the OpenGL driver.
 
+Reuse is enabled only while no external mods are loaded (the built-in ModLoader
+entry is allowed). `TileLoader.DrawEffects` exposes the object by reference, so an
+external mod could retain or replace it. Those sessions keep fresh instances and
+their original lifetime. This includes AndroidSwordTest. A separate regression
+checks that externally retained instances are neither reused nor reset later.
+
 Scratch storage is per thread and per nested invocation, retaining at most eight
 objects and their nine-element color arrays. Greater recursion allocates normally.
 Every field and all nine color samples are reset to constructor defaults before
@@ -44,8 +50,9 @@ dotnet tools/Tml.TileDrawProbe/bin/Release/net10.0/Tml.TileDrawProbe.dll /privat
 
 These checks do not establish an Android FPS gain or complete rendering fidelity.
 Compare a physical OpenGL run in the same world with inventory closed, then open;
-check allocation/frame, GC frequency, draw p95 and visible lighting/effects. Include
-the first sword mod only after a no-mod baseline. Verify saving and re-entry.
+check allocation/frame, GC frequency, draw p95 and visible lighting/effects. Test
+the sword mod separately for compatibility; it intentionally uses the original
+allocation path. Verify saving and re-entry.
 
 The startup gap after music remains unresolved. Vulkan remains experimental and
 failed on the physical Adreno phone in 0.2.14; its SIGKILL has no proven cause.
