@@ -1,5 +1,20 @@
 # Current status
 
+## Android 0.2.13 — 2026-11-07
+
+The source includes Android's system document picker for importing local `.tmod`
+packages, without Steam Workshop, plus a themed launcher, original tModLoader
+icon with a separate Android badge, a selectable experimental Vulkan backend,
+and revised touch aim/input ownership. See [ANDROID_0_2_13.md](ANDROID_0_2_13.md).
+
+The launcher regression update selects the real render Spinner instead of its
+text label and isolates the SDL native tap event from earlier launcher gestures.
+Five local Python selector checks passed. The SDL GitHub Actions workflow runs
+these checks before native builds. A newly built APK, the modified emulator
+workflow's outcome and private ARM64 phone gameplay have not been independently
+verified in this continuation. Do not treat source/fixture tests as a passed
+release gate. Existing phone evidence is from 0.2.12 and earlier.
+
 ## Active direction — dedicated Android port
 
 The 0.2.5 phone report confirms that the .NET 10 ARM64 host created, entered and saved a small world. It also reports severe flicker/black frames, poor performance and high memory use. Repeated portrait/landscape/fullscreen resets appear in the log; no measured gameplay FPS is available. The final managed crash was a desktop `xdg-open` launch from `Terraria.Utils.OpenToURL`; a native save-thread fault followed during shutdown.
