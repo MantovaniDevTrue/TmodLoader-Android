@@ -106,3 +106,28 @@ prints relevant SDL/touch diagnostics on failure. The Vulkan and OpenGL
 checks retain their original acceptance requirements. A fresh CI outcome
 and the failing run's `sdl-host-checks` files are still needed before
 claiming that the emulator issue has been fixed.
+
+
+## Workflow 42394775887 — exact failure and fix
+
+[Run 42394775887](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/runs/42394775887)
+checked commit `96daf0e`. The ARM64 package/signature checks, source-host artifact,
+x64 emulator APK and OpenGL probe passed. OpenGL presented 5,496 of 8,192
+expected pixels. Vulkan/SDLGPU also reached `SDL_FNA_FIRST_FRAME` and
+`ANDROID_GPU_STRESS_OK`, but the smoke script failed on an expected
+`FNA3D Driver: SDLGPU` log line, which was not emitted to Android logcat.
+The log also showed a created Vulkan instance and device, but that alone
+was insufficient to prove the active FNA3D renderer.
+
+The fix instruments the pinned FNA3D SDLGPU creation path with
+`SDL_GetGPUDeviceDriver(device)` and emits
+`TML_SDL_GPU_ACTIVE_DRIVER=<actual-driver>` through SDL warning logging
+after a GPU device is successfully created. Smoke tests now require the
+specific `TML_SDL_GPU_ACTIVE_DRIVER=vulkan` marker, rather than the
+unavailable banner or any unrelated mention of Vulkan. The source patch
+is strict and idempotent, and a synthetic regression fixture is included
+in the workflow.
+
+The change has been committed, but **the next emulator run and a private,
+playable ARM64 APK are not yet validated**. These checks cover the
+host graphics probe, not full Terraria gameplay or mod loading.
