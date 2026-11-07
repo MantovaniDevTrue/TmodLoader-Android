@@ -10,6 +10,7 @@ import subprocess
 import sys
 
 from prepare_fna import prepare
+from stage_metadata import stage as stage_metadata
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -56,6 +57,7 @@ def build(upstream, destination, dotnet):
          f"-p:GameDirectory={payload}", f"-p:FnaAssembly={fna / 'bin/Release/net10.0/FNA.dll'}"],
         ROOT, environment, destination / "mobile-integration.log")
     shutil.copyfile(bridge / "Tml.GameIntegration.dll", payload / "Tml.GameIntegration.dll")
+    stage_metadata(payload)
     run([str(dotnet), "run", "--project", str(ROOT / "tools/Tml.GameCheck"), "-c", "Release",
          "--", str(payload)], ROOT, environment, destination / "assembly-check.log")
 

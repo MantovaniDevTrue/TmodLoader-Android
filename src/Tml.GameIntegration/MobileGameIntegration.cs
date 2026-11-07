@@ -45,6 +45,7 @@ public sealed class MobileGameIntegration : IDisposable
         catch (Exception e) when (e is IOException or System.Text.Json.JsonException) { log("ANDROID_TOUCH_PROFILE_INVALID " + e.Message); profile = new(); }
         try
         {
+            hooks.Add(new MetadataAssemblyPatch(root, log));
             if (installedMemory <= 0) throw new InvalidOperationException("Android physical memory unavailable");
             hooks.Add(new Hook(typeof(Main).Assembly.GetType("Terraria.ModLoader.UI.UIMemoryBar", true)!.GetMethod("GetTotalMemory")!,
                 (Func<Func<long>, long>)(_ => installedMemory)));

@@ -44,6 +44,12 @@ try
         Require(game.GetType("Terraria.IO.WorldFile", true)!.GetMethod("SaveWorld", [typeof(bool), typeof(bool), typeof(bool)]) != null, "Save timing hook contract");
         Require(game.GetType("Terraria.IngameOptions", true)!.GetMethod("Draw")!.GetParameters().Length == 2, "In-world touch options hook contract");
         Require(input.GetProperty("NativeTouchEnabled") != null && input.GetProperty("DirectActions") != null && input.GetEvent("BeforeUpdate") != null, "Native touch transport contract");
+        if (bridge.GetType("Tml.GameIntegration.MetadataAssemblyPatch") != null)
+            foreach (string name in new[] { "FNA", "Tml.Mobile.Core" })
+            {
+                string metadataPath = Path.Combine(root,"Metadata",name+".metadata.dll");
+                Require(File.Exists(metadataPath) && File.ReadAllBytes(metadataPath).SequenceEqual(File.ReadAllBytes(Path.Combine(root,name+".dll"))), "Host metadata image matches runtime input: " + name);
+            }
         Console.WriteLine("PASS: mobile game integration assembly and exact hooked API contracts.");
     }
 

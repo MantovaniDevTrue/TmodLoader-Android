@@ -18,6 +18,11 @@ fna.GetType("Microsoft.Xna.Framework.MobileGraphicsEXT",true)!.GetMethod("Enable
 var sourceType = fna.GetType("Microsoft.Xna.Framework.Input.MobileInputEXT",true)!.GetProperty("Source")!.PropertyType;
 var source = Activator.CreateInstance(sourceType);
 var module = Assembly.LoadFrom(Path.Combine(root, "Tml.GameIntegration.dll"));
+string metadataPath = Path.Combine(testRoot,"game/Metadata");
+Directory.CreateDirectory(metadataPath);
+Directory.CreateDirectory(Path.Combine(testRoot,"game/Libraries"));
+foreach(string name in new[]{"FNA","Tml.Mobile.Core"})
+    File.Copy(Path.Combine(root,"Metadata",name+".metadata.dll"),Path.Combine(metadataPath,name+".metadata.dll"));
 using var integration = (IDisposable)module.GetType("Tml.GameIntegration.MobileGameIntegration",true)!.GetMethod("Initialize")!.Invoke(null,[source,testRoot,(Action<string>)Console.WriteLine,8L*1024*1024*1024])!;
 Console.WriteLine("PASS actual private integration hooks installed (headless CoreCLR, no gameplay)");
 
