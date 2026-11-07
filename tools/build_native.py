@@ -15,7 +15,14 @@ def prepare_gles(fna):
     text = source.read_text()
     anchor = "\t/* Some stuff is okay for ES3, not for desktop. */"
     patch = (ROOT / "integration/native/gles_capabilities.inc").read_text()
+    old = "return renderer->supports_ARB_map_buffer_range;"
+    new = "return renderer->supports_ARB_map_buffer_range || renderer->useES3;"
+    if new not in text:
+        if text.count(old) != 1:
+            raise SystemExit("FNA3D NoOverwrite capability context changed")
+        text = text.replace(old, new)
     if patch in text:
+        source.write_text(text)
         return
     if text.count(anchor) != 1:
         raise SystemExit("FNA3D GLES capability context changed")

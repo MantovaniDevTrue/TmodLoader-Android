@@ -3,6 +3,7 @@ using Android.Content;
 using Microsoft.Xna.Framework;
 using MonoMod.RuntimeDetour;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace Tml.Mobile.Android;
 
@@ -39,11 +40,36 @@ internal sealed class AndroidGameHooks : IDisposable
             else graphics.DeviceCreated += deviceReady;
             MethodInfo display = main.GetMethod("SetDisplayMode", [typeof(int), typeof(int), typeof(bool)])
                 ?? throw new MissingMethodException("Terraria.Main.SetDisplayMode(int,int,bool)");
+            var screenWidth = ReadInt(main.GetField("screenWidth", fields)!);
+            var screenHeight = ReadInt(main.GetField("screenHeight", fields)!);
+            int repairs = 0;
             hooks.Add(new Hook(display, (Action<Action<int, int, bool>, int, int, bool>)((original, w, h, full) =>
-                original(MobileGraphicsEXT.Size.Width, MobileGraphicsEXT.Size.Height, true))));
+            {
+                var desired = MobileGraphicsEXT.Size;
+                int beforeWidth = screenWidth(), beforeHeight = screenHeight();
+                bool repair = beforeWidth != desired.Width || beforeHeight != desired.Height;
+                if (repair)
+                {
+                    graphics.PreferredBackBufferWidth = beforeWidth;
+                    graphics.PreferredBackBufferHeight = beforeHeight;
+                }
+                original(desired.Width, desired.Height, true);
+                if (repair && ++repairs <= 8)
+                    GameEntry.Log($"ANDROID_GAME_DISPLAY_SYNC from={beforeWidth}x{beforeHeight} game={screenWidth()}x{screenHeight()} buffer={graphics.PreferredBackBufferWidth}x{graphics.PreferredBackBufferHeight}");
+            })));
+
             GameEntry.Log("ANDROID_GAME_HOOKS_READY url-intent+stable-display");
         }
         catch { Dispose(); throw; }
+    }
+
+    private static Func<int> ReadInt(FieldInfo field)
+    {
+        var method = new DynamicMethod("Read_" + field.Name, typeof(int), Type.EmptyTypes, field.DeclaringType!, true);
+        var il = method.GetILGenerator();
+        il.Emit(OpCodes.Ldsfld, field);
+        il.Emit(OpCodes.Ret);
+        return method.CreateDelegate<Func<int>>();
     }
 
     private static void Open(Activity owner, string address)
