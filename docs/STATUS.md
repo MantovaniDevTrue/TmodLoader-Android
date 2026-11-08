@@ -1,5 +1,18 @@
 # Current status
 
+## Android 0.2.18 — touch-first candidate, not packaged
+
+The `0.2.18` Android host version has been staged on `main` with a distinct
+native inventory gesture context. FNA receives primary dragging, secondary
+tap/hold and two-finger wheel input through the normal MouseState paths,
+with synthetic click-through prevention and new core/FNA/private-probe
+regressions. See [implementation and private build gates](ANDROID_0_2_18.md).
+
+**No playable 0.2.18 APK or passing CI is claimed in this source update.**
+Private tModLoader managed binaries, fresh integration build and the existing
+signing key are needed in the private build environment before shipment.
+Do not replace the known 0.2.17 binary merely by renaming it.
+
 ## Native touch-first UI — inventory/crafting foundation
 
 The platform now routes `Main.playerInventory` through a distinct
