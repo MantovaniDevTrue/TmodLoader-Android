@@ -1,5 +1,20 @@
 # Current status
 
+## Android 0.2.17 — transient memory and OpenGL drawing
+
+The 0.2.16 phone report had AndroidSwordTest loaded, world draw p95 around
+22–23 ms and WorldUi around 27 ms. This candidate enables tile scratch reuse
+around normal mod callbacks by detaching exposed objects, preserving their
+identity, color storage and by-ref replacements. It also reuses bounded LZX
+decoder state and removes temporary uncompressed-block copies. The local decoder
+measurement falls from 87,608 B per fresh instance to zero for warmed leases;
+this is a component measurement, not total game RAM or phone FPS.
+
+Memory reports now include Android PSS categories, GC information and LZX reuse
+counts. Host workflow 42432868466 and foundation workflow 42432868433 passed.
+The private playable signed ARM64 APK is assembled and verified. Physical gains
+remain to be tested. See [implementation and validation](ANDROID_0_2_17.md).
+
 ## Android 0.2.16 — launcher workspace
 
 The launcher has separate Home, Mods, Files, Settings and Diagnostics pages,
