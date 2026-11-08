@@ -64,3 +64,36 @@ by FNA after the activity's window flag is set.
 
 The 0.2.15 tile scratch optimization and compatibility guard are unchanged.
 Physical phone gameplay remains the final performance validation.
+
+## Packaged candidate and validation
+
+Playable private APK: `tML_Android_0.2.16_SDL3_NET10_ARM64.apk`, 51,754,605 bytes.
+SHA-256: `c624c78a6730342d2e8df51d70f8cf0feec950bc621bc87e4c94b0c0d98cabb2`.
+Payload SHA-256: `723c67ea2f79410a2c5519fbb62bc70bb9d11a0e9cc0bbd03799afd9df05f59c`.
+Source: `2ec386a2922087ca5cbe5ef0779c58adc58b0060`.
+
+Android host workflow 42429633823 and all three foundation jobs in workflow
+42429633861 passed. Source-host artifact 13596169431 was verified against its
+published ZIP digest before assembly. The final package's existing signing
+certificate, ARM64 libraries, 16 KiB alignment, manifest version, ZIP CRC, duplicate
+entries, exact embedded integration and matching host metadata images were checked.
+
+The emulator navigated all five launcher pages, changed to English and back,
+disabled all mods and verified the real enabled.json, saved a TXT through the
+Android document picker, pulled it from Downloads and decoded its version header
+as UTF-8. That initial report contained only the 19-byte app header because no
+session had run yet. Synthetic regression cases separately cover current errors,
+handled warnings and historical native crashes. Screenshots of the home, files,
+mods, settings, English interface, diagnostics and document picker were reviewed.
+OpenGL and SDL_GPU native graphics/input fixtures also passed; emulator Vulkan
+success does not supersede the failed physical Adreno Vulkan test.
+
+Local regressions passed: 73 core/input/library/diagnostic checks (including real
+sword identity), 28 FNA adapter checks, 20 host checks, 16 performance recorder
+checks and 30 tile scratch checks. The real private API contracts, touch editor,
+selection-cache refresh and five-type mod metadata probe passed headlessly.
+The emulator audit reads app-private files using its rooted test image; the
+production APK remains nondebuggable and does not request root on the phone.
+
+Install over the previous version without uninstalling. Physical phone UI and
+in-world performance validation remain pending. Use OpenGL for that baseline.
