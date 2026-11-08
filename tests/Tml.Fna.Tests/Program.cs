@@ -172,3 +172,4 @@ Check(scenes[(int)CaptureScene.Menu].Snapshot().TotalRecorded == 0 && scenes[(in
     "context changes reset pacing history without deleting other scene samples");
 MobilePerformanceEXT.Destination = null;
 MobilePerformanceEXT.SceneDestinations = null;
+LzxChecks.Run(Check);

@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using MonoMod.RuntimeDetour;
 using Terraria.DataStructures;
 using Terraria.GameContent.Drawing;
+using Terraria.ModLoader;
 using Tml.GameIntegration;
 
 if (args.Length != 1) throw new ArgumentException("Usage: Tml.TileDrawProbe <private-game>");
@@ -20,6 +21,14 @@ Probe.Run();
 static class Probe
 {
     private static TileDrawInfo? drawn;
+    private static TileDrawInfo? callbackRetained;
+    private static bool replaceCallback, throwCallback;
+    private static void Capture(int x, int y, int type, SpriteBatch batch, ref TileDrawInfo value)
+    {
+        callbackRetained = value;
+        if (replaceCallback) value = new TileDrawInfo { typeCache = 99 };
+        if (throwCallback) throw new IOException("callback fixture");
+    }
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void DrawFixture(TileDrawing self, Vector2 position, Vector2 offset, int x, int y)
     {
@@ -125,6 +134,78 @@ static class Probe
         DrawFixture(renderer, default, default, 6, 0);
         Check(!ReferenceEquals(escaped, drawn) && escaped!.typeCache == 4, "returning to reuse preserves external references");
         TileDrawScratch.Clear();
+        VerifyCallbacks();
+    }
+
+    private static void VerifyCallbacks()
+    {
+        const BindingFlags flags = BindingFlags.Static | BindingFlags.NonPublic;
+        var hooks = typeof(TileLoader).GetField("HookDrawEffects", flags)!;
+        var previous = hooks.GetValue(null);
+        var delegateType = hooks.FieldType.GetElementType()!;
+        using var patch = new ILHook(typeof(TileLoader).GetMethod("DrawEffects")!, TileDrawScratchPatch.RewriteCallbacks);
+        try
+        {
+            hooks.SetValue(null, Array.CreateInstance(delegateType, 0));
+            TileDrawScratch.Enter();
+            var empty = Construct();
+            TileLoader.DrawEffects(0, 0, 0, null!, ref empty);
+            TileDrawScratch.Exit();
+            TileDrawScratch.Enter();
+            var again = Construct();
+            Check(ReferenceEquals(empty, again), "actual TileLoader without callbacks keeps scratch reusable even with item mods");
+            TileDrawScratch.Exit();
+            var callbacks = Array.CreateInstance(delegateType, 1);
+            callbacks.SetValue(Delegate.CreateDelegate(delegateType, typeof(Probe).GetMethod(nameof(Capture), flags)!), 0);
+            hooks.SetValue(null, callbacks);
+            foreach (bool replace in new[] { false, true })
+            {
+                replaceCallback = replace;
+                TileDrawScratch.Enter();
+                var value = Construct(); value.typeCache = 37; value.colorSlices[0] = Vector3.One;
+                var escaped = value;
+                TileLoader.DrawEffects(0, 0, 0, null!, ref value);
+                TileDrawScratch.Exit();
+                TileDrawScratch.Enter();
+                Check(!ReferenceEquals(Construct(), escaped) && callbackRetained!.typeCache == 37 && callbackRetained.colorSlices[0] == Vector3.One, "actual global callback retains independent object and color storage");
+                Check(!replace || value.typeCache == 99, "actual by-ref replacement preserves callback result");
+                TileDrawScratch.Exit();
+            }
+            throwCallback = true; replaceCallback = false;
+            TileDrawScratch.Enter();
+            var failing = Construct(); failing.typeCache = 48;
+            try { TileLoader.DrawEffects(0, 0, 0, null!, ref failing); }
+            catch (IOException) { }
+            finally { TileDrawScratch.Exit(); }
+            TileDrawScratch.Enter();
+            Check(!ReferenceEquals(Construct(), callbackRetained) && callbackRetained!.typeCache == 48, "throwing callback cannot leave an escaped object in the pool");
+            TileDrawScratch.Exit();
+            var tiles = (System.Collections.IList)typeof(TileLoader).GetField("tiles", flags)!.GetValue(null)!;
+            var nextTile = typeof(TileLoader).GetField("nextTile", flags)!;
+            object? savedNext = nextTile.GetValue(null);
+            int index = tiles.Count;
+            try
+            {
+                hooks.SetValue(null, Array.CreateInstance(delegateType, 0));
+                throwCallback = replaceCallback = false;
+                tiles.Add(new RetainingTile());
+                nextTile.SetValue(null, Terraria.ID.TileID.Count + tiles.Count);
+                TileDrawScratch.Enter();
+                var modTile = Construct(); modTile.typeCache = 53;
+                TileLoader.DrawEffects(0, 0, Terraria.ID.TileID.Count + index, null!, ref modTile);
+                TileDrawScratch.Exit();
+                TileDrawScratch.Enter();
+                Check(ReferenceEquals(callbackRetained, modTile) && !ReferenceEquals(Construct(), modTile) && modTile.typeCache == 53, "actual ModTile virtual callback receives independent retained scratch");
+                TileDrawScratch.Exit();
+            }
+            finally { if (tiles.Count > index) tiles.RemoveAt(index); nextTile.SetValue(null, savedNext); }
+        }
+        finally { hooks.SetValue(null, previous); TileDrawScratch.Clear(); }
+    }
+
+    private sealed class RetainingTile : ModTile
+    {
+        public override void DrawEffects(int i, int j, SpriteBatch spriteBatch, ref TileDrawInfo drawData) => Capture(i, j, 0, spriteBatch, ref drawData);
     }
 
     private static void CheckThrows()

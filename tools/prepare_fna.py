@@ -55,10 +55,40 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
     new = old + "\n\t\t\t\t\tMobileInputEXT.NativeTouch((int) evt.tfinger.fingerID, evt.tfinger.x, evt.tfinger.y, evt.type == (uint) SDL.SDL_EventType.SDL_EVENT_FINGER_CANCELED ? Tml.Mobile.TouchPhase.Cancel : Tml.Mobile.TouchPhase.Up);"
     replacements["src/FNAPlatform/SDL3_FNAPlatform.cs"].append((old, new, 1))
     replacements["src/Content/ContentManager.cs"] = [
+        ("LzxDecoder dec = new LzxDecoder(16);", "LzxDecoder dec = LzxDecoderPool.Rent();\n\t\t\t\ttry {", 1),
+        ("\t\t\t\tdecompressedStream.Seek(0, SeekOrigin.Begin);", "\t\t\t\t} finally { LzxDecoderPool.Return(dec); }\n\t\t\t\tdecompressedStream.Seek(0, SeekOrigin.Begin);", 1),
         ("MemoryStream decompressedStream = new MemoryStream(\n\t\t\t\t\tnew byte[decompressedSize],\n\t\t\t\t\t0,\n\t\t\t\t\tdecompressedSize,\n\t\t\t\t\ttrue,\n\t\t\t\t\ttrue // This MUST be true! Readers may need GetBuffer()!\n\t\t\t\t);", "MemoryStream decompressedStream = PooledContentStream.Rent(decompressedSize);\n\t\t\t\ttry {", 1),
         ("MemoryStream compressedStream = new MemoryStream(\n\t\t\t\t\tnew byte[compressedSize],\n\t\t\t\t\t0,\n\t\t\t\t\tcompressedSize,\n\t\t\t\t\ttrue,\n\t\t\t\t\ttrue\n\t\t\t\t);", "using MemoryStream compressedStream = PooledContentStream.Rent(compressedSize);", 1),
         ("stream.Read(compressedStream.GetBuffer(), 0, compressedSize);", "stream.ReadExactly(compressedStream.GetBuffer(), 0, compressedSize);", 1),
         ("\n\t\t\t}\n\t\t\telse\n\t\t\t{\n\t\t\t\treader = new ContentReader(", "\n\t\t\t\t} catch { decompressedStream.Dispose(); throw; }\n\t\t\t}\n\t\t\telse\n\t\t\t{\n\t\t\t\treader = new ContentReader(", 1)
+    ]
+    reset = '''
+        internal void ResetEXT()
+        {
+            LzxState old = m_state;
+            uint size = (uint)old.window.Length;
+            int bits = System.Numerics.BitOperations.Log2(size);
+            int slots = bits == 20 ? 42 : bits == 21 ? 50 : bits << 1;
+            m_state = new LzxState {
+                R0 = 1, R1 = 1, R2 = 1,
+                actual_size = size, window_size = size,
+                main_elements = (ushort)(256 + (slots << 3)), window = old.window,
+                PRETREE_table = old.PRETREE_table, PRETREE_len = old.PRETREE_len,
+                MAINTREE_table = old.MAINTREE_table, MAINTREE_len = old.MAINTREE_len,
+                LENGTH_table = old.LENGTH_table, LENGTH_len = old.LENGTH_len,
+                ALIGNED_table = old.ALIGNED_table, ALIGNED_len = old.ALIGNED_len
+            };
+            Array.Fill(m_state.window, (byte)0xDC);
+            Array.Clear(m_state.PRETREE_table); Array.Clear(m_state.PRETREE_len);
+            Array.Clear(m_state.MAINTREE_table); Array.Clear(m_state.MAINTREE_len);
+            Array.Clear(m_state.LENGTH_table); Array.Clear(m_state.LENGTH_len);
+            Array.Clear(m_state.ALIGNED_table); Array.Clear(m_state.ALIGNED_len);
+        }
+'''
+    anchor = "\t\tpublic int Decompress(Stream inData, int inLen, Stream outData, int outLen)"
+    replacements["src/Content/LzxDecoder.cs"] = [
+        (anchor, reset + anchor, 1),
+        ("byte[] temp_buffer = new byte[this_run];\n\t\t\t\t\t\tinData.Read(temp_buffer, 0, this_run);\n\t\t\t\t\t\ttemp_buffer.CopyTo(window, (int)window_posn);", "inData.ReadExactly(window, (int)window_posn, this_run);", 1)
     ]
     # Validate all edits before copying or writing anything.
     modified = {}
@@ -76,6 +106,7 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
     for filename, text in modified.items():
         (destination / filename).write_text(text)
     shutil.copyfile(ROOT / "integration/fna/PooledContentStream.cs", destination / "src/PooledContentStream.cs")
+    shutil.copyfile(ROOT / "integration/fna/MobileContentEXT.cs", destination / "src/MobileContentEXT.cs")
     shutil.copyfile(ROOT / "integration/fna/MobileInputEXT.cs", destination / "src/Input/MobileInputEXT.cs")
     shutil.copyfile(ROOT / "integration/fna/MobilePerformanceEXT.cs", destination / "src/MobilePerformanceEXT.cs")
     shutil.copyfile(ROOT / "integration/fna/MobileFileIOEXT.cs", destination / "src/MobileFileIOEXT.cs")
@@ -89,6 +120,7 @@ def prepare(source: pathlib.Path, destination: pathlib.Path):
     text = text.replace("</Project>", f'''  <ItemGroup>
     <Compile Include="src/Input/MobileInputEXT.cs" />
     <Compile Include="src/PooledContentStream.cs" />
+    <Compile Include="src/MobileContentEXT.cs" />
     <Compile Include="src/MobilePerformanceEXT.cs" />
     <Compile Include="src/MobileFileIOEXT.cs" />
     <Compile Include="src/MobileGraphicsEXT.cs" />

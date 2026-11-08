@@ -1,5 +1,7 @@
 using System.Reflection;
 using Microsoft.Xna.Framework;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using Terraria.DataStructures;
@@ -11,18 +13,23 @@ internal sealed class TileDrawScratchPatch : IDisposable
 {
     private readonly ILHook allocation;
     private readonly Hook scope;
+    private readonly ILHook callbacks;
+    internal delegate void DrawInfoReference(ref TileDrawInfo value);
     private delegate void DrawTile(TileDrawing self, Vector2 position, Vector2 offset, int x, int y);
 
     internal TileDrawScratchPatch(Action<string> log)
     {
         var method = typeof(TileDrawing).GetMethod("DrawSingleTile", BindingFlags.Instance | BindingFlags.NonPublic)!;
         allocation = new ILHook(method, Rewrite);
+        ILHook? escape = null;
         try
         {
-            scope = InstallScope(method, static () => Terraria.ModLoader.ModLoader.Mods is { Length: <= 1 });
+            escape = new ILHook(typeof(Terraria.ModLoader.TileLoader).GetMethod("DrawEffects")!, RewriteCallbacks);
+            scope = InstallScope(method, static () => true);
+            callbacks = escape;
         }
-        catch { allocation.Dispose(); throw; }
-        log("ANDROID_TILE_SCRATCH_READY per-thread+reentrant+reset-colors");
+        catch { escape?.Dispose(); allocation.Dispose(); throw; }
+        log("ANDROID_TILE_SCRATCH_READY per-thread+reentrant+callback-escape");
     }
 
     internal static Hook InstallScope(MethodBase method, Func<bool> reusable) =>
@@ -47,9 +54,26 @@ internal sealed class TileDrawScratchPatch : IDisposable
         if (count != 1) throw new InvalidOperationException("Unexpected tile draw allocation sites: " + count);
     }
 
+    internal static void RewriteCallbacks(ILContext il)
+    {
+        var cursor = new ILCursor(il);
+        int count = 0;
+        while (cursor.TryGotoNext(i => i.OpCode == OpCodes.Callvirt && i.Operand is MethodReference m &&
+            (m.DeclaringType.FullName == "Terraria.ModLoader.ModTile" && m.Name == "DrawEffects" ||
+             m.DeclaringType.FullName == "Terraria.ModLoader.TileLoader/DelegateDrawEffects" && m.Name == "Invoke")))
+        {
+            cursor.Emit(OpCodes.Dup);
+            cursor.EmitDelegate<DrawInfoReference>(TileDrawScratch.Escape);
+            cursor.Index++;
+            count++;
+        }
+        if (count != 2) throw new InvalidOperationException("Unexpected tile callback sites: " + count);
+    }
+
     public void Dispose()
     {
         scope.Dispose();
+        callbacks.Dispose();
         allocation.Dispose();
         TileDrawScratch.Clear();
     }
@@ -88,6 +112,12 @@ internal static class TileDrawScratch
         }
         if (blockedDepth == depth) blockedDepth = 0;
         depth--;
+    }
+
+    internal static void Escape(ref TileDrawInfo value)
+    {
+        if (depth > 0 && depth <= Capacity && slots != null && ReferenceEquals(slots[depth - 1], value))
+            slots[depth - 1] = null;
     }
 
     internal static void Reset(TileDrawInfo value)
