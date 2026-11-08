@@ -61,6 +61,7 @@ namespace Microsoft.Xna.Framework.Input
                 Math.Max(1, Mouse.INTERNAL_BackBufferWidth), Math.Max(1, Mouse.INTERNAL_BackBufferHeight));
             if ((Frame.Pressed & MobileAction.HotbarPrevious) != 0) wheel += 120;
             if ((Frame.Pressed & MobileAction.HotbarNext) != 0) wheel -= 120;
+            if (Source.Context == InputContext.Inventory) wheel += Frame.UiScrollSteps * 120;
         }
 
         internal static KeyboardState MergeKeyboard(KeyboardState physical)
@@ -83,7 +84,7 @@ namespace Microsoft.Xna.Framework.Input
                 physical.Y = (int)(aimState.Position.Y * Math.Max(0, Mouse.INTERNAL_BackBufferHeight - 1));
             }
             if (Frame.PointerDown || Frame.IsHeld(MobileAction.Attack)) physical.LeftButton = ButtonState.Pressed;
-            if (Frame.IsHeld(MobileAction.Interact)) physical.RightButton = ButtonState.Pressed;
+            if (Frame.UiRightDown || Frame.IsHeld(MobileAction.Interact)) physical.RightButton = ButtonState.Pressed;
             physical.ScrollWheelValue += wheel;
             return physical;
         }
