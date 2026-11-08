@@ -1,5 +1,21 @@
 # Current status
 
+## Android 0.2.17 — physical OpenGL performance report
+
+The user's 22:43 BRT ARM64 diagnostic confirms a complete game session:
+AndroidSwordTest 0.1.1 loaded, world entered and saved in 2,791 ms, with
+no fatal error in this session. Twelve World samples showed median 56.5
+presentation calls/s and draw p95 ~20.7 ms; twelve WorldUi samples showed
+median 48.3 calls/s and draw p95 ~23.9 ms. Update p95 was ~3.1 ms in both
+scenes. Android graphics PSS was ~1,524 MiB within total process PSS
+~2,286–2,289 MiB. The LZX decoder pool recorded one creation and 2,454
+reuses, but this is not direct proof of overall RAM savings.
+
+The next performance boundary is profiling CPU rendering sub-passes and
+GPU resource lifetime before changing behavior. All world effects, mod
+callbacks and visual fidelity remain intact. See
+[physical run measurements and interpretation](ANDROID_0_2_17.md).
+
 ## Android 0.2.17 — transient memory and OpenGL drawing
 
 The 0.2.16 phone report had AndroidSwordTest loaded, world draw p95 around
