@@ -111,7 +111,7 @@ public sealed partial class MainActivity
             var icon = new ImageView(this); icon.SetImageResource(global::Tml.Game.Android.Resource.Drawable.tml_icon);
             rail.AddView(icon, new LinearLayout.LayoutParams(Dp(40), Dp(40)) { Gravity = GravityFlags.CenterHorizontal });
             var brand = Text("tModLoader", 17); brand.Gravity = GravityFlags.Center; rail.AddView(brand);
-            var version = Text("ANDROID · 0.2.17", 10, true); version.Gravity = GravityFlags.Center; rail.AddView(version);
+            var version = Text("ANDROID · 0.2.18", 10, true); version.Gravity = GravityFlags.Center; rail.AddView(version);
         }
         string[] labels = [L("Início", "Home", "Inicio"), "Mods", L("Arquivos", "Files", "Archivos"), L("Configurações", "Settings", "Ajustes"), L("Diagnóstico", "Diagnostics", "Diagnóstico")];
         string[] ids = ["launcher-home", "launcher-mods", "launcher-files", "launcher-settings", "launcher-diagnostics"];
