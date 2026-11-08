@@ -71,3 +71,29 @@ some runtimes return zero or do not provide them. No forced frame GC is added.
 Physical FPS, startup time and total RAM improvements remain unverified until
 the next comparable phone run. Vulkan remains experimental; this work targets
 the working OpenGL baseline. The launcher and in-world touch editor are retained.
+
+## Candidate package and verification
+
+Private playable APK: `tML_Android_0.2.17_SDL3_NET10_ARM64.apk`, 51,762,797 bytes.
+SHA-256: `5d090c9c46b1296816008161d5e5b68c1705bd4ec252ba039a5ecc6d77f012f1`.
+Payload SHA-256: `1d36fe7e4211b37b29dae451c701eb798e01e6c98c400f6804b06d6fca0f6546`.
+Source: `9cb031e6b39975113f29a5707c182cae7b9f0a50`.
+
+Host workflow 42432868466 passed, including ARM64 packaging and the existing
+OpenGL/SDL_GPU rendering, input and launcher/TXT export fixtures. All three jobs
+in foundation workflow 42432868433 passed. Host artifact 13598058565 was checked
+against its published digest before assembly. The final package's signature,
+ARM64 libraries, 16 KiB alignment, manifest, ZIP integrity, exact private
+integration and matching metadata images were verified.
+
+Local checks passed: 73 FNA/input/LZX assertions, 37 tile scratch/callback
+assertions, 73 core/input/library/diagnostic assertions, 20 host assertions and
+16 performance recorder assertions. The actual private hook/editor/cache probe,
+API contracts and five-type sword mod metadata load also passed headlessly.
+These checks do not establish physical phone frame rates or total RAM savings.
+
+LZX counters are cumulative for the process lifetime; differences between samples
+can be used for later game runs in the same process. Install over the existing
+app without uninstalling. For a comparable first run use OpenGL, the same world
+and only AndroidSwordTest, then capture inventory-closed and inventory-open
+periods. A no-mod run provides a separate base-engine comparison.
