@@ -1,5 +1,20 @@
 # Current status
 
+## Android 0.2.16 — launcher workspace
+
+The launcher has separate Home, Mods, Files, Settings and Diagnostics pages,
+Portuguese/English/Spanish, themed controls, local mod toggles, disable-all with
+selection restore, and a clean launch button. Diagnostics separate session errors,
+warnings and Android history; the complete report can be viewed, copied and saved
+as TXT using the system document picker. The in-memory tML selection cache is
+refreshed for subsequent launches. The 0.2.15 tile optimization is retained.
+
+Host workflow 42429633823 and foundation workflow 42429633861 passed. Emulator
+navigation, language switching, actual mod-selection JSON and real TXT export
+passed; screenshots were reviewed. The private playable ARM64 APK was assembled
+and checked with the existing signature. Physical phone testing remains pending.
+See [implementation, package and validation](ANDROID_0_2_16.md).
+
 ## Android 0.2.15 — OpenGL tile scratch reuse
 
 The next private candidate reuses the per-tile drawing scratch object and its
