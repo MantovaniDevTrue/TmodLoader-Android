@@ -119,6 +119,49 @@ Check(frame.PointerDown && frame.Held == 0, "menu taps become pointer input with
 Touch(4, new(-50, 1200), TouchPhase.Move);
 frame = router.ConsumeFrame();
 Check(frame.Pointer == new Vector2(0, 1), "captured pointer clamps outside viewport");
+router.Configure(area, layout.Where(c => c.Action is MobileAction.Inventory or MobileAction.Escape).ToArray());
+router.SetContext(InputContext.Inventory);
+var uiPrimary = new Vector2(500, 210);
+var uiSecondary = new Vector2(620, 240);
+Touch(601, uiPrimary, TouchPhase.Down);
+Touch(602, uiSecondary, TouchPhase.Down);
+frame = router.ConsumeFrame();
+Check(!frame.PointerDown && !frame.UiRightDown && frame.HasPointer &&
+    frame.Pointer == area.Normalize(uiPrimary), "two-finger inventory input waits for context tap instead of producing a phantom left click");
+Touch(602, uiSecondary, TouchPhase.Up);
+frame = router.ConsumeFrame();
+Check(frame.UiRightDown && !frame.PointerDown, "quick two-finger inventory tap produces one right click");
+frame = router.ConsumeFrame();
+Check(!frame.UiRightDown && !frame.PointerDown, "context tap releases without re-clicking primary finger");
+Touch(601, uiPrimary, TouchPhase.Up);
+router.ConsumeFrame();
+Touch(603, uiPrimary, TouchPhase.Down);
+frame = router.ConsumeFrame();
+Check(frame.PointerDown && !frame.UiRightDown, "new single finger recovers normal inventory click and drag");
+Touch(603, uiPrimary + new Vector2(140, 80), TouchPhase.Move);
+frame = router.ConsumeFrame();
+Check(frame.PointerDown && frame.Pointer == area.Normalize(uiPrimary + new Vector2(140, 80)),
+    "inventory drag retains one live pointer and updates cursor");
+Touch(603, uiPrimary, TouchPhase.Up);
+router.ConsumeFrame();
+Touch(604, uiPrimary, TouchPhase.Down);
+Touch(605, uiSecondary, TouchPhase.Down);
+Touch(605, uiSecondary + new Vector2(0, -100), TouchPhase.Move);
+frame = router.ConsumeFrame();
+Check(frame.UiScrollSteps < 0 && !frame.UiRightDown && !frame.PointerDown,
+    "two-finger inventory swipe scrolls recipes without activating item buttons");
+Touch(605, uiSecondary + new Vector2(0, -100), TouchPhase.Up);
+frame = router.ConsumeFrame();
+Check(!frame.UiRightDown, "completed scroll cannot synthesize a secondary click");
+Touch(604, uiPrimary, TouchPhase.Up);
+router.ConsumeFrame();
+var inventoryControl = layout.Single(c => c.Action == MobileAction.Inventory);
+Touch(606, inventoryControl.Center, TouchPhase.Down);
+frame = router.ConsumeFrame();
+Check(frame.IsHeld(MobileAction.Inventory) && !frame.PointerDown,
+    "inventory close button remains a real UI action and never clicks an item");
+Touch(606, inventoryControl.Center, TouchPhase.Up);
+router.Configure(area, layout);
 router.SetContext(InputContext.TextEntry);
 Check(!router.Handle(new(7, jump.Center, TouchPhase.Down)) && router.ConsumeFrame().Held == 0, "text entry suppresses gameplay input");
 router.SetContext(InputContext.Gameplay);
