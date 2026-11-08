@@ -141,7 +141,8 @@ public sealed class TouchRouter
                 Stopwatch.GetTimestamp() - uiSecondaryStart >= Stopwatch.Frequency / 6;
             if (uiRightHeld) uiRightWasHeld = true;
             bool uiRight = uiRightHeld || pendingUiRightTap;
-            bool visiblePointer = (pointerDown || pointerPressed) && !uiRight;
+            bool uiScrolling = context == InputContext.Inventory && IsCaptured(-3) && uiSecondaryScrolling;
+            bool visiblePointer = (pointerDown || pointerPressed) && !uiRight && !uiScrolling;
             bool hasPosition = pointerDown || pointerPressed || sampledPointerDown || uiRight;
             var frame = new InputFrame(++sequence, visible, pressed, released,
                 movement, aim, pointer, hasPosition, visiblePointer,
