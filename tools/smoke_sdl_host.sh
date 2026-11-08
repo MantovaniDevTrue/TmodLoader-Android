@@ -116,7 +116,7 @@ if [ "$backend" == OpenGL ]; then
   document=$(tr -d '\r' < /tmp/tml-export-path.txt | tail -n 1)
   test -n "$document"
   adb pull "$document" artifacts/sdl-smoke/diagnostics-export.txt
-  python3 -c 'from pathlib import Path; data=Path("artifacts/sdl-smoke/diagnostics-export.txt").read_text(encoding="utf-8"); assert data.startswith("tML Android 0.2.17")'
+  python3 -c 'from pathlib import Path; data=Path("artifacts/sdl-smoke/diagnostics-export.txt").read_text(encoding="utf-8"); assert data.startswith("tML Android 0.2.18")'
 fi
 found_button=0
 for attempt in $(seq 1 12); do
