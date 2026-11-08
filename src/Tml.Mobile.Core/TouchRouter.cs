@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Numerics;
 
 namespace Tml.Mobile;
@@ -21,6 +22,10 @@ public sealed class TouchRouter
     private bool pointerDown, pointerPressed, sampledPointerDown;
     private InputFrame lastFrame;
     private long sequence, gestureRevision, pointerRevision, aimRevision, gestureEpoch;
+    private long uiSecondaryStart;
+    private float uiSecondaryStartY, uiScrollRemainder;
+    private int pendingUiScroll;
+    private bool uiSecondaryScrolling, uiRightWasHeld, pendingUiRightTap;
 
     public InputContext Context { get { lock (gate) return context; } }
 
@@ -74,10 +79,39 @@ public sealed class TouchRouter
                 slot = FreeSlot();
                 if (slot < 0) return false;
                 fingers[slot] = new() { Active = true, Id = point.Id, Control = target, Position = point.Position };
+                if (target == -3)
+                {
+                    uiSecondaryStart = Stopwatch.GetTimestamp();
+                    uiSecondaryStartY = point.Position.Y;
+                    uiScrollRemainder = 0;
+                    uiSecondaryScrolling = uiRightWasHeld = pendingUiRightTap = false;
+                }
             }
             else
             {
                 if (slot < 0) return false;
+                if (fingers[slot].Control == -3 && point.Phase == TouchPhase.Move)
+                {
+                    float delta = point.Position.Y - fingers[slot].Position.Y;
+                    float total = point.Position.Y - uiSecondaryStartY;
+                    if (!uiSecondaryScrolling && MathF.Abs(total) >= 24)
+                    {
+                        uiSecondaryScrolling = true;
+                        uiScrollRemainder = total;
+                    }
+                    else if (uiSecondaryScrolling) uiScrollRemainder += delta;
+                    if (uiSecondaryScrolling)
+                    {
+                        int steps = (int)(uiScrollRemainder / 32f);
+                        if (steps != 0)
+                        {
+                            pendingUiScroll += steps;
+                            uiScrollRemainder -= steps * 32f;
+                        }
+                    }
+                }
+                if (fingers[slot].Control == -3 && point.Phase == TouchPhase.Up)
+                    pendingUiRightTap = !uiSecondaryScrolling && !uiRightWasHeld;
                 fingers[slot].Position = point.Position;
                 if (point.Phase == TouchPhase.Up) fingers[slot].Active = false;
             }
@@ -102,15 +136,26 @@ public sealed class TouchRouter
             MobileAction visible = held | pendingPressed;
             MobileAction pressed = visible & ~sampledHeld;
             MobileAction released = sampledHeld & ~visible;
-            bool visiblePointer = pointerDown || pointerPressed;
+            bool uiRightHeld = context == InputContext.Inventory && IsCaptured(-1) &&
+                IsCaptured(-3) && !uiSecondaryScrolling &&
+                Stopwatch.GetTimestamp() - uiSecondaryStart >= Stopwatch.Frequency / 6;
+            if (uiRightHeld) uiRightWasHeld = true;
+            bool uiRight = uiRightHeld || pendingUiRightTap;
+            bool visiblePointer = (pointerDown || pointerPressed) && !uiRight;
+            bool hasPosition = pointerDown || pointerPressed || sampledPointerDown || uiRight;
             var frame = new InputFrame(++sequence, visible, pressed, released,
-                movement, aim, pointer, visiblePointer || sampledPointerDown, visiblePointer,
+                movement, aim, pointer, hasPosition, visiblePointer,
                 visiblePointer && !sampledPointerDown, !visiblePointer && sampledPointerDown)
-            { PointerRevision = pointerRevision, AimRevision = aimRevision, GestureEpoch = gestureEpoch };
+            {
+                PointerRevision = pointerRevision, AimRevision = aimRevision, GestureEpoch = gestureEpoch,
+                UiRightDown = uiRight, UiScrollSteps = pendingUiScroll
+            };
             sampledHeld = visible;
             sampledPointerDown = visiblePointer;
             pendingPressed = MobileAction.None;
             pointerPressed = false;
+            pendingUiRightTap = false;
+            pendingUiScroll = 0;
             lastFrame = frame;
             return frame;
         }
@@ -131,11 +176,11 @@ public sealed class TouchRouter
     private int HitTest(Vector2 position)
     {
         if (!viewport.Contains(position)) return -2;
-        if (context == InputContext.Gameplay)
+        if (context is InputContext.Gameplay or InputContext.Inventory)
             for (int i = 0; i < controls.Length; i++)
                 if (controls[i].Contains(position)) return IsCaptured(i) ? -2 : i;
-        // Exactly one free-screen finger owns the pointer; buttons never become clicks.
-        return IsCaptured(-1) ? -2 : -1;
+        if (!IsCaptured(-1)) return -1;
+        return context == InputContext.Inventory && !IsCaptured(-3) ? -3 : -2;
     }
 
     private bool IsCaptured(int control)
@@ -158,6 +203,7 @@ public sealed class TouchRouter
                 nextPointerDown = true;
                 continue;
             }
+            if (finger.Control == -3) continue;
             var control = controls[finger.Control];
             if (control.Kind == ControlKind.Button)
             {
@@ -189,6 +235,10 @@ public sealed class TouchRouter
         held = pendingPressed = MobileAction.None;
         movement = aim = Vector2.Zero;
         pointerDown = pointerPressed = false;
+        uiSecondaryStart = 0;
+        uiSecondaryStartY = uiScrollRemainder = 0;
+        pendingUiScroll = 0;
+        uiSecondaryScrolling = uiRightWasHeld = pendingUiRightTap = false;
         lastFrame = default;
         // Keep sampled state until the consumer sees the release frame.
     }
