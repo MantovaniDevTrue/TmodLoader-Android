@@ -1,5 +1,21 @@
 # Current status
 
+## Native touch-first UI — inventory/crafting foundation
+
+The platform now routes `Main.playerInventory` through a distinct
+`InputContext.Inventory`: native FNA primary touch remains available, quick
+two-finger taps emit a context click, stationary second-finger holds maintain
+right click, and a vertical two-finger swipe produces recipe/inventory scroll
+wheel steps without unwanted item clicks. The standard inventory/escape
+actions remain available and hardware mouse input is preserved.
+
+Core/FNA regressions for context tap, scroll, dragging and action isolation
+were added, along with a private tML integration probe. The entire UI rewrite
+is **not** complete: responsive inventory panels, dedicated crafting controls,
+Android IME and mod configuration UX remain separate phases. The new code is
+pending CI and real phone testing; do not label it released or validated.
+See [native mobile UI architecture](NATIVE_MOBILE_UX.md).
+
 ## Android 0.2.17 — physical OpenGL performance report
 
 The user's 22:43 BRT ARM64 diagnostic confirms a complete game session:
