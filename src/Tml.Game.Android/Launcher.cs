@@ -19,6 +19,7 @@ public sealed partial class MainActivity
     private int selectedPage;
     private string language = "pt", pendingReport = "", exportReport = "", notice = "";
     private bool launcherReady;
+    private bool compactLayout;
     private string ModDirectory => LocalModImport.DirectoryFor(FilesDir!.AbsolutePath);
     private sealed class PaletteAdapter(Context context, string[] values, AColor foreground, AColor background)
         : ArrayAdapter<string>(context, global::Android.Resource.Layout.SimpleSpinnerDropDownItem, values)
@@ -94,6 +95,7 @@ public sealed partial class MainActivity
         var themes = custom == null ? LauncherTheme.Presets : LauncherTheme.Presets.Append(custom).ToArray();
         theme = themes.FirstOrDefault(t => t.Name == Preferences.GetString("theme", "tModLoader")) ?? themes[0];
         bool compact = Resources!.Configuration!.ScreenWidthDp < 700;
+        compactLayout = compact;
         var shell = new LinearLayout(this) { Orientation = compact ? Orientation.Vertical : Orientation.Horizontal };
         shell.SetBackgroundColor(Color(theme.Background));
         var rail = new LinearLayout(this) { Orientation = compact ? Orientation.Horizontal : Orientation.Vertical };
@@ -123,9 +125,11 @@ public sealed partial class MainActivity
         shell.AddView(scroll, compact ? new LinearLayout.LayoutParams(-1, 0, 1) : new LinearLayout.LayoutParams(0, -1, 1));
         var content = new LinearLayout(this) { Orientation = Orientation.Vertical };
         content.SetPadding(Dp(24), Dp(18), Dp(24), Dp(24)); scroll.AddView(content);
-        var heading = Text(selectedPage == 5 ? L("Registro completo", "Full log", "Registro completo") : labels[selectedPage], 28);
-        heading.SetTypeface(Typeface.Default, TypefaceStyle.Bold); content.AddView(heading);
-        content.AddView(Text(L("Seu espaço para jogar e criar.", "Your space to play and create.", "Tu espacio para jugar y crear."), 13, true));
+        if (selectedPage != 0)
+        {
+            var heading = Text(selectedPage == 5 ? L("Registro completo", "Full log", "Registro completo") : labels[selectedPage], 28);
+            heading.SetTypeface(Typeface.Default, TypefaceStyle.Bold); content.AddView(heading);
+        }
         switch (selectedPage)
         {
             case 0: BuildHome(content); break;
@@ -143,7 +147,7 @@ public sealed partial class MainActivity
     private void BuildHome(LinearLayout page)
     {
         bool installed = File.Exists(Path.Combine(FilesDir!.AbsolutePath, "Terraria/Terraria.exe"));
-        var hero = Panel(page, L("Sua próxima aventura", "Your next adventure", "Tu próxima aventura"), L("Terraria no Android, com o seu jeito de jogar.", "Terraria on Android, your way to play.", "Terraria en Android, a tu manera."));
+        var hero = Panel(page, compactLayout ? "tModLoader · Android" : L("Sua próxima aventura", "Your next adventure", "Tu próxima aventura"), compactLayout ? null : L("Terraria no Android, com o seu jeito de jogar.", "Terraria on Android, your way to play.", "Terraria en Android, a tu manera."));
         hero.AddView(Text(installed ? L("● Arquivos prontos", "● Files ready", "● Archivos listos") : L("○ Importe os arquivos para começar", "○ Import files to get started", "○ Importa los archivos para comenzar"), 14));
         try { hero.AddView(Text($"{LocalModLibrary.Enabled(ModDirectory).Count} " + L("mod(s) selecionado(s)", "mod(s) selected", "mod(s) seleccionado(s)"), 14, true)); }
         catch (Exception e) when (e is IOException or InvalidDataException or System.Text.Json.JsonException) { hero.AddView(Text(L("Seleção de mods ilegível: ", "Unreadable mod selection: ", "Selección ilegible: ") + e.Message, 13)); }

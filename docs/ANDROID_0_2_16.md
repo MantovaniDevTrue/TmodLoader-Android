@@ -27,6 +27,10 @@ Disabling all saves nonempty selections to `launcher-selection.json`; repeated
 disabling does not overwrite that backup with an empty selection. Restore is an
 explicit action. Starting without mods persists the empty selection until the
 user changes or restores it. Package files and save files are not removed.
+Before each game run, integration invalidates tML's lazy enabled-mod cache after
+the save paths are initialized. The next read uses the game's own JSON parser.
+The private touch probe seeds an old nonempty cache and verifies the real
+EnabledMods property rereads the new empty selection from disk.
 
 Corrupt package headers are shown individually. A corrupt selection is reported
 and is not silently overwritten. Header parsing is not complete asset, hash,

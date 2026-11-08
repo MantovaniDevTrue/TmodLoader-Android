@@ -23,8 +23,17 @@ Directory.CreateDirectory(metadataPath);
 Directory.CreateDirectory(Path.Combine(testRoot,"game/Libraries"));
 foreach(string name in new[]{"FNA","Tml.Mobile.Core"})
     File.Copy(Path.Combine(root,"Metadata",name+".metadata.dll"),Path.Combine(metadataPath,name+".metadata.dll"));
+var loader = game.GetType("Terraria.ModLoader.ModLoader", true)!;
+var selection = loader.GetField("_enabledMods", BindingFlags.Static | BindingFlags.NonPublic)!;
+selection.SetValue(null, new HashSet<string> { "PreviousSessionMod" });
+string modDirectory = (string)loader.GetProperty("ModPath")!.GetValue(null)!;
+Directory.CreateDirectory(modDirectory);
+File.WriteAllText(Path.Combine(modDirectory, "enabled.json"), "[]");
 using var integration = (IDisposable)module.GetType("Tml.GameIntegration.MobileGameIntegration",true)!.GetMethod("Initialize")!.Invoke(null,[source,testRoot,(Action<string>)Console.WriteLine,8L*1024*1024*1024])!;
 Console.WriteLine("PASS actual private integration hooks installed (headless CoreCLR, no gameplay)");
+var reloaded = (HashSet<string>)loader.GetProperty("EnabledMods", BindingFlags.Static | BindingFlags.NonPublic)!.GetValue(null)!;
+if (reloaded.Count != 0) throw new Exception("Stale enabled mods survived launcher selection change");
+Console.WriteLine("PASS actual enabled-mod cache rereads empty disk selection after a previous-session selection");
 
 var input = fna.GetType("Microsoft.Xna.Framework.Input.MobileInputEXT",true)!;
 input.GetProperty("Source")!.SetValue(null, source);

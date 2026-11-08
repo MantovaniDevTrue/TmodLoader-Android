@@ -46,6 +46,11 @@ public sealed class MobileGameIntegration : IDisposable
         try
         {
             hooks.Add(new MetadataAssemblyPatch(root, log));
+            var selection = typeof(Terraria.ModLoader.ModLoader).GetField("_enabledMods", BindingFlags.Static | BindingFlags.NonPublic)
+                ?? throw new MissingFieldException("ModLoader._enabledMods");
+            if (selection.FieldType != typeof(HashSet<string>)) throw new InvalidOperationException("Unexpected enabled-mod cache type");
+            selection.SetValue(null, null);
+            log("ANDROID_MOD_SELECTION_REFRESHED disk-on-next-read");
             hooks.Add(new TileDrawScratchPatch(log));
             if (installedMemory <= 0) throw new InvalidOperationException("Android physical memory unavailable");
             hooks.Add(new Hook(typeof(Main).Assembly.GetType("Terraria.ModLoader.UI.UIMemoryBar", true)!.GetMethod("GetTotalMemory")!,

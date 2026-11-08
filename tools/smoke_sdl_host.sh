@@ -50,7 +50,9 @@ adb exec-out screencap -p > artifacts/sdl-smoke/launcher-home.png
 tap_launcher launcher-mods
 adb exec-out screencap -p > artifacts/sdl-smoke/launcher-mods.png
 tap_launcher launcher-disable-all
-adb shell run-as com.mantovani.tmlmobile cat files/Saves/tModLoader/Mods/enabled.json > artifacts/sdl-smoke/enabled.json
+adb root
+adb wait-for-device
+adb shell cat /data/user/0/com.mantovani.tmlmobile/files/Saves/tModLoader/Mods/enabled.json > artifacts/sdl-smoke/enabled.json
 python3 -c 'import json; assert json.load(open("artifacts/sdl-smoke/enabled.json")) == []'
 tap_launcher launcher-files
 adb exec-out screencap -p > artifacts/sdl-smoke/launcher-files.png
