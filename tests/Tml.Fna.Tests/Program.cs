@@ -49,6 +49,33 @@ MobileInputEXT.BeginUpdate();
 mouse = mergeMouse(physicalMouse);
 Check(mouse.X == 399 && mouse.Y == 239 && mouse.LeftButton == ButtonState.Pressed,
     "menu pointer maps overlay pixels into actual FNA backbuffer");
+router.Configure(area, controls.Where(c => c.Action is MobileAction.Inventory or MobileAction.Escape).ToArray());
+router.SetContext(InputContext.Inventory);
+var neutral = new MouseState(20, 30, 0, ButtonState.Released, ButtonState.Released,
+    ButtonState.Released, ButtonState.Released, ButtonState.Released);
+router.Handle(new(401, new(600, 250), TouchPhase.Down));
+router.Handle(new(402, new(730, 260), TouchPhase.Down));
+router.Handle(new(402, new(730, 260), TouchPhase.Up));
+MobileInputEXT.BeginUpdate();
+mouse = mergeMouse(neutral);
+Check(mouse.RightButton == ButtonState.Pressed && mouse.LeftButton == ButtonState.Released,
+    "inventory secondary touch maps to native FNA right button without left click");
+MobileInputEXT.BeginUpdate();
+Check(mergeMouse(neutral).RightButton == ButtonState.Released &&
+    mergeMouse(neutral).LeftButton == ButtonState.Released,
+    "inventory context tap releases in FNA without re-clicking");
+router.Handle(new(401, new(600, 250), TouchPhase.Up));
+router.ConsumeFrame();
+router.Handle(new(403, new(600, 250), TouchPhase.Down));
+router.Handle(new(404, new(730, 280), TouchPhase.Down));
+router.Handle(new(404, new(730, 180), TouchPhase.Move));
+MobileInputEXT.BeginUpdate();
+mouse = mergeMouse(neutral);
+Check(mouse.ScrollWheelValue < 0 && mouse.LeftButton == ButtonState.Released &&
+    mouse.RightButton == ButtonState.Released,
+    "inventory gesture scroll reaches real FNA wheel without item clicks");
+router.Handle(new(404, new(730, 180), TouchPhase.Up));
+router.Handle(new(403, new(600, 250), TouchPhase.Up));
 router.SetContext(InputContext.Suspended);
 MobileInputEXT.BeginUpdate();
 Check(mergeMouse(physicalMouse) == physicalMouse, "suspending clears synthetic mouse position and buttons");
