@@ -80,6 +80,8 @@ router.SetContext(InputContext.Suspended);
 MobileInputEXT.BeginUpdate();
 Check(mergeMouse(physicalMouse) == physicalMouse, "suspending clears synthetic mouse position and buttons");
 router.SetContext(InputContext.Gameplay);
+// The inventory checks above configured only the Inventory/Escape controls.
+router.Configure(area, controls);
 var next = controls.Single(c => c.Id == "next");
 // The synthetic wheel accumulates like a real mouse wheel, so earlier inventory scrolls shift it.
 int wheelBefore = mergeMouse(physicalMouse).ScrollWheelValue;
