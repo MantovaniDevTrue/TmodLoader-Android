@@ -123,7 +123,7 @@ public sealed class TouchRouter
             if (point.Phase is TouchPhase.Down or TouchPhase.Move)
             {
                 if (captured == -1) pointerRevision = ++gestureRevision;
-                else if (controls[captured].Kind == ControlKind.AimStick) aimRevision = ++gestureRevision;
+                else if (captured >= 0 && controls[captured].Kind == ControlKind.AimStick) aimRevision = ++gestureRevision;
             }
             Recalculate();
             return true;
