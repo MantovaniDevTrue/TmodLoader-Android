@@ -14,7 +14,7 @@ public enum MobileAction : ulong
     HotbarPrevious = 1UL << 16, HotbarNext = 1UL << 17
 }
 
-public enum InputContext { Gameplay, Menu, TextEntry, Suspended }
+public enum InputContext { Gameplay, Inventory, Menu, TextEntry, Suspended }
 public enum ControlKind { Button, MovementStick, AimStick }
 public enum TouchPhase { Down, Move, Up, Cancel }
 
@@ -45,5 +45,7 @@ public readonly record struct InputFrame(
     public long PointerRevision { get; init; }
     public long AimRevision { get; init; }
     public long GestureEpoch { get; init; }
+    public bool UiRightDown { get; init; }
+    public int UiScrollSteps { get; init; }
     public bool IsHeld(MobileAction action) => (Held & action) != 0;
 }
