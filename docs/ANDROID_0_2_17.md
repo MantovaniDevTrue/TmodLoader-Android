@@ -97,3 +97,54 @@ can be used for later game runs in the same process. Install over the existing
 app without uninstalling. For a comparable first run use OpenGL, the same world
 and only AndroidSwordTest, then capture inventory-closed and inventory-open
 periods. A no-mod run provides a separate base-engine comparison.
+
+
+## Physical ARM64 OpenGL result — 2026-11-07 22:43 BRT
+
+User-supplied diagnostics for 0.2.17 confirmed a clean world entry and exit,
+AndroidSwordTest 0.1.1 loading, and world save in 2,791 ms. Split 1.0.11 was
+listed as from a different release stream and was **not** loaded. The tML
+startup emitted HTTP connection-refused warnings for api.steampowered.com,
+including unobserved tasks; the game still entered the world and saved.
+A roughly 32-second post-music/pre-mod-search gap remains unexplained.
+No managed fatal exception or immediate-session native crash was recorded.
+
+From the report's 12 World and 12 WorldUi observations (overlapping windows;
+**not** independent frames or standardized A/B sampling):
+
+| Metric | World | WorldUi |
+| --- | ---: | ---: |
+| Presentation calls/s, median (range) | 56.5 (54.3–59.4) | 48.3 (46.0–51.7) |
+| Draw CPU p95, median (range), ms | 20.7 (19.8–23.4) | 23.9 (22.2–24.5) |
+| Update CPU p95, median, ms | 3.1 | 3.1 |
+| PSS, median, MiB | 2,286.5 | 2,289 |
+| Android graphics PSS, median, MiB | 1,524 | 1,524 |
+| Managed live heap, median, MiB | 636 | 636 |
+| Allocation bytes per recorded tick, median | 15,362 | 27,175 |
+
+At 60 fps the full frame has approximately 16.67 ms. Draw p95 is already
+higher, even though present p95 is approximately 2.6 ms, indicating the next
+optimization focus is **rendering work rather than game update logic**.
+The graphics PSS category is Android accounting, not a measured inventory
+of textures, and must not be added to the process PSS or managed heap.
+
+The LZX counters increased from one created instance to 2,454 reuse events
+by the end of the run. They demonstrate reuse in practice, but not a
+measured improvement in total RAM or CPU. Gameplay memory was relatively
+stable for the observed windows (PSS ~2,283–2,289 MiB; graphics
+~1,521–1,525 MiB); there is no evidence in this interval of continuous
+memory growth. A higher managed reading after returning to the menu does
+not by itself establish a retained-object leak.
+
+For context only, the previous 0.2.16 report had a World draw p95 around
+22–23 ms and WorldUi around 27 ms, with roughly 2,346–2,377 MiB PSS.
+The 0.2.17 numbers trend lower in those metrics, but this was not a matched
+scene/camera/thermal experiment and cannot prove the optimization caused
+that difference. Historic Android LowMemory exits at 01:36:54 and
+01:10:57 UTC belong to **earlier processes**, not to this completed session.
+
+Next profiling priority: measure CPU draw sub-passes and native GPU resource
+lifetime/peak usage before adjusting texture buffers, render targets or
+off-screen passes. Preserve visual fidelity, mod hooks, and supported GPU
+backends; do not downscale effects, disable animations, or add forced GC as
+a substitute for an identified allocation source.
