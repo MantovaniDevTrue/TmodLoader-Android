@@ -64,4 +64,12 @@ type.GetMethod("Command",BindingFlags.Instance|BindingFlags.NonPublic)!.Invoke(i
 string saved = Path.Combine(testRoot,"Saves/touch-controls.json");
 if (!File.Exists(saved) || !File.ReadAllText(saved).Contains("jump")) throw new Exception("Edited control was not persisted");
 Console.WriteLine("PASS actual touch drag and save persist the edited button");
+main.GetField("ingameOptionsWindow")!.SetValue(null, false);
+main.GetField("playerInventory")!.SetValue(null, true);
+input.GetMethod("BeginUpdate")!.Invoke(null, null);
+string inventoryContext = sourceType.GetProperty("Context")!.GetValue(source)!.ToString()!;
+if (inventoryContext != "Inventory")
+    throw new Exception("Native inventory gesture context was not activated");
+Console.WriteLine("PASS actual private integration enters native inventory gesture context");
+main.GetField("playerInventory")!.SetValue(null, false);
 Directory.Delete(testRoot,true);
