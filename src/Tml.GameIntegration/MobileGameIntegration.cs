@@ -169,7 +169,7 @@ public sealed class MobileGameIntegration : IDisposable
             for (int i = 0; i < commands.Length; i++) commands[i] = new Rectangle(panel.X + 12 + i % 5 * 120, panel.Y + 72 + i / 5 * 50, 112, 42);
             RefreshText();
         }
-        router.SetContext(mode is 0 or 3 or 4 ? InputContext.Menu : InputContext.Gameplay);
+        router.SetContext(mode == 2 ? InputContext.Inventory : mode is 0 or 3 or 4 ? InputContext.Menu : InputContext.Gameplay);
         if (!Main.gameMenu && Main.LocalPlayer != null)
         {
             var origin = Vector2.Transform(Main.LocalPlayer.Center - Main.screenPosition, Main.GameViewMatrix.TransformationMatrix);
