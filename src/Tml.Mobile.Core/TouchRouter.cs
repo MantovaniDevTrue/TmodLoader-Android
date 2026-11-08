@@ -25,7 +25,7 @@ public sealed class TouchRouter
     private long uiSecondaryStart;
     private float uiSecondaryStartY, uiScrollRemainder;
     private int pendingUiScroll;
-    private bool uiSecondaryScrolling, uiRightWasHeld, pendingUiRightTap;
+    private bool uiSecondaryScrolling, uiRightWasHeld, pendingUiRightTap, uiPrimaryLocked;
 
     public InputContext Context { get { lock (gate) return context; } }
 
@@ -81,6 +81,7 @@ public sealed class TouchRouter
                 fingers[slot] = new() { Active = true, Id = point.Id, Control = target, Position = point.Position };
                 if (target == -3)
                 {
+                    uiPrimaryLocked = true;
                     uiSecondaryStart = Stopwatch.GetTimestamp();
                     uiSecondaryStartY = point.Position.Y;
                     uiScrollRemainder = 0;
@@ -112,6 +113,8 @@ public sealed class TouchRouter
                 }
                 if (fingers[slot].Control == -3 && point.Phase == TouchPhase.Up)
                     pendingUiRightTap = !uiSecondaryScrolling && !uiRightWasHeld;
+                if (fingers[slot].Control == -1 && point.Phase == TouchPhase.Up)
+                    uiPrimaryLocked = false;
                 fingers[slot].Position = point.Position;
                 if (point.Phase == TouchPhase.Up) fingers[slot].Active = false;
             }
@@ -142,7 +145,7 @@ public sealed class TouchRouter
             if (uiRightHeld) uiRightWasHeld = true;
             bool uiRight = uiRightHeld || pendingUiRightTap;
             bool uiScrolling = context == InputContext.Inventory && IsCaptured(-3) && uiSecondaryScrolling;
-            bool visiblePointer = (pointerDown || pointerPressed) && !uiRight && !uiScrolling;
+            bool visiblePointer = (pointerDown || pointerPressed) && !uiRight && !uiScrolling && !uiPrimaryLocked;
             bool hasPosition = pointerDown || pointerPressed || sampledPointerDown || uiRight;
             var frame = new InputFrame(++sequence, visible, pressed, released,
                 movement, aim, pointer, hasPosition, visiblePointer,
@@ -239,7 +242,7 @@ public sealed class TouchRouter
         uiSecondaryStart = 0;
         uiSecondaryStartY = uiScrollRemainder = 0;
         pendingUiScroll = 0;
-        uiSecondaryScrolling = uiRightWasHeld = pendingUiRightTap = false;
+        uiSecondaryScrolling = uiRightWasHeld = pendingUiRightTap = uiPrimaryLocked = false;
         lastFrame = default;
         // Keep sampled state until the consumer sees the release frame.
     }
