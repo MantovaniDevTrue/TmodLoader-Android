@@ -1,99 +1,113 @@
+<div align="center">
+
 # tModLoader Android
 
-Dedicated Android ARM64 adaptation of tModLoader: preserve the C# mod ecosystem while adapting the game host, interface, input and performance to mobile. See [architecture and delivery gates](docs/ANDROID_PORT.md).
+**An experimental, unofficial native ARM64 port of tModLoader for Android.**
 
-> **Active work:** Experimental tML Android **0.2.13** (.NET 10, SDL3, FNA). The 0.2.12 phone run entered and saved a world, but performance, memory use, and several touch/audio paths still require device validation. Version 0.2.13 adds local .tmod import without Workshop, a themed launcher with the original icon plus Android badge, an optional Vulkan backend, and touch-aim fixes. Android CI tests the graphics probe; that does not prove full game or mod compatibility. [Version scope](docs/ANDROID_0_2_13.md) and [host tests](docs/SDL_HOST.md).
->
-> **Historical game baseline:** Phase 2.23.01 — FNA3D SpriteBatch Buffer Bridge. Its gameplay host still uses MonoVM 8. Matching vanilla PC input was received privately on 2026-11-06; the new .NET 10 host remains to be integrated.
+The PC tModLoader C# runtime, adapted for a mobile display, touch input, Android lifecycle and performance — **without Windows or x86 emulation**.
 
-## Dedicated Android direction
+[![.NET 10 Android foundation](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/workflows/mobile-net10.yml/badge.svg)](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/workflows/mobile-net10.yml)
+[![Android SDL game host](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/workflows/sdl-host.yml/badge.svg)](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/workflows/sdl-host.yml)
 
-The selected direction is a Terraria-specific Android port. The original 0.1.1 APK remains the validated controls/runtime diagnostic; a separate 0.2.0 SDL3 host is now built ([details](docs/SDL_HOST.md)). the matching vanilla PC 1.4.5.8 input has now passed [archive/basic content validation](docs/PC_INPUT_VALIDATION.md). The [private managed game candidate](docs/GAME_BUILD.md) now builds in .NET 10 against mobile FNA and passes assembly/type checks. SDL3/FNA Android host wiring and native ARM64 builds are now implemented; game startup still needs runtime validation. Optional FNA phase timing and bounded reports are now prepared for that first playable baseline. See [PERFORMANCE.md](docs/PERFORMANCE.md).
+**.NET 10** · **Android ARM64** · **SDL3 + FNA** · **OpenGL (tested)** · **C# mods**
 
-## New .NET 10 mobile source
+[Current status](docs/STATUS.md) · [Roadmap](docs/ROADMAP.md) · [Architecture](docs/ANDROID_PORT.md) · [Build instructions](docs/BUILD.md)
 
-- `src/Tml.Mobile.Core/` — shared multi-touch state and content/runtime preflight.
-- `src/Tml.Mobile.Android/` — original ARM64 input/runtime diagnostic.
-- `src/Tml.Game.Android/` — experimental SDL3 Android game host and private PC content importer.
-- `integration/native/` — pinned SDL3/FNA3D/FAudio build and managed entry stub.
-- `integration/fna/` — direct FNA input integration, with no per-field JNI bridge.
-- `tools/prepare_fna.py` — revision-checked patching of the pinned FNA source into a separate build directory.
-- `tests/` — gesture, allocation and actual FNA input tests.
-- `.github/workflows/mobile-net10.yml` — repeatable APK and FNA checks.
+</div>
 
-See [build instructions](docs/BUILD.md) and [remaining game integration](docs/NET10_MOBILE.md). Full in-game touch, mobile menus and desktop mod compatibility are objectives still requiring implementation and device tests.
+> [!IMPORTANT]
+> **Experimental development project, not an official Terraria or tModLoader release.**
+> The latest **phone-validated private APK is 0.2.17**. **0.2.18 is staged in source**, but has not been packaged and validated as a playable release. No playable public APK is provided here. You must own the matching Terraria PC **1.4.5.8** installation. Mod compatibility is **not universal or guaranteed**.
 
-## Historical game progress
+## What already works
 
-The bootstrap already reaches the first controlled game frame and has passed several major startup blockers:
+- **Native ARM64 execution.** The tModLoader managed assemblies run through .NET 10 / Mono JIT on Android. The original Windows `Terraria.exe` is verified/imported as input, **not run by Wine, Box64 or an x86 emulator**.
+- **Real game sessions.** The 0.2.17 OpenGL phone test entered a world, loaded the small `AndroidSwordTest` mod, saved the world and exited normally.
+- **Android launcher.** Separate Home, Mods, Files, Settings and Diagnostics pages; local Terraria and `.tmod` importing, mod selection, PT-BR/English/Spanish launcher UI and TXT report export.
+- **Game input adaptation.** Multi-touch routing through actual FNA input, configurable in-world controls and hardware input coexistence. Additional inventory gestures are staged for 0.2.18.
+- **Diagnostics and measurements.** CPU frame timing, allocations, memory reporting and validation tests, without silently dropping shaders or mod hooks for benchmark scores.
 
-- MonoVM runtime initialization on `android-arm64`;
-- tModLoader assembly bootstrap and dependency loading;
-- dedicated 32 MiB game-thread stack for the large Terraria static initialization path;
-- complete `ContentSamples.Initialize()`;
-- FNA graphics device and backbuffer setup;
-- render-target creation;
-- `FNA3D_CreateTexture2D` through an Android-safe InternalCall bridge;
-- `FNA3D_SetTextureData2D` through an Android-safe InternalCall bridge;
-- real 1×1 dummy texture creation and 4-byte pixel upload;
-- ARM64 tagged-pointer-safe Mono method metadata conversion;
-- `SoundEngine.Initialize()` no-device fallback through the existing Terraria/tModLoader audio path;
-- asset service creation and registration of PNG/XNB/rawimg/FXC/WAV/MP3/OGG readers;
-- successful opening of the real `Content/PixelShader.xnb` payload after it is supplied externally.
+## Screenshots from physical Android testing
 
-Phase 2.22.99 is validated. The FAudio bridge reports zero devices, FNA raises the expected `NoAudioHardwareException`, Terraria catches it in `TestAudioSupport`, and `SoundEngine.Initialize()` returns normally.
+These screenshots document experimental gameplay and the real tModLoader mod UI, **not** a finished mobile interface or broad third-party mod compatibility.
 
-The shader content payload is also no longer missing. With the correct XNB files in `Content/`, `TMLContentManager.OpenStream` returns successfully for `PixelShader`.
+| Gameplay and inventory | Mod list |
+| :---: | :---: |
+| ![Terraria inventory and Example Sword mod item running on Android](docs/media/gameplay-inventory.webp) | ![tModLoader mod list with Example Sword test mod and an incompatible Split build detected](docs/media/mod-list.webp) |
 
-Phase 2.23.00 and 2.23.01 are validated. Real shader effects are created through the APK FNA3D, and SpriteBatch vertex/index buffers are now allocated and initialized successfully.
+<div align="center">
 
-The last historical run reached `AssetInitializer.LoadSplashAssets` and failed because its selected content tree lacked `Images/SplashScreens/Splash_1.xnb`. The privately supplied PC Content now contains that file; the historical game has not yet been rerun with it.
+![Android Example Sword mod information screen](docs/media/mod-details.webp)
 
-The supplied **Terraria PC 1.4.5.8** vanilla `Content` tree must be integrated while keeping tModLoader/platform `Content` files as a separate override layer. This mirrors upstream tModLoader's content-manager design instead of mixing mobile and desktop assets.
+*Example Sword test-mod information shown in the in-game tModLoader UI.*
 
-## Latest source
+</div>
 
-The sanitized source snapshot for the current test baseline is:
+## Current development status
 
-`source-snapshots/phase2.23.00/tML_Phase2_23_00_FNA3DEffectMetadataBridge_Fontes.zip` (latest published public snapshot; Phase 2.23.01 is the validated runtime baseline)
+| Area | Status |
+| --- | --- |
+| Runtime | .NET 10, Android ARM64, Mono JIT |
+| Renderer | OpenGL tested on physical device; Vulkan experimental |
+| Latest phone-validated game build | **0.2.17** (private APK) |
+| Next code milestone | **0.2.18** touch-first inventory candidate; **not released** |
+| World entry, gameplay and saving | Validated in a real 0.2.17 session |
+| Local C# `.tmod` loading | Validated with a **small example mod only** |
+| Large PC mod compatibility | Unverified; individual mods may fail |
+| Responsive crafting, mobile inventory UI and keyboard | In progress |
 
-Its SHA-256 and exact contents/exclusions are documented beside the archive in:
+### Phone performance reference
 
-`source-snapshots/phase2.23.00/README.md`
+The 0.2.17 OpenGL capture recorded median **56.5 presents/s** in the world, versus **48.3 presents/s** with inventory open. Draw CPU p95 was **20.7 ms** and **23.9 ms** respectively; total Android process PSS was approximately **2.29 GiB**. These are historical samples from one phone, **not** guarantees of 60 FPS or general device benchmarks. The main optimization targets are rendering sub-passes, inventory UI and GPU resource lifetime.
 
-## Repository layout
+See [0.2.17 measurements](docs/releases/0.2.17.md), [performance methodology](docs/PERFORMANCE.md) and [current limitations](docs/STATUS.md).
 
-- `docs/STATUS.md` — exact current state and active blocker.
-- `docs/PHASES.md` — history of the diagnostic/fix phases.
-- `docs/ARCHITECTURE.md` — MonoVM/bootstrap/FNA bridge architecture.
-- `docs/DEBUGGING.md` — current logs and diagnostic commands.
-- `docs/BUILD.md` — local build requirements.
-- `docs/CONTENT.md` — required Android layout for vanilla Terraria PC content and tModLoader overrides.
-- `docs/ROADMAP.md` — milestones from first frame to menu/mod/world support.
-- `source-snapshots/` — sanitized source-only snapshots for important baselines.
-- `SECURITY.md` — signing-key and runtime-payload policy.
+## Project structure
 
-## Important
+| Directory | Purpose |
+| --- | --- |
+| `src/Tml.Game.Android/` | Android game host, launcher, runtime hooks and diagnostics |
+| `src/Tml.GameIntegration/` | Integration built against the private game payload |
+| `src/Tml.Mobile.Core/` | Shared input, mod-library and runtime utilities |
+| `src/Tml.Mobile.Android/` | Standalone input/runtime diagnostic app |
+| `integration/fna/` | Mobile modifications applied to the pinned FNA source |
+| `integration/native/` | Android SDL3, FNA3D and FAudio native build |
+| `integration/game/` | Managed game build integration |
+| `tests/` | Input, FNA, host and performance regression checks |
+| `tools/` | Build, verification, packaging and profiling scripts |
+| `examples/AndroidSwordTest/` | Small mod used to validate local loading on-device |
+| `docs/` | Architecture, device results, release notes and roadmap |
 
-This repository intentionally does **not** contain signing private keys, proprietary game/runtime payloads, personal save data or generated APK binaries. Those stay outside Git.
+## Building from source
 
-The build expects locally supplied Android/FNA and game content payload files described in `docs/BUILD.md`.
+Requirements include the pinned **.NET 10 SDK**, Android workload, JDK 21, Android SDK/NDK, pinned upstream repositories and the relevant Android native dependencies.
 
-## Upstream projects
+```bash
+dotnet workload install android --version 10.0.100
 
-This work is built around the tModLoader, FNA, FNA3D, FAudio and SDL2 ecosystems. Their upstream licenses and terms continue to apply to their respective source and binaries.
+# Builds a diagnostic app, NOT a playable Terraria APK:
+bash tools/build_mobile.sh \
+  -p:AndroidSdkDirectory=/path/to/android-sdk \
+  -p:JavaSdkDirectory=/path/to/jdk21
+```
 
-## Development model
+The **SDL game host** is tested by [GitHub Actions](.github/workflows/sdl-host.yml) without redistributing the game. A playable APK additionally requires privately generated tModLoader assemblies, the matching owned Terraria installation, Android libraries and signing. See [BUILD.md](docs/BUILD.md), [GAME_BUILD.md](docs/GAME_BUILD.md) and [SDL_HOST.md](docs/SDL_HOST.md).
 
-`main` tracks the latest working/diagnostic baseline.
+> [!NOTE]
+> Green source/host CI jobs **do not demonstrate** that an assembled game, every mod, Vulkan or a particular phone will work.
 
-As the Android port advances, each new phase should update:
+## Documentation and contribution
 
-1. `docs/STATUS.md`;
-2. `docs/PHASES.md`;
-3. the latest sanitized source snapshot when source changes materially;
-4. debugging/build notes when the workflow changes.
+- [Current status](docs/STATUS.md), [changelog](CHANGELOG.md) and [per-version notes](docs/releases/)
+- [Native mobile UX roadmap](docs/NATIVE_MOBILE_UX.md) and [mobile touch implementation](docs/MOBILE_TOUCH.md)
+- [Architecture and delivery gates](docs/ANDROID_PORT.md)
+- [Security policy](SECURITY.md), [credits and third-party licenses](THIRD_PARTY.md)
+- [Contributing and bug reports](CONTRIBUTING.md)
 
-The objective is to keep the repository useful as both the current source-of-truth and a readable record of how the Android bootstrap reached each milestone.
+If you report a bug, please include the Android model/OS, port version, renderer, active mods and relevant **sanitized** diagnostic log. Do not attach privately owned Terraria executables, game assets, signing keys or personal data.
 
-Native touch controls and mobile runtime work: [implementation and validation scope](docs/MOBILE_TOUCH.md).
+## Credits and legal notice
+
+This is an independent fan project maintained by **MantovaniDevTrue**, with credit to the original developers of [tModLoader](https://github.com/tModLoader/tModLoader), [Terraria / Re-Logic](https://terraria.org/), [FNA](https://github.com/FNA-XNA/FNA), [SDL](https://github.com/libsdl-org/SDL), FNA3D, FAudio, .NET and other upstream libraries. Their respective ownership and licenses remain in effect. No association with or endorsement by the official teams is implied.
+
+**The repository does not provide proprietary game binaries, purchased game content, signing keys or personal save files.** See [THIRD_PARTY.md](THIRD_PARTY.md) and [SECURITY.md](SECURITY.md).

@@ -1,40 +1,26 @@
 # Roadmap
 
-The project is a dedicated Android variant of tModLoader. Architecture, acceptance criteria and delivery gates are recorded in [ANDROID_PORT.md](ANDROID_PORT.md).
+Architecture and acceptance criteria are in [ANDROID_PORT.md](ANDROID_PORT.md).
 
-## Validated foundation
+## Done
 
-- .NET 10 / ARM64 diagnostic opened on the user's phone.
-- Dynamic DLL loading and Reflection.Emit succeeded on-device.
-- JNI startup, drawing, touch and pause/resume are covered by Android emulator checks.
-- Shared multi-touch input and its FNA integration are implemented.
+- .NET 10 ARM64 runtime with JIT, dynamic DLL loading and `Reflection.Emit` on the phone.
+- SDL3 host with FNA3D and FAudio, PC installation import and the real tModLoader entry point.
+- Menu, world entry, saving and exit on a physical device.
+- Local `.tmod` import; first simple mod loaded on the phone.
+- Native touch controls with an in-game editor.
+- Performance and memory reports; allocation-free tile drawing and content decoding.
 
-## Current development
+## In progress
 
-- Optional per-tick/update/draw/present timing in the pinned FNA source.
-- Bounded performance capture, allocation/collection counters and report statistics.
-- This is measurement infrastructure, not evidence of higher game FPS. See [PERFORMANCE.md](PERFORMANCE.md).
+- Touch-first inventory input (0.2.18).
+- Rendering and GPU memory profiling.
 
-## Next: actual game startup
+## Next
 
-1. Obtain the matching desktop Terraria executable/managed payload and complete PC Content tree privately.
-2. Prepare the selected upstream tModLoader build and maintain separate vanilla/platform content roots.
-3. Connect SDL's Android surface/lifecycle to the SDK-managed .NET 10 game host.
-4. Revalidate graphics, audio and interop and reach the menu without hiding exceptions.
-
-## First playable baseline
-
-- Load one small supported desktop mod.
-- Enter a world and verify gameplay hooks, saving and reentry.
-- Test pause/resume, surface recreation and audio recovery on-device.
-- Record baseline frame timings before attempting performance changes.
-
-## Mobile interface and optimization
-
-- Mobile menus and settings.
-- Inventory/crafting touch interactions and dragging.
-- Native text entry, scrolling, pinch zoom and configurable mod hotkeys.
-- User-editable layouts, controller/mouse coexistence and safe-area scaling.
-- Matched, thermally warmed comparisons of rendering, memory, frame pacing and heavier mods.
-
-The 0.1.1 APK remains a controls/runtime diagnostic. A new playable APK will only be described as such after the real game-startup and world gates pass. Historical bootstrap milestones remain in [PHASES.md](PHASES.md).
+- Mobile crafting panel with search, categories and craft actions that use the original recipe code.
+- Android Back navigation and keyboard input for chat, signs and search.
+- Touch-friendly menus, mod configuration, map and other game panels.
+- Editable action palette for mod key bindings.
+- Compatibility tests with larger content mods, chests, shops and mod UIs.
+- Vulkan on devices where it starts reliably.

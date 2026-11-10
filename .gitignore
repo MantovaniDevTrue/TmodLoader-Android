@@ -16,19 +16,8 @@
 signing/
 keys/
 
-# Runtime payloads
-runtime/
-deps/
-apk_base/lib/
-apk_base/classes.dex
-apk_base/resources.arsc
-
-# Logs and local probes
+# Logs
 *.log
-monovm_*.txt
-probes/
-work/
-save/
 
 # Python
 __pycache__/

@@ -34,6 +34,4 @@ The new optional FNA timing hooks and bounded capture window are described in [P
 
 ## Current boundary
 
-The runnable Android app is still the controls/runtime diagnostic. It has not constructed the SDL game surface or launched Terraria. The dedicated-port decision does not change that status.
-
-The matching vanilla Terraria PC 1.4.5.8 executable and Content tree are now available privately and passed archive/basic asset validation. They remain outside the repository. The private tModLoader managed candidate now builds from the selected upstream against mobile FNA and passes API/type loading checks; see [GAME_BUILD.md](GAME_BUILD.md). It still needs the SDL/FNA Android host and ARM64 native dependencies before the next game-startup gate. The legacy Mono 8 bootstrap remains historical reference; its internal metadata offsets must not be transplanted into Mono 10.
+The game host, first playable baseline and touch controls are working on a physical device (0.2.17). Mobile interface and measured optimization are in progress; see [STATUS.md](STATUS.md).

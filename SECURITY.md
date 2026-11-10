@@ -4,7 +4,7 @@
 
 Private APK signing keys must never be committed to this repository.
 
-The local development builds used during bootstrap bring-up may use a disposable test key, but the private key must remain outside Git. The public certificate may be stored separately when needed for verification.
+Release APKs are signed with a private key kept outside Git. Android only installs an update signed with the same key, so do not re-sign a release with a different key. The public certificate may be stored separately when needed for verification.
 
 If a signing private key is accidentally committed, treat it as compromised and rotate it immediately.
 
@@ -14,4 +14,4 @@ Do not commit proprietary Terraria/tModLoader runtime payloads, extracted game a
 
 ## Bug reports
 
-For bootstrap failures, prefer the sanitized diagnostic files listed in `docs/DEBUGGING.md`.
+Attach the report exported from the launcher's Diagnostics page. Check it for personal paths or account names before posting it publicly.
