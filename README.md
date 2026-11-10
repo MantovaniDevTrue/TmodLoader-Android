@@ -38,9 +38,9 @@ The matching, legally owned Terraria PC installation currently serves **two sepa
 
 This import/verification requirement remains part of the **current implementation**. Removing it would require a separate code and installation-flow change; the fact that execution is native does **not** mean the original PC files are never needed.
 
-## Screenshots & video from a real Android device
+## Screenshots from a real Android device
 
-These captures are from the experimental tModLoader Android port running on a physical phone. The original uploads are **1536 × 691 screenshots** and a **1920 × 864 video**, preserved without the previous 144p thumbnails. They demonstrate a working build, not a finished mobile UI or universal mod support.
+These captures are from the experimental tModLoader Android port running on a physical phone. The original screenshots are **1536 × 691**, preserved without the previous low-resolution thumbnails. They demonstrate a working build, not a finished mobile UI or universal mod support.
 
 | Gameplay · inventory & crafting | In-game mod information |
 | :---: | :---: |
@@ -55,13 +55,6 @@ These captures are from the experimental tModLoader Android port running on a ph
 
 *Launcher tested on Android · separate screens for mods, local files, configuration and TXT diagnostics.*
 
-### Video demonstration
-
-<a href="docs/media/android-demo.mp4"><img src="docs/media/android-demo-preview.jpg" alt="Watch the tModLoader Android gameplay demonstration" width="850"></a>
-
-**[▶ Watch the original 1920 × 864 MP4 demonstration](docs/media/android-demo.mp4)**
-
-*Short recording from the actual Android device (4.7 seconds). Select the preview or the link to open the video.*
 
 </div>
 
