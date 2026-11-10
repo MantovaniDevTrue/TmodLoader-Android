@@ -38,19 +38,30 @@ The matching, legally owned Terraria PC installation currently serves **two sepa
 
 This import/verification requirement remains part of the **current implementation**. Removing it would require a separate code and installation-flow change; the fact that execution is native does **not** mean the original PC files are never needed.
 
-## Screenshots from physical Android testing
+## Screenshots & video from a real Android device
 
-These screenshots document experimental gameplay and the real tModLoader mod UI, **not** a finished mobile interface or broad third-party mod compatibility.
+These captures are from the experimental tModLoader Android port running on a physical phone. The original uploads are **1536 × 691 screenshots** and a **1920 × 864 video**, preserved without the previous 144p thumbnails. They demonstrate a working build, not a finished mobile UI or universal mod support.
 
-| Gameplay and inventory | Mod list |
+| Gameplay · inventory & crafting | In-game mod information |
 | :---: | :---: |
-| ![Terraria inventory and Example Sword mod item running on Android](docs/media/gameplay-inventory.webp) | ![tModLoader mod list with Example Sword test mod and an incompatible Split build detected](docs/media/mod-list.webp) |
+| [![Terraria gameplay, inventory, crafting and the Example Sword mod item on Android](docs/media/gameplay-inventory.jpg)](docs/media/gameplay-inventory.jpg) | [![tModLoader Example Sword mod details running on Android](docs/media/mod-details.jpg)](docs/media/mod-details.jpg) |
+| *Native ARM64 gameplay with an ExampleMod-based sword and crafting.* | *Original tModLoader mod-information screen shown on Android.* |
 
 <div align="center">
 
-![Android Example Sword mod information screen](docs/media/mod-details.webp)
+### Android launcher
 
-*Example Sword test-mod information shown in the in-game tModLoader UI.*
+[![Touch-first tModLoader Android launcher with separate Home, Mods, Files, Settings and Diagnostics pages](docs/media/android-launcher.jpg)](docs/media/android-launcher.jpg)
+
+*Launcher tested on Android · separate screens for mods, local files, configuration and TXT diagnostics.*
+
+### Video demonstration
+
+<a href="docs/media/android-demo.mp4"><img src="docs/media/android-demo-preview.jpg" alt="Watch the tModLoader Android gameplay demonstration" width="850"></a>
+
+**[▶ Watch the original 1920 × 864 MP4 demonstration](docs/media/android-demo.mp4)**
+
+*Short recording from the actual Android device (4.7 seconds). Select the preview or the link to open the video.*
 
 </div>
 
