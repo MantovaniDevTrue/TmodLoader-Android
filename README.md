@@ -21,11 +21,22 @@ The PC tModLoader C# runtime, adapted for a mobile display, touch input, Android
 
 ## What already works
 
-- **Native ARM64 execution.** The tModLoader managed assemblies run through .NET 10 / Mono JIT on Android. The original Windows `Terraria.exe` is verified/imported as input, **not run by Wine, Box64 or an x86 emulator**.
+- **Native ARM64 execution.** The game's managed tModLoader assemblies run on Android through .NET 10 / Mono JIT. **No Windows executable is launched and no Wine, Box64 or x86 emulation is used.**
 - **Real game sessions.** The 0.2.17 OpenGL phone test entered a world, loaded the small `AndroidSwordTest` mod, saved the world and exited normally.
 - **Android launcher.** Separate Home, Mods, Files, Settings and Diagnostics pages; local Terraria and `.tmod` importing, mod selection, PT-BR/English/Spanish launcher UI and TXT report export.
 - **Game input adaptation.** Multi-touch routing through actual FNA input, configurable in-world controls and hardware input coexistence. Additional inventory gestures are staged for 0.2.18.
 - **Diagnostics and measurements.** CPU frame timing, allocations, memory reporting and validation tests, without silently dropping shaders or mod hooks for benchmark scores.
+
+## Native execution vs. PC installation files
+
+**The Android port does not run `Terraria.exe`.** The actual game is launched from the rebuilt tModLoader managed assemblies (`tModLoader.dll` and dependencies) inside the Android ARM64 .NET 10 runtime, using SDL3/FNA and Android-native graphics/audio libraries.
+
+The matching, legally owned Terraria PC installation currently serves **two separate purposes**:
+
+1. **Source preparation / private build:** upstream tooling uses the PC executable as input when reconstructing and compiling the managed Terraria/tModLoader game code for the Android port.
+2. **Installation verification and content:** the current launcher/game integration requires an imported PC installation and checks the `Terraria.exe` file (including the expected version/hash) and needed content assets. That executable is **checked as data**, not executed.
+
+This import/verification requirement remains part of the **current implementation**. Removing it would require a separate code and installation-flow change; the fact that execution is native does **not** mean the original PC files are never needed.
 
 ## Screenshots from physical Android testing
 
