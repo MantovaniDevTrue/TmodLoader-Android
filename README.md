@@ -6,7 +6,7 @@
 
 The PC tModLoader C# runtime, adapted for a mobile display, touch input, Android lifecycle and performance — **without Windows or x86 emulation**.
 
-[![.NET 10 Android foundation](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/workflows/mobile-net10.yml/badge.svg)](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/workflows/mobile-net10.yml)
+[![.NET 10 Android foundation](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/workflows/mobile-net10.yml/badge.svg?branch=main)](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/workflows/mobile-net10.yml)
 [![Android SDL game host](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/workflows/sdl-host.yml/badge.svg)](https://github.com/MantovaniDevTrue/TmodLoader-Android/actions/workflows/sdl-host.yml)
 
 **.NET 10** · **Android ARM64** · **SDL3 + FNA** · **OpenGL (tested)** · **C# mods**
